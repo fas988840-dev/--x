@@ -9,16 +9,52 @@
 import { PublicKey } from '@solana/web3.js';
 
 /**
- * Base58 alphabet for validation
+ * Base58 alphabet for decoding validation
  */
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 /**
- * Validate base58 string using proper base58 character check
+ * Decode Base58 string to bytes
  */
-function isValidBase58(str: string): boolean {
-  if (str.length === 0) return false;
-  return /^[1-9A-HJ-NP-Z]+$/.test(str);
+function decodeBase58(str: string): Buffer {
+  if (str.length === 0) {
+    throw new Error('Cannot decode empty Base58 string');
+  }
+
+  // Validate base58 characters
+  for (const char of str) {
+    if (!BASE58_ALPHABET.includes(char)) {
+      throw new Error(`Invalid Base58 character: ${char}`);
+    }
+  }
+
+  // Decode Base58
+  let num = 0n;
+  let power = 1n;
+
+  for (let i = str.length - 1; i >= 0; i--) {
+    const digit = BigInt(BASE58_ALPHABET.indexOf(str[i]));
+    num += digit * power;
+    power *= 58n;
+  }
+
+  // Convert to bytes
+  const bytes: number[] = [];
+  while (num > 0n) {
+    bytes.unshift(Number(num % 256n));
+    num /= 256n;
+  }
+
+  // Handle leading zeros (encoded as '1' in Base58)
+  for (const char of str) {
+    if (char === '1') {
+      bytes.unshift(0);
+    } else {
+      break;
+    }
+  }
+
+  return Buffer.from(bytes);
 }
 
 /**
@@ -37,23 +73,26 @@ export function validateWalletAddress(addr: string): WalletAddress {
 }
 
 /**
- * Transaction signature - validated as valid base58 Solana signature
- * Solana signatures are typically 88 chars but we validate base58 format instead of fixed length
+ * Transaction signature - validated as valid Base58 with 64-byte decoded length
+ * Solana signatures decode to exactly 64 bytes
  */
 export type TransactionSignature = string & { readonly __brand: 'TransactionSignature' };
 
 export function validateTransactionSignature(sig: string): TransactionSignature {
   try {
-    if (!isValidBase58(sig)) {
-      throw new Error('Invalid base58 format');
+    // Decode Base58
+    const decoded = decodeBase58(sig);
+
+    // Solana signatures must decode to exactly 64 bytes
+    if (decoded.length !== 64) {
+      throw new Error(`Signature decoded to ${decoded.length} bytes, expected 64`);
     }
-    // Solana signatures should decode to 64 bytes
-    if (sig.length < 40 || sig.length > 90) {
-      throw new Error('Signature length out of expected range');
-    }
+
     return sig as TransactionSignature;
   } catch (error) {
-    throw new Error(`Invalid transaction signature: ${sig}. ${error instanceof Error ? error.message : ''}`);
+    throw new Error(
+      `Invalid transaction signature: ${sig}. ${error instanceof Error ? error.message : ''}`
+    );
   }
 }
 
