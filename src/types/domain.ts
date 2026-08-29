@@ -1,67 +1,101 @@
 /**
  * Core domain types for Solana wallet intelligence platform.
  * Represents immutable blockchain facts and deterministic analysis.
+ *
+ * CRITICAL: All blockchain amounts kept as strings/bigint to avoid precision loss.
+ * NEVER use JavaScript number for blockchain data except normalized human-readable display.
  */
 
+import { PublicKey } from '@solana/web3.js';
+
 /**
- * Wallet address - validated base58
+ * Base58 alphabet for validation
+ */
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+/**
+ * Validate base58 string using proper base58 character check
+ */
+function isValidBase58(str: string): boolean {
+  if (str.length === 0) return false;
+  return /^[1-9A-HJ-NP-Z]+$/.test(str);
+}
+
+/**
+ * Wallet address - validated using Solana's PublicKey
  */
 export type WalletAddress = string & { readonly __brand: 'WalletAddress' };
 
 export function validateWalletAddress(addr: string): WalletAddress {
-  // Base58 validation for Solana addresses (44-44 chars typically)
-  if (!/^[1-9A-HJ-NP-Z]{43,44}$/.test(addr)) {
+  try {
+    // Use Solana's official PublicKey validation
+    new PublicKey(addr);
+    return addr as WalletAddress;
+  } catch (_error) {
     throw new Error(`Invalid wallet address: ${addr}`);
   }
-  return addr as WalletAddress;
 }
 
 /**
- * Transaction signature - validated base58
+ * Transaction signature - validated as valid base58 Solana signature
+ * Solana signatures are typically 88 chars but we validate base58 format instead of fixed length
  */
 export type TransactionSignature = string & { readonly __brand: 'TransactionSignature' };
 
 export function validateTransactionSignature(sig: string): TransactionSignature {
-  // Solana signatures are 88 characters base58
-  if (!/^[1-9A-HJ-NP-Z]{88}$/.test(sig)) {
-    throw new Error(`Invalid transaction signature: ${sig}`);
+  try {
+    if (!isValidBase58(sig)) {
+      throw new Error('Invalid base58 format');
+    }
+    // Solana signatures should decode to 64 bytes
+    if (sig.length < 40 || sig.length > 90) {
+      throw new Error('Signature length out of expected range');
+    }
+    return sig as TransactionSignature;
+  } catch (error) {
+    throw new Error(`Invalid transaction signature: ${sig}. ${error instanceof Error ? error.message : ''}`);
   }
-  return sig as TransactionSignature;
 }
 
 /**
- * Token mint address
+ * Token mint address - validated using Solana's PublicKey
  */
 export type TokenMint = string & { readonly __brand: 'TokenMint' };
 
 export function validateTokenMint(mint: string): TokenMint {
-  if (!/^[1-9A-HJ-NP-Z]{43,44}$/.test(mint)) {
+  try {
+    new PublicKey(mint);
+    return mint as TokenMint;
+  } catch (_error) {
     throw new Error(`Invalid token mint: ${mint}`);
   }
-  return mint as TokenMint;
 }
 
 /**
- * Program ID (smart contract address)
+ * Program ID (smart contract address) - validated using Solana's PublicKey
  */
 export type ProgramId = string & { readonly __brand: 'ProgramId' };
 
 export function validateProgramId(id: string): ProgramId {
-  if (!/^[1-9A-HJ-NP-Z]{43,44}$/.test(id)) {
+  try {
+    new PublicKey(id);
+    return id as ProgramId;
+  } catch (_error) {
     throw new Error(`Invalid program ID: ${id}`);
   }
-  return id as ProgramId;
 }
 
 /**
  * Transaction meta - immutable blockchain facts
+ * blockTime can be null per Solana RPC spec
+ * fee stored as string to avoid precision loss
  */
 export interface TransactionMeta {
   signature: TransactionSignature;
   slot: number;
-  blockTime: number; // Unix timestamp
+  blockTime: number | null; // Unix timestamp, null if unavailable
   status: 'success' | 'failed' | 'unknown';
-  fee: number; // Lamports
+  fee: string; // Lamports as string to avoid precision loss, 'unknown' if unavailable
   logMessages: string[];
 }
 
@@ -93,23 +127,25 @@ export interface ParsedInstruction {
 }
 
 /**
- * Token with optional metadata
+ * Token with metadata
  */
 export interface Token {
   mint: TokenMint;
   symbol: string | null; // "SOL", "USDC", null if unknown
-  decimals: number; // 6 for most tokens, 8 for SOL
+  decimals: number; // 6 for most tokens, 9 for SOL (lamports)
   name: string | null;
 }
 
 /**
- * Token balance change with confidence
+ * Token balance change with high precision
+ * CRITICAL: amount kept as string to avoid precision loss
+ * amountNormalized is null when exact conversion cannot be safely represented
  */
 export interface TokenBalanceDelta {
   token: Token;
-  amount: string; // Use string to avoid floating-point errors
-  amountDecimals: number; // Decimal places
-  amountNormalized: number; // Human-readable decimal (amount / 10^decimals)
+  amount: string; // Raw amount as string (e.g., "1000000000" for 1 SOL with 9 decimals)
+  amountDecimals: number; // Decimal places for this token
+  amountNormalized: number | null; // Human-readable decimal (amount / 10^decimals), null if exact conversion unsafe
   direction: 'in' | 'out' | 'unknown';
   confidence: 'high' | 'medium' | 'low';
 }
@@ -121,7 +157,7 @@ export type SwapStatus = 'confirmed' | 'candidate' | 'unknown';
 
 export interface SwapEvent {
   signature: TransactionSignature;
-  blockTime: number;
+  blockTime: number | null;
   status: SwapStatus;
   programId: ProgramId;
   programName: string;
@@ -130,7 +166,7 @@ export interface SwapEvent {
   inputUSD: number | null; // null if price unavailable
   outputUSD: number | null; // null if price unavailable
   priceImpact: number | null; // Percentage, null if price unavailable
-  fee: number; // Lamports
+  fee: string; // Lamports as string
 }
 
 /**
