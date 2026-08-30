@@ -151,6 +151,33 @@ Returns transaction metadata:
 - Transaction fee
 - Log messages
 
+## MCP Server
+
+In addition to the REST API, `src/mcp/` exposes the same read-only pipeline
+as an [MCP](https://modelcontextprotocol.io) server, so MCP-compatible
+clients (Claude Desktop, Claude Code, other MCP hosts) can call it directly
+as tools, over stdio.
+
+```bash
+npm run mcp
+```
+
+**Tools exposed:** `wallet_intelligence`, `transaction_lookup`,
+`wallet_risk`, `wallet_research_report`, `market_events` - each is a thin
+pass-through to `src/agents/core_agents.ts`, so every tool result carries
+the same `evidenceStatus`/`confidenceScore` honesty guarantee as the
+agents: real data when it was actually read from chain, `UNKNOWN`/`null`
+when it wasn't (never a guess). `market_events` always returns `UNKNOWN` -
+there is no live event pipeline in this codebase yet.
+
+⚠️ **Verification status:** this was implemented against
+`@modelcontextprotocol/sdk` from training knowledge and a single web
+search, because the official docs (github.com, npmjs.com,
+modelcontextprotocol.io) were unreachable from the sandbox this was
+written in. Run `npm install && npm test` before relying on it in
+production - if the SDK's API has since changed, the likely failure is a
+renamed method/import, not a flaw in the overall approach.
+
 ## Local Development
 
 ### Prerequisites
@@ -406,6 +433,8 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [x] Intelligence scoring
 - [x] Risk assessment
 - [x] REST API
+- [x] Read-only agent facades (`src/agents/core_agents.ts`) - no LLM calls, honest UNKNOWN when data isn't real
+- [~] MCP server (`src/mcp/`) - implemented, **API surface unverified** (docs were unreachable when written; run `npm install && npm test` before relying on it)
 - [ ] Real price provider (CoinGecko/Birdeye)
 - [ ] DEX protocol adapters (Raydium, Jupiter, etc.)
 - [ ] Alert system
