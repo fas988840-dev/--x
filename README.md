@@ -225,6 +225,30 @@ Returns transaction metadata:
 - Transaction fee
 - Log messages
 
+## Deployment
+
+`Dockerfile` builds the API as a standalone container — no code changes
+needed, works on any Docker-based host. This is what gives the "unverified
+website link" problem in the funding drafts an actual fix: pick one of
+these, deploy, and the API has a real, stable, public URL.
+
+**⚠️ I cannot deploy this myself** — every option below needs an account
+on that platform, which is credentials/access only you have.
+
+- **Railway / Render (free tier)**: connect the GitHub repo, both
+  auto-detect `Dockerfile` with no extra config. Set the environment
+  variables from `.env.example` (at minimum `API_KEYS` — see the Security
+  section above) in that platform's dashboard, not in a committed file.
+- **Fly.io**: `fly launch` in the repo root detects the `Dockerfile`
+  automatically; `fly deploy` after that.
+- **Dashboard (`dashboard/`) on Vercel**: Vercel auto-detects Next.js with
+  zero config — connect the repo, set the project's root directory to
+  `dashboard/`, and set `FACTLEDGER_API_URL` to wherever the API above
+  ends up deployed.
+
+Once deployed, replace the placeholder `https://fas988840-dev.github.io/PROJECT-x/`
+link in the funding application drafts with the real API/dashboard URL.
+
 ## Public Docs Page
 
 `docs/index.html` is a static, single-page project overview (what it does,
