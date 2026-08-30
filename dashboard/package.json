@@ -1,0 +1,26 @@
+{
+  "name": "factledger-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Read-only web dashboard for FactLedger, calling the existing REST API - no direct blockchain access, no state of its own.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

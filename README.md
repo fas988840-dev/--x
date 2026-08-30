@@ -509,11 +509,11 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [~] MCP server (`src/mcp/`) - implemented, **API surface unverified** (docs were unreachable when written; run `npm install && npm test` before relying on it)
 - [x] CI (`.github/workflows/ci.yml`) - npm audit, lint, type-check, test (incl. an automated determinism check), build, on every push/PR
 - [x] Dependabot (`.github/dependabot.yml`) - weekly npm + GitHub Actions update PRs
+- [~] Dashboard UI (`dashboard/`) - Next.js app, implemented but **unverified** (npm registry unreachable when written; run `npm install` in `dashboard/` before relying on it)
 - [ ] Real price provider (CoinGecko/Birdeye)
 - [ ] DEX protocol adapters (Raydium, Jupiter, etc.)
 - [ ] Alert system
-- [ ] Track record database
-- [ ] Dashboard UI
+- [ ] Track record database - deliberately not started; the platform is stateless/read-only by design, and no concrete persistence requirement has been established yet (see `dashboard/README.md`)
 - [ ] WebSocket support
 
 ## Repository Status
