@@ -210,6 +210,21 @@ Returns transaction metadata:
 - Transaction fee
 - Log messages
 
+## Public Docs Page
+
+`docs/index.html` is a static, single-page project overview (what it does,
+the pipeline, what's actually verified vs. still `candidate`) - intended
+to be served via GitHub Pages as the project's public-facing link (e.g.
+for grant/funding applications), separately from the private source repo.
+
+**Not live until enabled manually:** GitHub Pages isn't turned on by
+default. To activate it: **Settings → Pages → Source: "Deploy from a
+branch" → Branch: `main`, folder `/docs` → Save.** It then serves at
+`https://<github-username>.github.io/<repo-name>/`. Note: GitHub Pages
+for a *private* repository requires GitHub Pro/Team (the free plan only
+serves Pages from public repos) — the same billing consideration as
+GitHub Actions minutes elsewhere in this README.
+
 ## MCP Server
 
 In addition to the REST API, `src/mcp/` exposes the same read-only pipeline

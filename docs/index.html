@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FactLedger — Evidence-Backed Solana Wallet Intelligence</title>
+<meta name="description" content="A read-only Solana wallet intelligence API and MCP server. Every score cites the real transactions it's based on, and says 'unknown' instead of guessing.">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --border: #262b33;
+    --text: #e6e8eb;
+    --muted: #9aa3ad;
+    --accent: #4f8cff;
+    --verified: #34c07a;
+    --candidate: #d9a441;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    padding: 4rem 1.5rem 3rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 2.25rem;
+    margin: 0 0 0.75rem;
+  }
+  header p {
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto;
+    font-size: 1.05rem;
+  }
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  section {
+    margin-bottom: 3rem;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+  .pipeline {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .card h3 {
+    margin-top: 0;
+    font-size: 1rem;
+  }
+  .card p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 0.4rem;
+  }
+  .badge-verified { background: rgba(52,192,122,0.15); color: var(--verified); }
+  .badge-candidate { background: rgba(217,164,65,0.15); color: var(--candidate); }
+  code {
+    background: var(--panel);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  a { color: var(--accent); }
+  .disclaimer {
+    font-size: 0.85rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    padding: 2rem 1.5rem 3rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FactLedger</h1>
+  <p>A read-only Solana wallet intelligence platform. Every score cites the real
+  transactions, program IDs, and factors it's based on — and says
+  <strong>"unknown"</strong> instead of guessing when it can't verify something.</p>
+</header>
+
+<main>
+
+<section>
+  <h2>What it does</h2>
+  <p>FactLedger turns raw Solana RPC data into deterministic behavioral
+  metrics, an intelligence score, and a risk assessment for any wallet
+  address — through a REST API, an MCP server, and a web dashboard. It
+  never signs transactions, never requests private keys, and never
+  fabricates a value it can't verify.</p>
+</section>
+
+<section>
+  <h2>The pipeline</h2>
+  <div class="pipeline">Solana RPC
+  → TransactionRetriever    (signatures, transactions, instructions)
+  → InstructionParser       (program identification: confirmed / candidate / unknown)
+  → BehaviorAnalyzer        (frequency, failure rate, diversity, timing)
+  → IntelligenceScorer      (activity / sophistication / consistency / efficiency)
+  → RiskAssessor            (failure-rate / concentration / volatility / pattern factors)</div>
+</section>
+
+<section>
+  <h2>What's real today</h2>
+  <div class="grid">
+    <div class="card">
+      <h3><span class="badge badge-verified">VERIFIED</span>Deterministic scoring</h3>
+      <p>The same input into the scoring functions is asserted, in CI, to
+      produce byte-identical output every time — not just claimed.</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge badge-verified">VERIFIED</span>Evidence Engine</h3>
+      <p>Every transaction cited turns into a real, per-instruction evidence
+      entry — signature, slot, program, and a confidence value from a fixed,
+      documented mapping.</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge badge-candidate">CANDIDATE</span>Raydium / Jupiter detection</h3>
+      <p>Verified program IDs and instruction-type discriminators identify
+      swap instructions from these two protocols. Amount/mint extraction is
+      intentionally not implemented yet — see the repo's <code>CLAUDE.md</code>
+      for why.</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge badge-verified">VERIFIED</span>Real price data</h3>
+      <p>Token prices come from CoinGecko's public API — <code>null</code>
+      on any failure, never a hardcoded guess.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Interfaces</h2>
+  <ul>
+    <li><strong>REST API</strong> — wallet analysis, risk, evidence, research, and a deterministic agent router</li>
+    <li><strong>MCP server</strong> — the same capabilities as callable tools for any MCP-compatible AI client</li>
+    <li><strong>Dashboard</strong> — a web UI over the same API</li>
+  </ul>
+</section>
+
+<section>
+  <p class="disclaimer">
+  This is a pre-launch, proof-of-concept project. No external users or
+  usage metrics yet. Intelligence and risk scores are derived from
+  observable on-chain behavior only — not financial advice, and not a
+  recommendation. Source code is proprietary; contact for access.
+  </p>
+</section>
+
+</main>
+
+<footer>
+  FactLedger — Founder: Abdullah Al-Anzi ·
+  <a href="mailto:fas988840@gmail.com">fas988840@gmail.com</a>
+</footer>
+
+</body>
+</html>
