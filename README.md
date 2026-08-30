@@ -148,6 +148,41 @@ Returns comprehensive wallet analysis combining:
 - Risk assessment
 - Clear disclaimers
 
+#### Evidence
+
+```
+GET /api/v1/wallet/:address/evidence?limit=10
+```
+
+Returns a flat, per-instruction evidence list (`EvidenceEngine`, see
+`src/agents/evidence-engine.ts`): each entry cites the real transaction
+signature, slot, program ID/name, and a `confidencePercent` from a fixed
+mapping (`confirmed`→100, `candidate`→50, `unknown`→0 — never an invented
+per-instance number). `limit` defaults to 10 and is capped at 100, since
+this route does one extra RPC round-trip per transaction on top of the
+signature list.
+
+#### Research Report
+
+```
+GET /api/v1/wallet/:address/research?limit=100
+```
+
+Returns `ResearchAgent`'s synthesis of `WalletIntelligenceAgent` +
+`RiskAgent` output (see `src/agents/core_agents.ts`) — a plain-language
+summary built only from those two real results, with an `auditTrail` of
+which agents it cites.
+
+### Protocols
+
+```
+GET /api/v1/protocols
+```
+
+Returns `DexRegistry`'s registered adapters. Currently always an empty
+array — no adapters are registered in this deployment (see CLAUDE.md) —
+returned explicitly as `[]` rather than a hardcoded protocol list.
+
 ### Transaction Endpoints
 
 #### Transaction Details

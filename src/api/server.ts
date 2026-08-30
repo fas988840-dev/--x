@@ -9,6 +9,9 @@ import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { PriceProvider } from '../services/price-provider';
+import { DexRegistry } from '../services/dex-registry';
+import { ResearchAgent } from '../agents/core_agents';
+import { EvidenceEngine } from '../agents/evidence-engine';
 
 /**
  * API Error Response
@@ -84,6 +87,9 @@ export class APIServer {
   private intelligenceScorer: IntelligenceScorer;
   private riskAssessor: RiskAssessor;
   private priceProvider: PriceProvider;
+  private dexRegistry: DexRegistry;
+  private evidenceEngine: EvidenceEngine;
+  private researchAgent: ResearchAgent;
 
   constructor(
     port: number,
@@ -91,7 +97,10 @@ export class APIServer {
     behaviorAnalyzer: BehaviorAnalyzer,
     intelligenceScorer: IntelligenceScorer,
     riskAssessor: RiskAssessor,
-    priceProvider: PriceProvider
+    priceProvider: PriceProvider,
+    dexRegistry: DexRegistry,
+    evidenceEngine: EvidenceEngine,
+    researchAgent: ResearchAgent
   ) {
     this.port = port;
     this.app = express();
@@ -100,6 +109,9 @@ export class APIServer {
     this.intelligenceScorer = intelligenceScorer;
     this.riskAssessor = riskAssessor;
     this.priceProvider = priceProvider;
+    this.dexRegistry = dexRegistry;
+    this.evidenceEngine = evidenceEngine;
+    this.researchAgent = researchAgent;
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -238,9 +250,18 @@ export class APIServer {
     this.app.get('/api/v1/wallet/:address/intelligence', this.heavyLimiter, this.handleWalletIntelligence.bind(this));
     this.app.get('/api/v1/wallet/:address/risk', this.heavyLimiter, this.handleWalletRisk.bind(this));
     this.app.get('/api/v1/wallet/:address/analysis', this.heavyLimiter, this.handleWalletAnalysis.bind(this));
+    // Evidence does one extra RPC round-trip per transaction (see EvidenceEngine) - heaviest route in the API.
+    this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.handleWalletEvidence.bind(this));
+    this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.handleWalletResearch.bind(this));
 
     // Transaction endpoint
     this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.handleTransaction.bind(this));
+
+    // Protocols - lists the DexRegistry's registered adapters (currently
+    // none - see CLAUDE.md's "DEX/program identification is honest about
+    // confidence" invariant. Returns an empty array rather than a
+    // hardcoded protocol list.)
+    this.app.get('/api/v1/protocols', this.handleProtocols.bind(this));
 
     // 404 handler
     this.app.use((_req: Request, res: Response) => {
@@ -485,6 +506,65 @@ export class APIServer {
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Handle wallet evidence report
+   */
+  private async handleWalletEvidence(req: Request, res: Response): Promise<void> {
+    try {
+      const address = validateWalletAddress(req.params.address);
+      // Lower default/cap than the other routes: this one does one extra
+      // RPC round-trip per transaction (see EvidenceEngine).
+      const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+
+      const result = await this.evidenceEngine.buildWalletEvidence(address, limit);
+
+      res.json({
+        wallet: address,
+        ...result,
+        disclaimer:
+          'Evidence is derived from observable blockchain transactions only. Each entry\'s confidencePercent reflects a fixed mapping (confirmed=100, candidate=50, unknown=0), never an invented value. Not financial advice.',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Handle wallet research report (synthesizes wallet + risk agent output)
+   */
+  private async handleWalletResearch(req: Request, res: Response): Promise<void> {
+    try {
+      const address = validateWalletAddress(req.params.address);
+      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+
+      const result = await this.researchAgent.generateReport(address, limit);
+
+      res.json({
+        wallet: address,
+        ...result,
+        disclaimer:
+          'This report is synthesized only from real, deterministic agent outputs. Not financial advice.',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Handle protocols list
+   */
+  private handleProtocols(_req: Request, res: Response): void {
+    const programIds = this.dexRegistry.getKnownProgramIds();
+
+    res.json({
+      protocols: programIds,
+      disclaimer:
+        programIds.length === 0
+          ? 'No DEX protocol adapters are currently registered in this deployment - see CLAUDE.md. This is an empty list, not an error, so downstream callers do not mistake it for a fabricated one.'
+          : 'Protocol identification reflects only adapters registered in DexRegistry.',
+    });
   }
 
   /**
