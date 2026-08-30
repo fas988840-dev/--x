@@ -17,6 +17,7 @@ import { APIServer } from './api/server';
 import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent, AlertAgent, ExplanationAgent } from './agents/core_agents';
 import { EvidenceEngine } from './agents/evidence-engine';
 import { AlertEngine } from './services/alert-engine';
+import { LiveAlertWatcher } from './services/live-alert-watcher';
 import { ChainGptClient } from './services/chaingpt-client';
 import { AgentRouter } from './agents/agent-router';
 
@@ -65,7 +66,12 @@ async function main(): Promise<void> {
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const evidenceEngine = new EvidenceEngine(transactionRetriever, txAgent);
   const marketAgent = new MarketEventAgent();
-  const alertAgent = new AlertAgent(transactionRetriever, behaviorAnalyzer, riskAssessor, new AlertEngine());
+  const alertEngine = new AlertEngine();
+  const alertAgent = new AlertAgent(transactionRetriever, behaviorAnalyzer, riskAssessor, alertEngine);
+  // Live/streaming counterpart to alertAgent's one-shot evaluation - see
+  // src/services/live-alert-watcher.ts for the verification-status note
+  // (Solana RPC was blocked from this sandbox, so onLogs is unexercised).
+  const liveAlertWatcher = new LiveAlertWatcher(rpcClient, transactionRetriever, behaviorAnalyzer, riskAssessor, alertEngine);
   // ChainGPT integration - explanation-only, see src/services/chaingpt-client.ts
   // for the honest verification-status note on its REST shape. Reads
   // CHAINGPT_API_KEY from the environment only; never logged, never
@@ -99,7 +105,8 @@ async function main(): Promise<void> {
     walletAgent,
     agentRouter,
     alertAgent,
-    explanationAgent
+    explanationAgent,
+    liveAlertWatcher
   );
 
   server.start();

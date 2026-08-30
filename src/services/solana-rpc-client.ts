@@ -3,7 +3,7 @@
  * NEVER signs transactions, NEVER requests credentials
  */
 
-import { Connection, PublicKey, Transaction, ParsedTransactionWithMeta } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, ParsedTransactionWithMeta, Logs } from '@solana/web3.js';
 import { SolanaConfig } from '../types/config';
 import { RpcError, ValidationError } from '../types/errors';
 import { TransactionSignature, WalletAddress, validateTransactionSignature, validateWalletAddress } from '../types/domain';
@@ -116,6 +116,43 @@ export class SolanaRpcClient {
       return slot > 0;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Subscribes to new log notifications for a wallet address (read-only -
+   * this is a WebSocket *subscription*, never a signed transaction). Used
+   * by LiveAlertWatcher (src/services/live-alert-watcher.ts) to notice new
+   * transactions as they land instead of only on request.
+   *
+   * ⚠️ Not independently verified against a live endpoint: Solana RPC was
+   * blocked by this sandbox's network egress policy when this was written,
+   * so `onLogs` has not actually been exercised here. It is written
+   * against @solana/web3.js's documented Connection.onLogs API from
+   * training knowledge. Separately, many public/free RPC endpoints
+   * (including the default api.mainnet-beta.solana.com) rate-limit or
+   * disable WebSocket log subscriptions entirely - a dedicated RPC
+   * provider (e.g. Helius, QuickNode, Triton) is typically required for
+   * this to work reliably in production. Test against a real endpoint
+   * before relying on it.
+   *
+   * @returns a subscription id to pass to unsubscribeFromLogs()
+   */
+  subscribeToLogs(walletAddress: WalletAddress, onLogs: (logs: Logs) => void): number {
+    const pubkey = new PublicKey(walletAddress);
+    return this.connection.onLogs(pubkey, (logs) => onLogs(logs), this.config.commitment);
+  }
+
+  /**
+   * Cancels a subscription created by subscribeToLogs(). Never throws -
+   * callers (LiveAlertWatcher's stop()) should be able to unwind cleanly
+   * even if the underlying WebSocket connection already dropped.
+   */
+  async unsubscribeFromLogs(subscriptionId: number): Promise<void> {
+    try {
+      await this.connection.removeOnLogsListener(subscriptionId);
+    } catch {
+      // Already disconnected/invalid id - nothing more to clean up.
     }
   }
 }

@@ -8,6 +8,7 @@ import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { EvidenceEngine } from '../agents/evidence-engine';
 import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent, EvidenceStatus } from '../agents/core_agents';
+import { LiveAlertWatcher } from '../services/live-alert-watcher';
 import { AgentRouter } from '../agents/agent-router';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
@@ -21,6 +22,7 @@ describe('API Server', () => {
   let mockAgentRouter: any;
   let mockAlertAgent: any;
   let mockExplanationAgent: any;
+  let mockLiveAlertWatcher: any;
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -105,6 +107,9 @@ describe('API Server', () => {
         justification: 'test',
       }),
     };
+    mockLiveAlertWatcher = {
+      watch: vi.fn().mockReturnValue({ stop: vi.fn().mockResolvedValue(undefined) }),
+    };
 
     // Create server with mocked services
     server = new APIServer(
@@ -120,7 +125,8 @@ describe('API Server', () => {
       mockWalletAgent as WalletIntelligenceAgent,
       mockAgentRouter as AgentRouter,
       mockAlertAgent as AlertAgent,
-      mockExplanationAgent as ExplanationAgent
+      mockExplanationAgent as ExplanationAgent,
+      mockLiveAlertWatcher as LiveAlertWatcher
     );
 
     app = server.getApp();
@@ -403,6 +409,27 @@ describe('API Server', () => {
       expect(response.body.data.summarySource).toBe('deterministic');
       expect(mockExplanationAgent.explainWallet).toHaveBeenCalledWith(address, 100);
     });
+  });
+
+  describe('GET /api/v1/wallet/:address/alerts/stream', () => {
+    it('rejects an invalid address with 400 via the centralized error handler (not a hang)', async () => {
+      // Also a regression test for asyncHandler(): before it existed, a
+      // throw inside an async route handler became an unhandled promise
+      // rejection instead of ever reaching this response.
+      const response = await request(app).get('/api/v1/wallet/not-a-real-address/alerts/stream');
+
+      expect(response.status).toBe(400);
+      expect(mockLiveAlertWatcher.watch).not.toHaveBeenCalled();
+    });
+
+    // The happy path (opening the SSE stream, receiving alert events) is
+    // deliberately not covered here via supertest: the stream never ends
+    // on its own, and a full HTTP round-trip test would either hang the
+    // suite or require reaching into supertest/superagent internals in a
+    // way that hasn't been verified to behave correctly in this sandbox
+    // (npm install is blocked - see CLAUDE.md). LiveAlertWatcher's own
+    // subscription/dedupe logic is covered directly in
+    // live-alert-watcher.test.ts instead.
   });
 
   describe('GET /api/v1/protocols', () => {

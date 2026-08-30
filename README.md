@@ -184,10 +184,35 @@ Returns `AlertAgent`'s deterministic evaluation of the wallet's examined
 transactions (see `src/services/alert-engine.ts`) against fixed,
 documented thresholds — high failure rate, abnormal frequency,
 single-program concentration, high risk score. Each alert cites the real
-numbers that triggered it. **Not a live/streaming watch** — a one-shot
-evaluation of the transactions this request examined, not a standing
-subscription; that gap belongs to the `market_events` tool/endpoint
-below, which honestly stays `UNKNOWN` until a real event pipeline exists.
+numbers that triggered it. **One-shot** — a single evaluation of the
+transactions this request examined, not a standing subscription; see the
+live variant right below for that.
+
+#### Alerts (Live Stream)
+
+```
+GET /api/v1/wallet/:address/alerts/stream
+```
+
+Server-Sent Events, not a single JSON response — opens a standing
+connection and pushes each real, evidence-cited `Alert` as it's detected:
+once immediately for the wallet's current state, then again on every new
+on-chain transaction, via `LiveAlertWatcher`
+(`src/services/live-alert-watcher.ts`) subscribing to the wallet through
+`SolanaRpcClient.subscribeToLogs()` (a read-only WebSocket subscription -
+never a signed transaction). Runs the exact same `AlertEngine` pipeline as
+the one-shot endpoint above, so it never invents an alert type the
+one-shot version wouldn't also produce; each alert is deduped on its real
+evidence so the same condition is never re-announced every time a new
+transaction lands. `market_events` below stays a separate, honestly
+`UNKNOWN` gap — it is topic-based market/event tracking, not wallet
+alerts, and this codebase has no such pipeline. ⚠️ Solana RPC access was
+blocked from the sandbox this was built in (confirmed via a live `curl`
+test), so this has not been exercised against a real subscription — see
+`src/services/live-alert-watcher.ts`'s header comment for what's
+confirmed vs. assumed, including a separate, sandbox-independent caveat
+that many public/free RPC endpoints restrict WebSocket log subscriptions
+and a dedicated RPC provider is typically needed in production.
 
 #### Explanation
 
@@ -620,10 +645,11 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [~] Dashboard UI (`dashboard/`) - Next.js app, implemented but **unverified** (npm registry unreachable when written; run `npm install` in `dashboard/` before relying on it)
 - [x] Real price provider (`CoinGeckoPriceProvider`, `src/services/coingecko-price-provider.ts`) - CoinGecko's free public API, no key required
 - [~] DEX protocol adapters (Raydium, Jupiter) - verified program IDs registered by default; instruction *type* detection only (`candidate` status), amount/mint extraction not yet implemented (see CLAUDE.md)
-- [x] Alert system (`src/services/alert-engine.ts` + `AlertAgent`) - deterministic, one-shot evaluation (not live/streaming); each alert cites the real numbers behind it
+- [x] Alert system (`src/services/alert-engine.ts` + `AlertAgent`) - deterministic, one-shot evaluation; each alert cites the real numbers behind it
+- [~] Live alert streaming (`src/services/live-alert-watcher.ts`, `GET /wallet/:address/alerts/stream`) - implemented, same deterministic pipeline as the one-shot version; **unverified against a live RPC subscription** (Solana RPC blocked from the sandbox that wrote it - see "Alerts (Live Stream)" above)
 - [~] ChainGPT integration (`src/services/chaingpt-client.ts` + `ExplanationAgent`) - implemented, explanation-only (never a source of new facts); **REST shape unverified** (docs.chaingpt.org was unreachable when written - see "ChainGPT Integration" above)
 - [ ] Track record database - deliberately not started; the platform is stateless/read-only by design, and no concrete persistence requirement has been established yet (see `dashboard/README.md`)
-- [ ] WebSocket support
+- [~] WebSocket support - `LiveAlertWatcher` subscribes to Solana RPC over a WebSocket (`onLogs`) internally; the client-facing side of `/alerts/stream` is Server-Sent Events, not a client-facing WebSocket - no client-facing WS endpoint exists yet
 
 ## Repository Status
 

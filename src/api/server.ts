@@ -2,7 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { validateWalletAddress, validateTransactionSignature } from '../types/domain';
+import { validateWalletAddress, validateTransactionSignature, WalletAddress } from '../types/domain';
 import { ValidationError, RpcError } from '../types/errors';
 import { TransactionRetriever } from '../services/transaction-retriever';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
@@ -12,6 +12,7 @@ import { PriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent } from '../agents/core_agents';
 import { EvidenceEngine } from '../agents/evidence-engine';
+import { LiveAlertWatcher } from '../services/live-alert-watcher';
 import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
 
 /**
@@ -95,6 +96,7 @@ export class APIServer {
   private agentRouter: AgentRouter;
   private alertAgent: AlertAgent;
   private explanationAgent: ExplanationAgent;
+  private liveAlertWatcher: LiveAlertWatcher;
 
   constructor(
     port: number,
@@ -109,7 +111,8 @@ export class APIServer {
     walletAgent: WalletIntelligenceAgent,
     agentRouter: AgentRouter,
     alertAgent: AlertAgent,
-    explanationAgent: ExplanationAgent
+    explanationAgent: ExplanationAgent,
+    liveAlertWatcher: LiveAlertWatcher
   ) {
     this.port = port;
     this.app = express();
@@ -123,6 +126,7 @@ export class APIServer {
     this.researchAgent = researchAgent;
     this.alertAgent = alertAgent;
     this.explanationAgent = explanationAgent;
+    this.liveAlertWatcher = liveAlertWatcher;
     this.walletAgent = walletAgent;
     this.agentRouter = agentRouter;
 
@@ -250,29 +254,50 @@ export class APIServer {
   });
 
   /**
+   * Wraps an async route handler so a rejected promise reaches
+   * setupErrorHandling() via next(error) instead of becoming an unhandled
+   * promise rejection. Express 4 (this project's version) does NOT do
+   * this automatically for async handlers - without this wrapper, every
+   * `throw` inside a handler below (including validateWalletAddress()
+   * rejecting bad input, on essentially every route) would silently hang
+   * the request and crash the process on Node's default
+   * unhandled-rejection behavior instead of returning a 400/500. This was
+   * a real, pre-existing gap - every async handler is wrapped below.
+   */
+  private asyncHandler(handler: (req: Request, res: Response) => Promise<void>) {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      handler(req, res).catch(next);
+    };
+  }
+
+  /**
    * Setup routes
    */
   private setupRoutes(): void {
     // Health check
-    this.app.get('/api/v1/health', this.handleHealth.bind(this));
+    this.app.get('/api/v1/health', this.asyncHandler(this.handleHealth.bind(this)));
 
     // Wallet endpoints - RPC-heavy ones carry an extra, stricter rate limit
-    this.app.get('/api/v1/wallet/:address/transactions', this.heavyLimiter, this.handleWalletTransactions.bind(this));
-    this.app.get('/api/v1/wallet/:address/tokens', this.handleWalletTokens.bind(this));
-    this.app.get('/api/v1/wallet/:address/behavior', this.heavyLimiter, this.handleWalletBehavior.bind(this));
-    this.app.get('/api/v1/wallet/:address/intelligence', this.heavyLimiter, this.handleWalletIntelligence.bind(this));
-    this.app.get('/api/v1/wallet/:address/risk', this.heavyLimiter, this.handleWalletRisk.bind(this));
-    this.app.get('/api/v1/wallet/:address/analysis', this.heavyLimiter, this.handleWalletAnalysis.bind(this));
+    this.app.get('/api/v1/wallet/:address/transactions', this.heavyLimiter, this.asyncHandler(this.handleWalletTransactions.bind(this)));
+    this.app.get('/api/v1/wallet/:address/tokens', this.asyncHandler(this.handleWalletTokens.bind(this)));
+    this.app.get('/api/v1/wallet/:address/behavior', this.heavyLimiter, this.asyncHandler(this.handleWalletBehavior.bind(this)));
+    this.app.get('/api/v1/wallet/:address/intelligence', this.heavyLimiter, this.asyncHandler(this.handleWalletIntelligence.bind(this)));
+    this.app.get('/api/v1/wallet/:address/risk', this.heavyLimiter, this.asyncHandler(this.handleWalletRisk.bind(this)));
+    this.app.get('/api/v1/wallet/:address/analysis', this.heavyLimiter, this.asyncHandler(this.handleWalletAnalysis.bind(this)));
     // Evidence does one extra RPC round-trip per transaction (see EvidenceEngine) - heaviest route in the API.
-    this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.handleWalletEvidence.bind(this));
-    this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.handleWalletResearch.bind(this));
-    this.app.get('/api/v1/wallet/:address/alerts', this.heavyLimiter, this.handleWalletAlerts.bind(this));
+    this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.asyncHandler(this.handleWalletEvidence.bind(this)));
+    this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.asyncHandler(this.handleWalletResearch.bind(this)));
+    this.app.get('/api/v1/wallet/:address/alerts', this.heavyLimiter, this.asyncHandler(this.handleWalletAlerts.bind(this)));
     // Calls the ChainGPT API on top of the usual RPC reads - the heaviest
     // per-request cost in the API alongside evidence, so it rides heavyLimiter too.
-    this.app.get('/api/v1/wallet/:address/explanation', this.heavyLimiter, this.handleWalletExplanation.bind(this));
+    this.app.get('/api/v1/wallet/:address/explanation', this.heavyLimiter, this.asyncHandler(this.handleWalletExplanation.bind(this)));
+    // Live/streaming counterpart to /alerts - a long-lived Server-Sent
+    // Events connection, not a single request/response. Still rides
+    // heavyLimiter since opening it starts a standing RPC subscription.
+    this.app.get('/api/v1/wallet/:address/alerts/stream', this.heavyLimiter, this.asyncHandler(this.handleWalletAlertsStream.bind(this)));
 
     // Transaction endpoint
-    this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.handleTransaction.bind(this));
+    this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.asyncHandler(this.handleTransaction.bind(this)));
 
     // Protocols - lists the DexRegistry's registered adapters (currently
     // none - see CLAUDE.md's "DEX/program identification is honest about
@@ -283,7 +308,7 @@ export class APIServer {
     // Agent Router - single entry point for MCP-style clients that don't
     // want to hardcode 5 different endpoints. Deterministic dispatch only
     // (no NLP/intent guessing) - see src/agents/agent-router.ts.
-    this.app.get('/api/v1/agents/:intent', this.heavyLimiter, this.handleAgentRouter.bind(this));
+    this.app.get('/api/v1/agents/:intent', this.heavyLimiter, this.asyncHandler(this.handleAgentRouter.bind(this)));
 
     // 404 handler
     this.app.use((_req: Request, res: Response) => {
@@ -621,6 +646,45 @@ export class APIServer {
       });
     } catch (error) {
       throw error;
+    }
+  }
+
+  /**
+   * Handle live wallet alerts - Server-Sent Events, the live/streaming
+   * counterpart to /alerts (see LiveAlertWatcher). Not a JSON
+   * request/response: once the stream opens, every event written is a
+   * real Alert from AlertEngine (never a guess), sent once immediately
+   * and again on each new on-chain transaction until the client
+   * disconnects.
+   */
+  private async handleWalletAlertsStream(req: Request, res: Response): Promise<void> {
+    let address: WalletAddress;
+    try {
+      address = validateWalletAddress(req.params.address);
+    } catch (error) {
+      throw error; // centralized error handler - no response written yet
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no', // disable proxy buffering (e.g. nginx) so events flush immediately
+    });
+    res.write(
+      `: connected - live alert stream for ${address}. Evaluated once immediately, then again on each new on-chain transaction. Every event is a real, evidence-cited Alert (see AlertEngine) - never a guess.\n\n`
+    );
+
+    try {
+      const subscription = this.liveAlertWatcher.watch(address, (alert) => {
+        res.write(`data: ${JSON.stringify(alert)}\n\n`);
+      });
+      req.on('close', () => {
+        void subscription.stop();
+      });
+    } catch (error) {
+      res.write(`event: error\ndata: ${JSON.stringify({ message: error instanceof Error ? error.message : String(error) })}\n\n`);
+      res.end();
     }
   }
 
