@@ -14,8 +14,9 @@ import { CoinGeckoPriceProvider } from './services/coingecko-price-provider';
 import { createDefaultDexRegistry } from './services/dex-registry';
 import { InstructionParser } from './services/instruction-parser';
 import { APIServer } from './api/server';
-import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent } from './agents/core_agents';
+import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent, AlertAgent } from './agents/core_agents';
 import { EvidenceEngine } from './agents/evidence-engine';
+import { AlertEngine } from './services/alert-engine';
 import { AgentRouter } from './agents/agent-router';
 
 /**
@@ -60,7 +61,8 @@ async function main(): Promise<void> {
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const evidenceEngine = new EvidenceEngine(transactionRetriever, txAgent);
   const marketAgent = new MarketEventAgent();
-  const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, researchAgent, marketAgent);
+  const alertAgent = new AlertAgent(transactionRetriever, behaviorAnalyzer, riskAssessor, new AlertEngine());
+  const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, alertAgent, researchAgent, marketAgent);
 
   if (process.env.NODE_ENV === 'production' && !process.env.API_KEYS) {
     console.warn(
@@ -80,7 +82,8 @@ async function main(): Promise<void> {
     evidenceEngine,
     researchAgent,
     walletAgent,
-    agentRouter
+    agentRouter,
+    alertAgent
   );
 
   server.start();

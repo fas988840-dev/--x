@@ -22,12 +22,14 @@ import {
   validateWalletAddress,
   validateTransactionSignature,
   RiskScore,
+  Alert,
 } from '../types/domain';
 import { TransactionRetriever } from '../services/transaction-retriever';
 import { SolanaRpcClient } from '../services/solana-rpc-client';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { InstructionParser } from '../services/instruction-parser';
+import { AlertEngine } from '../services/alert-engine';
 
 export enum EvidenceStatus {
   VERIFIED = 'VERIFIED', // Directly read from chain / computed deterministically from chain data
@@ -301,5 +303,55 @@ export class ResearchAgent {
       },
       justification: 'Synthesized from WalletIntelligenceAgent and RiskAgent outputs only - no field here was generated independently of those two real, deterministic results.',
     };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. Alert Agent
+// ---------------------------------------------------------------------------
+
+export interface AlertAgentData {
+  alerts: Alert[];
+}
+
+/**
+ * Evaluates a wallet's real behavior/risk data (via AlertEngine) for
+ * deterministic alert conditions. NOT a live/streaming watcher - see
+ * AlertEngine's own doc comment and MarketEventAgent above for that
+ * distinction.
+ */
+export class AlertAgent {
+  constructor(
+    private transactionRetriever: TransactionRetriever,
+    private behaviorAnalyzer: BehaviorAnalyzer,
+    private riskAssessor: RiskAssessor,
+    private alertEngine: AlertEngine
+  ) {}
+
+  async evaluateWallet(address: string, limit = 100): Promise<AgentResponse<AlertAgentData>> {
+    let validated: WalletAddress;
+    try {
+      validated = validateWalletAddress(address);
+    } catch (error) {
+      return unknownResponse<AlertAgentData>('alert_agent_v1', `Invalid wallet address: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    try {
+      const transactions = await this.transactionRetriever.getWalletTransactionsMeta(validated, limit);
+      const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], new Set(), new Set());
+      const risk = this.riskAssessor.assessRisk(behavior);
+      const alerts = this.alertEngine.evaluate(validated, behavior, risk);
+
+      return {
+        agentId: 'alert_agent_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: { alerts },
+        justification: `Evaluated ${transactions.length} real transaction(s) against fixed, documented alert thresholds; ${alerts.length} alert(s) triggered, each citing the real numbers behind it.`,
+      };
+    } catch (error) {
+      return unknownResponse<AlertAgentData>('alert_agent_v1', `RPC read failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 }

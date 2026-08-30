@@ -7,7 +7,7 @@ import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { EvidenceEngine } from '../agents/evidence-engine';
-import { ResearchAgent, WalletIntelligenceAgent, EvidenceStatus } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, EvidenceStatus } from '../agents/core_agents';
 import { AgentRouter } from '../agents/agent-router';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
@@ -19,6 +19,7 @@ describe('API Server', () => {
   let mockResearchAgent: any;
   let mockWalletAgent: any;
   let mockAgentRouter: any;
+  let mockAlertAgent: any;
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -76,6 +77,16 @@ describe('API Server', () => {
         justification: 'test',
       }),
     };
+    mockAlertAgent = {
+      evaluateWallet: vi.fn().mockResolvedValue({
+        agentId: 'alert_agent_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: { alerts: [] },
+        justification: 'test',
+      }),
+    };
 
     // Create server with mocked services
     server = new APIServer(
@@ -89,7 +100,8 @@ describe('API Server', () => {
       mockEvidenceEngine as EvidenceEngine,
       mockResearchAgent as ResearchAgent,
       mockWalletAgent as WalletIntelligenceAgent,
-      mockAgentRouter as AgentRouter
+      mockAgentRouter as AgentRouter,
+      mockAlertAgent as AlertAgent
     );
 
     app = server.getApp();
@@ -344,6 +356,19 @@ describe('API Server', () => {
       expect(response.status).toBe(200);
       expect(response.body.wallet).toBe(address);
       expect(response.body.data.auditTrail).toEqual(['wallet_intel_v1', 'risk_assessment_v1']);
+    });
+  });
+
+  describe('GET /api/v1/wallet/:address/alerts', () => {
+    it('should return the alert agent evaluation', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/wallet/${address}/alerts`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.wallet).toBe(address);
+      expect(response.body.data.alerts).toEqual([]);
+      expect(mockAlertAgent.evaluateWallet).toHaveBeenCalledWith(address, 100);
     });
   });
 

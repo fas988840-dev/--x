@@ -10,7 +10,7 @@ import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { PriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
-import { ResearchAgent, WalletIntelligenceAgent } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent } from '../agents/core_agents';
 import { EvidenceEngine } from '../agents/evidence-engine';
 import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
 
@@ -93,6 +93,7 @@ export class APIServer {
   private researchAgent: ResearchAgent;
   private walletAgent: WalletIntelligenceAgent;
   private agentRouter: AgentRouter;
+  private alertAgent: AlertAgent;
 
   constructor(
     port: number,
@@ -105,7 +106,8 @@ export class APIServer {
     evidenceEngine: EvidenceEngine,
     researchAgent: ResearchAgent,
     walletAgent: WalletIntelligenceAgent,
-    agentRouter: AgentRouter
+    agentRouter: AgentRouter,
+    alertAgent: AlertAgent
   ) {
     this.port = port;
     this.app = express();
@@ -117,6 +119,7 @@ export class APIServer {
     this.dexRegistry = dexRegistry;
     this.evidenceEngine = evidenceEngine;
     this.researchAgent = researchAgent;
+    this.alertAgent = alertAgent;
     this.walletAgent = walletAgent;
     this.agentRouter = agentRouter;
 
@@ -260,6 +263,7 @@ export class APIServer {
     // Evidence does one extra RPC round-trip per transaction (see EvidenceEngine) - heaviest route in the API.
     this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.handleWalletEvidence.bind(this));
     this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.handleWalletResearch.bind(this));
+    this.app.get('/api/v1/wallet/:address/alerts', this.heavyLimiter, this.handleWalletAlerts.bind(this));
 
     // Transaction endpoint
     this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.handleTransaction.bind(this));
@@ -563,6 +567,27 @@ export class APIServer {
         ...result,
         disclaimer:
           'This report is synthesized only from real, deterministic agent outputs. Not financial advice.',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Handle wallet alerts (deterministic evaluation, not a live watcher - see AlertEngine)
+   */
+  private async handleWalletAlerts(req: Request, res: Response): Promise<void> {
+    try {
+      const address = validateWalletAddress(req.params.address);
+      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+
+      const result = await this.alertAgent.evaluateWallet(address, limit);
+
+      res.json({
+        wallet: address,
+        ...result,
+        disclaimer:
+          'Alerts are evaluated once, from the transactions examined in this request - not a live/streaming watch. Each alert cites the real numbers that triggered it. Not financial advice.',
       });
     } catch (error) {
       throw error;

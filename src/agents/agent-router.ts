@@ -22,6 +22,8 @@ import {
   ResearchReportData,
   MarketEventAgent,
   MarketEventData,
+  AlertAgent,
+  AlertAgentData,
   EvidenceStatus,
 } from './core_agents';
 import { EvidenceEngine, WalletEvidenceReport } from './evidence-engine';
@@ -32,6 +34,7 @@ export type AgentIntent =
   | 'transaction_lookup'
   | 'wallet_risk'
   | 'wallet_evidence'
+  | 'wallet_alerts'
   | 'research_report'
   | 'market_events';
 
@@ -40,6 +43,7 @@ export const AGENT_INTENTS: readonly AgentIntent[] = [
   'transaction_lookup',
   'wallet_risk',
   'wallet_evidence',
+  'wallet_alerts',
   'research_report',
   'market_events',
 ];
@@ -56,6 +60,7 @@ export type AgentRouterResult =
   | AgentResponse<TransactionIntelligenceData>
   | AgentResponse<RiskScore>
   | AgentResponse<WalletEvidenceReport>
+  | AgentResponse<AlertAgentData>
   | AgentResponse<ResearchReportData>
   | AgentResponse<MarketEventData>;
 
@@ -76,6 +81,7 @@ export class AgentRouter {
     private txAgent: TransactionIntelligenceAgent,
     private riskAgent: RiskAgent,
     private evidenceEngine: EvidenceEngine,
+    private alertAgent: AlertAgent,
     private researchAgent: ResearchAgent,
     private marketAgent: MarketEventAgent
   ) {}
@@ -97,6 +103,10 @@ export class AgentRouter {
       case 'wallet_evidence':
         if (!params.address) return missingParam(intent, 'address');
         return this.evidenceEngine.buildWalletEvidence(params.address, params.limit);
+
+      case 'wallet_alerts':
+        if (!params.address) return missingParam(intent, 'address');
+        return this.alertAgent.evaluateWallet(params.address, params.limit);
 
       case 'research_report':
         if (!params.address) return missingParam(intent, 'address');

@@ -27,6 +27,7 @@ import {
   MarketEventAgent,
   RiskAgent,
   ResearchAgent,
+  AlertAgent,
 } from '../agents/core_agents';
 import { SolanaRpcClient } from '../services/solana-rpc-client';
 import { TransactionRetriever } from '../services/transaction-retriever';
@@ -34,6 +35,7 @@ import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { createDefaultDexRegistry } from '../services/dex-registry';
 import { InstructionParser } from '../services/instruction-parser';
+import { AlertEngine } from '../services/alert-engine';
 import { SolanaConfig } from '../types/config';
 
 const addressParam = z.string().describe('Solana wallet address, base58-encoded');
@@ -68,6 +70,7 @@ export function buildMcpServer(): McpServer {
   const riskAgent = new RiskAgent(transactionRetriever, behaviorAnalyzer, riskAssessor);
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const marketAgent = new MarketEventAgent();
+  const alertAgent = new AlertAgent(transactionRetriever, behaviorAnalyzer, riskAssessor, new AlertEngine());
 
   const server = new McpServer({
     name: 'factledger',
@@ -112,6 +115,16 @@ export function buildMcpServer(): McpServer {
       inputSchema: { address: addressParam, limit: limitParam },
     },
     async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await researchAgent.generateReport(address, limit))
+  );
+
+  server.registerTool(
+    'wallet_alerts',
+    {
+      description:
+        'Evaluates a Solana wallet\'s real transaction history against fixed, documented alert thresholds (high failure rate, abnormal frequency, single-program concentration, high risk score). This is a one-shot evaluation, not a live/streaming watch - each alert cites the real numbers that triggered it.',
+      inputSchema: { address: addressParam, limit: limitParam },
+    },
+    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await alertAgent.evaluateWallet(address, limit))
   );
 
   server.registerTool(

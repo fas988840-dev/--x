@@ -7,6 +7,7 @@ import {
   RiskAgent,
   ResearchAgent,
   MarketEventAgent,
+  AlertAgent,
 } from './core_agents';
 import { EvidenceEngine } from './evidence-engine';
 
@@ -29,6 +30,7 @@ describe('AgentRouter', () => {
       {} as TransactionIntelligenceAgent,
       {} as RiskAgent,
       {} as EvidenceEngine,
+      {} as AlertAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );
@@ -45,6 +47,7 @@ describe('AgentRouter', () => {
       txAgent,
       {} as RiskAgent,
       {} as EvidenceEngine,
+      {} as AlertAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );
@@ -61,6 +64,7 @@ describe('AgentRouter', () => {
       {} as TransactionIntelligenceAgent,
       {} as RiskAgent,
       {} as EvidenceEngine,
+      {} as AlertAgent,
       {} as ResearchAgent,
       marketAgent
     );
@@ -70,6 +74,23 @@ describe('AgentRouter', () => {
     expect(marketAgent.trackEvents).toHaveBeenCalledWith('t');
   });
 
+  it('routes wallet_alerts to AlertAgent.evaluateWallet', async () => {
+    const alertAgent = { evaluateWallet: vi.fn().mockResolvedValue(mockAgentResponse({ alerts: [] })) } as unknown as AlertAgent;
+    const router = new AgentRouter(
+      {} as WalletIntelligenceAgent,
+      {} as TransactionIntelligenceAgent,
+      {} as RiskAgent,
+      {} as EvidenceEngine,
+      alertAgent,
+      {} as ResearchAgent,
+      {} as MarketEventAgent
+    );
+
+    await router.route('wallet_alerts', { address: 'addr', limit: 5 });
+
+    expect(alertAgent.evaluateWallet).toHaveBeenCalledWith('addr', 5);
+  });
+
   it('returns UNKNOWN instead of calling any agent when a required param is missing', async () => {
     const walletAgent = { analyzeWallet: vi.fn() } as unknown as WalletIntelligenceAgent;
     const router = new AgentRouter(
@@ -77,6 +98,7 @@ describe('AgentRouter', () => {
       {} as TransactionIntelligenceAgent,
       {} as RiskAgent,
       {} as EvidenceEngine,
+      {} as AlertAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );

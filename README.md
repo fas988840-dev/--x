@@ -174,6 +174,21 @@ Returns `ResearchAgent`'s synthesis of `WalletIntelligenceAgent` +
 summary built only from those two real results, with an `auditTrail` of
 which agents it cites.
 
+#### Alerts
+
+```
+GET /api/v1/wallet/:address/alerts?limit=100
+```
+
+Returns `AlertAgent`'s deterministic evaluation of the wallet's examined
+transactions (see `src/services/alert-engine.ts`) against fixed,
+documented thresholds — high failure rate, abnormal frequency,
+single-program concentration, high risk score. Each alert cites the real
+numbers that triggered it. **Not a live/streaming watch** — a one-shot
+evaluation of the transactions this request examined, not a standing
+subscription; that gap belongs to the `market_events` tool/endpoint
+below, which honestly stays `UNKNOWN` until a real event pipeline exists.
+
 ### Protocols
 
 ```
@@ -192,7 +207,7 @@ GET /api/v1/agents/:intent?address=...&signature=...&topic=...&limit=...
 
 Single dispatch endpoint over the agents above — `intent` must be one of
 `wallet_overview`, `transaction_lookup`, `wallet_risk`, `wallet_evidence`,
-`research_report`, `market_events`. This is **deterministic dispatch**,
+`wallet_alerts`, `research_report`, `market_events`. This is **deterministic dispatch**,
 not NLP: an unrecognized intent returns `400`, it never guesses what a
 free-form question means. Useful for MCP-style clients that want one
 endpoint instead of hardcoding five.
@@ -237,7 +252,7 @@ npm run mcp
 ```
 
 **Tools exposed:** `wallet_intelligence`, `transaction_lookup`,
-`wallet_risk`, `wallet_research_report`, `market_events` - each is a thin
+`wallet_risk`, `wallet_alerts`, `wallet_research_report`, `market_events` - each is a thin
 pass-through to `src/agents/core_agents.ts`, so every tool result carries
 the same `evidenceStatus`/`confidenceScore` honesty guarantee as the
 agents: real data when it was actually read from chain, `UNKNOWN`/`null`
@@ -527,7 +542,7 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [~] Dashboard UI (`dashboard/`) - Next.js app, implemented but **unverified** (npm registry unreachable when written; run `npm install` in `dashboard/` before relying on it)
 - [x] Real price provider (`CoinGeckoPriceProvider`, `src/services/coingecko-price-provider.ts`) - CoinGecko's free public API, no key required
 - [~] DEX protocol adapters (Raydium, Jupiter) - verified program IDs registered by default; instruction *type* detection only (`candidate` status), amount/mint extraction not yet implemented (see CLAUDE.md)
-- [ ] Alert system
+- [x] Alert system (`src/services/alert-engine.ts` + `AlertAgent`) - deterministic, one-shot evaluation (not live/streaming); each alert cites the real numbers behind it
 - [ ] Track record database - deliberately not started; the platform is stateless/read-only by design, and no concrete persistence requirement has been established yet (see `dashboard/README.md`)
 - [ ] WebSocket support
 

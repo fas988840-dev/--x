@@ -5,6 +5,7 @@ import {
   MarketEventAgent,
   RiskAgent,
   ResearchAgent,
+  AlertAgent,
   EvidenceStatus,
 } from './core_agents';
 import { TransactionRetriever } from '../services/transaction-retriever';
@@ -12,6 +13,7 @@ import { SolanaRpcClient } from '../services/solana-rpc-client';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { InstructionParser } from '../services/instruction-parser';
+import { AlertEngine } from '../services/alert-engine';
 import { TransactionMeta, ParsedInstruction, validateTransactionSignature, validateWalletAddress, validateProgramId } from '../types/domain';
 
 const VALID_ADDRESS = '11111111111111111111111111111112';
@@ -135,6 +137,28 @@ describe('RiskAgent', () => {
     expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
     expect(result.data?.level).toMatch(/low|medium|high/);
     expect(result.data?.reasoning).toBeDefined();
+  });
+});
+
+describe('AlertAgent', () => {
+  it('evaluates real behavior/risk data via AlertEngine and returns VERIFIED', async () => {
+    const transactionRetriever = {
+      getWalletTransactionsMeta: vi.fn().mockResolvedValue([]),
+    } as unknown as TransactionRetriever;
+
+    const agent = new AlertAgent(transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor(), new AlertEngine());
+    const result = await agent.evaluateWallet(VALID_ADDRESS);
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
+    expect(result.data?.alerts).toEqual([]); // no transactions -> nothing to trigger on
+  });
+
+  it('returns UNKNOWN for an invalid address instead of throwing', async () => {
+    const agent = new AlertAgent({} as TransactionRetriever, new BehaviorAnalyzer(), new RiskAssessor(), new AlertEngine());
+    const result = await agent.evaluateWallet('not-a-real-address');
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
+    expect(result.data).toBeNull();
   });
 });
 
