@@ -3,14 +3,18 @@
  * Sets up and starts the API server
  */
 
-import { SolanaConfig, PriceProviderConfig, DexRegistryConfig } from '../types/config';
-import { SolanaRpcClient } from '../services/solana-rpc-client';
-import { TransactionRetriever } from '../services/transaction-retriever';
-import { BehaviorAnalyzer } from '../services/behavior-analyzer';
-import { IntelligenceScorer } from '../services/intelligence-scorer';
-import { RiskAssessor } from '../services/risk-assessor';
-import { StubPriceProvider } from '../services/price-provider';
-import { APIServer } from '../api/server';
+import { SolanaConfig } from './types/config';
+import { SolanaRpcClient } from './services/solana-rpc-client';
+import { TransactionRetriever } from './services/transaction-retriever';
+import { BehaviorAnalyzer } from './services/behavior-analyzer';
+import { IntelligenceScorer } from './services/intelligence-scorer';
+import { RiskAssessor } from './services/risk-assessor';
+import { StubPriceProvider } from './services/price-provider';
+import { DexRegistry } from './services/dex-registry';
+import { InstructionParser } from './services/instruction-parser';
+import { APIServer } from './api/server';
+import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent } from './agents/core_agents';
+import { EvidenceEngine } from './agents/evidence-engine';
 
 /**
  * Initialize and start the application
@@ -33,10 +37,20 @@ async function main(): Promise<void> {
 
   const rpcClient = new SolanaRpcClient(solanaConfig);
   const transactionRetriever = new TransactionRetriever(rpcClient);
+  const dexRegistry = new DexRegistry(); // no adapters registered - see CLAUDE.md
+  const instructionParser = new InstructionParser(dexRegistry);
   const behaviorAnalyzer = new BehaviorAnalyzer();
   const intelligenceScorer = new IntelligenceScorer();
   const riskAssessor = new RiskAssessor();
   const priceProvider = new StubPriceProvider();
+
+  // Agents - thin, honest facades over the services above (see
+  // src/agents/core_agents.ts and CLAUDE.md)
+  const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+  const txAgent = new TransactionIntelligenceAgent(transactionRetriever, rpcClient, instructionParser);
+  const riskAgent = new RiskAgent(transactionRetriever, behaviorAnalyzer, riskAssessor);
+  const researchAgent = new ResearchAgent(walletAgent, riskAgent);
+  const evidenceEngine = new EvidenceEngine(transactionRetriever, txAgent);
 
   // Create and start API server
   const server = new APIServer(
@@ -45,7 +59,10 @@ async function main(): Promise<void> {
     behaviorAnalyzer,
     intelligenceScorer,
     riskAssessor,
-    priceProvider
+    priceProvider,
+    dexRegistry,
+    evidenceEngine,
+    researchAgent
   );
 
   server.start();

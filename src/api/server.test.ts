@@ -1,24 +1,50 @@
 import request from 'supertest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { APIServer } from '../api/server';
-import { SolanaRpcClient } from '../services/solana-rpc-client';
-import { TransactionRetriever } from '../services/transaction-retriever';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
+import { DexRegistry } from '../services/dex-registry';
+import { EvidenceEngine } from '../agents/evidence-engine';
+import { ResearchAgent, EvidenceStatus } from '../agents/core_agents';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 describe('API Server', () => {
   let app: any;
   let server: APIServer;
   let mockTransactionRetriever: any;
+  let mockEvidenceEngine: any;
+  let mockResearchAgent: any;
 
   beforeEach(() => {
     // Mock transaction retriever
     mockTransactionRetriever = {
       getWalletTransactionsMeta: vi.fn(),
       getTransaction: vi.fn(),
+    };
+
+    // Mock the agent-based collaborators (unit-tested on their own in
+    // src/agents/*.test.ts) so this suite stays focused on HTTP wiring.
+    mockEvidenceEngine = {
+      buildWalletEvidence: vi.fn().mockResolvedValue({
+        agentId: 'evidence_engine_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: { wallet: '', transactionsExamined: 0, transactionsSkipped: 0, evidence: [] },
+        justification: 'test',
+      }),
+    };
+    mockResearchAgent = {
+      generateReport: vi.fn().mockResolvedValue({
+        agentId: 'research_synth_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: { summary: 'test summary', auditTrail: ['wallet_intel_v1', 'risk_assessment_v1'] },
+        justification: 'test',
+      }),
     };
 
     // Create server with mocked services
@@ -28,7 +54,10 @@ describe('API Server', () => {
       new BehaviorAnalyzer(),
       new IntelligenceScorer(),
       new RiskAssessor(),
-      new StubPriceProvider()
+      new StubPriceProvider(),
+      new DexRegistry(),
+      mockEvidenceEngine as EvidenceEngine,
+      mockResearchAgent as ResearchAgent
     );
 
     app = server.getApp();
@@ -231,6 +260,42 @@ describe('API Server', () => {
       expect(response.body.wallet).toBe(address);
       expect(response.body.tokens).toBeDefined();
       expect(response.body.disclaimer).toBeDefined();
+    });
+  });
+
+  describe('GET /api/v1/wallet/:address/evidence', () => {
+    it('should return the evidence engine result, capped at a lower default limit', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/wallet/${address}/evidence`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.wallet).toBe(address);
+      expect(response.body.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
+      expect(response.body.data.evidence).toEqual([]);
+      expect(mockEvidenceEngine.buildWalletEvidence).toHaveBeenCalledWith(address, 10);
+    });
+  });
+
+  describe('GET /api/v1/wallet/:address/research', () => {
+    it('should return the research agent synthesis', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/wallet/${address}/research`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.wallet).toBe(address);
+      expect(response.body.data.auditTrail).toEqual(['wallet_intel_v1', 'risk_assessment_v1']);
+    });
+  });
+
+  describe('GET /api/v1/protocols', () => {
+    it('returns an empty list rather than a fabricated one - DexRegistry has no adapters registered', async () => {
+      const response = await request(app).get('/api/v1/protocols');
+
+      expect(response.status).toBe(200);
+      expect(response.body.protocols).toEqual([]);
+      expect(response.body.disclaimer).toContain('No DEX protocol adapters');
     });
   });
 
