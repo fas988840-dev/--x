@@ -1,4 +1,4 @@
-import { getWalletAnalysis, getWalletEvidence, getWalletResearch } from '@/lib/factledger-api';
+import { getWalletAnalysis, getWalletEvidence, getWalletResearch, getWalletExplanation } from '@/lib/factledger-api';
 
 function statusBadge(status: string) {
   const cls = status.toLowerCase();
@@ -11,10 +11,11 @@ export default async function WalletPage({ params }: { params: { address: string
   // Fetched independently and in parallel - one endpoint failing (e.g. an
   // invalid address, or the RPC being unreachable) does not block the
   // others from rendering their own real result.
-  const [analysis, evidence, research] = await Promise.all([
+  const [analysis, evidence, research, explanation] = await Promise.all([
     getWalletAnalysis(address),
     getWalletEvidence(address),
     getWalletResearch(address),
+    getWalletExplanation(address),
   ]);
 
   return (
@@ -160,6 +161,32 @@ export default async function WalletPage({ params }: { params: { address: string
           </>
         ) : (
           <p className="muted">{research.ok ? research.data.justification : `Could not load: ${research.error}`}</p>
+        )}
+      </div>
+
+      <div className="card">
+        <h2>
+          AI Explanation {explanation.ok && statusBadge(explanation.data.evidenceStatus)}
+          {explanation.ok && explanation.data.data && (
+            <span className="badge" title="Whether the sentence below came from ChainGPT or a deterministic fallback">
+              {explanation.data.data.summarySource === 'chaingpt' ? 'ChainGPT' : 'deterministic'}
+            </span>
+          )}
+        </h2>
+        {explanation.ok && explanation.data.data ? (
+          <>
+            <p>{explanation.data.data.summary}</p>
+            {explanation.data.data.patterns.length > 0 && (
+              <ul>
+                {explanation.data.data.patterns.map((p) => (
+                  <li key={p}>{p}</li>
+                ))}
+              </ul>
+            )}
+            <div className="disclaimer">{explanation.data.data.disclaimer}</div>
+          </>
+        ) : (
+          <p className="muted">{explanation.ok ? explanation.data.justification : `Could not load: ${explanation.error}`}</p>
         )}
       </div>
     </>

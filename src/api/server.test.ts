@@ -7,7 +7,7 @@ import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { EvidenceEngine } from '../agents/evidence-engine';
-import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, EvidenceStatus } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent, EvidenceStatus } from '../agents/core_agents';
 import { AgentRouter } from '../agents/agent-router';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
@@ -20,6 +20,7 @@ describe('API Server', () => {
   let mockWalletAgent: any;
   let mockAgentRouter: any;
   let mockAlertAgent: any;
+  let mockExplanationAgent: any;
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -87,6 +88,23 @@ describe('API Server', () => {
         justification: 'test',
       }),
     };
+    mockExplanationAgent = {
+      explainWallet: vi.fn().mockResolvedValue({
+        agentId: 'explanation_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {
+          summary: 'test summary',
+          summarySource: 'deterministic',
+          keyActivities: [],
+          riskAssessment: 'Risk score 0/100 (low).',
+          patterns: [],
+          disclaimer: 'test',
+        },
+        justification: 'test',
+      }),
+    };
 
     // Create server with mocked services
     server = new APIServer(
@@ -101,7 +119,8 @@ describe('API Server', () => {
       mockResearchAgent as ResearchAgent,
       mockWalletAgent as WalletIntelligenceAgent,
       mockAgentRouter as AgentRouter,
-      mockAlertAgent as AlertAgent
+      mockAlertAgent as AlertAgent,
+      mockExplanationAgent as ExplanationAgent
     );
 
     app = server.getApp();
@@ -369,6 +388,20 @@ describe('API Server', () => {
       expect(response.body.wallet).toBe(address);
       expect(response.body.data.alerts).toEqual([]);
       expect(mockAlertAgent.evaluateWallet).toHaveBeenCalledWith(address, 100);
+    });
+  });
+
+  describe('GET /api/v1/wallet/:address/explanation', () => {
+    it('should return the explanation agent output', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/wallet/${address}/explanation`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.wallet).toBe(address);
+      expect(response.body.data.summary).toBe('test summary');
+      expect(response.body.data.summarySource).toBe('deterministic');
+      expect(mockExplanationAgent.explainWallet).toHaveBeenCalledWith(address, 100);
     });
   });
 

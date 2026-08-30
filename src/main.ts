@@ -14,9 +14,10 @@ import { CoinGeckoPriceProvider } from './services/coingecko-price-provider';
 import { createDefaultDexRegistry } from './services/dex-registry';
 import { InstructionParser } from './services/instruction-parser';
 import { APIServer } from './api/server';
-import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent, AlertAgent } from './agents/core_agents';
+import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent, AlertAgent, ExplanationAgent } from './agents/core_agents';
 import { EvidenceEngine } from './agents/evidence-engine';
 import { AlertEngine } from './services/alert-engine';
+import { ChainGptClient } from './services/chaingpt-client';
 import { AgentRouter } from './agents/agent-router';
 
 /**
@@ -62,12 +63,23 @@ async function main(): Promise<void> {
   const evidenceEngine = new EvidenceEngine(transactionRetriever, txAgent);
   const marketAgent = new MarketEventAgent();
   const alertAgent = new AlertAgent(transactionRetriever, behaviorAnalyzer, riskAssessor, new AlertEngine());
-  const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, alertAgent, researchAgent, marketAgent);
+  // ChainGPT integration - explanation-only, see src/services/chaingpt-client.ts
+  // for the honest verification-status note on its REST shape. Reads
+  // CHAINGPT_API_KEY from the environment only; never logged, never
+  // required (ExplanationAgent falls back to a deterministic summary when
+  // this key is unset or the API call fails).
+  const chainGptClient = new ChainGptClient(process.env.CHAINGPT_API_KEY);
+  const explanationAgent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
+  const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, alertAgent, explanationAgent, researchAgent, marketAgent);
 
   if (process.env.NODE_ENV === 'production' && !process.env.API_KEYS) {
     console.warn(
       'WARNING: running with NODE_ENV=production but API_KEYS is unset - the API is open to any caller. Set API_KEYS to require authentication.'
     );
+  }
+
+  if (!process.env.CHAINGPT_API_KEY) {
+    console.warn('CHAINGPT_API_KEY is not set - /wallet/:address/explanation will use deterministic summaries only (no AI-generated prose).');
   }
 
   // Create and start API server
@@ -83,7 +95,8 @@ async function main(): Promise<void> {
     researchAgent,
     walletAgent,
     agentRouter,
-    alertAgent
+    alertAgent,
+    explanationAgent
   );
 
   server.start();

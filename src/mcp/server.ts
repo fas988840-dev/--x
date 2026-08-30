@@ -28,6 +28,7 @@ import {
   RiskAgent,
   ResearchAgent,
   AlertAgent,
+  ExplanationAgent,
 } from '../agents/core_agents';
 import { SolanaRpcClient } from '../services/solana-rpc-client';
 import { TransactionRetriever } from '../services/transaction-retriever';
@@ -36,6 +37,7 @@ import { RiskAssessor } from '../services/risk-assessor';
 import { createDefaultDexRegistry } from '../services/dex-registry';
 import { InstructionParser } from '../services/instruction-parser';
 import { AlertEngine } from '../services/alert-engine';
+import { ChainGptClient } from '../services/chaingpt-client';
 import { SolanaConfig } from '../types/config';
 
 const addressParam = z.string().describe('Solana wallet address, base58-encoded');
@@ -71,6 +73,10 @@ export function buildMcpServer(): McpServer {
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const marketAgent = new MarketEventAgent();
   const alertAgent = new AlertAgent(transactionRetriever, behaviorAnalyzer, riskAssessor, new AlertEngine());
+  // See src/services/chaingpt-client.ts for the honest verification-status
+  // note on the ChainGPT REST shape this was written against.
+  const chainGptClient = new ChainGptClient(process.env.CHAINGPT_API_KEY);
+  const explanationAgent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
 
   const server = new McpServer({
     name: 'factledger',
@@ -125,6 +131,16 @@ export function buildMcpServer(): McpServer {
       inputSchema: { address: addressParam, limit: limitParam },
     },
     async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await alertAgent.evaluateWallet(address, limit))
+  );
+
+  server.registerTool(
+    'wallet_explanation',
+    {
+      description:
+        'ChainGPT-generated plain-language explanation of a Solana wallet\'s real, already-computed data (transaction counts, risk score, risk reasoning). ChainGPT only rephrases these facts - it never adds new ones. If ChainGPT is unavailable (no CHAINGPT_API_KEY, network/API failure), the summary field falls back to a deterministic sentence built from the same facts, and data.summarySource reports which path was used.',
+      inputSchema: { address: addressParam, limit: limitParam },
+    },
+    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await explanationAgent.explainWallet(address, limit))
   );
 
   server.registerTool(

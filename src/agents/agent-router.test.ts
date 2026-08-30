@@ -8,6 +8,7 @@ import {
   ResearchAgent,
   MarketEventAgent,
   AlertAgent,
+  ExplanationAgent,
 } from './core_agents';
 import { EvidenceEngine } from './evidence-engine';
 
@@ -31,6 +32,7 @@ describe('AgentRouter', () => {
       {} as RiskAgent,
       {} as EvidenceEngine,
       {} as AlertAgent,
+      {} as ExplanationAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );
@@ -48,6 +50,7 @@ describe('AgentRouter', () => {
       {} as RiskAgent,
       {} as EvidenceEngine,
       {} as AlertAgent,
+      {} as ExplanationAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );
@@ -65,6 +68,7 @@ describe('AgentRouter', () => {
       {} as RiskAgent,
       {} as EvidenceEngine,
       {} as AlertAgent,
+      {} as ExplanationAgent,
       {} as ResearchAgent,
       marketAgent
     );
@@ -82,6 +86,7 @@ describe('AgentRouter', () => {
       {} as RiskAgent,
       {} as EvidenceEngine,
       alertAgent,
+      {} as ExplanationAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );
@@ -89,6 +94,24 @@ describe('AgentRouter', () => {
     await router.route('wallet_alerts', { address: 'addr', limit: 5 });
 
     expect(alertAgent.evaluateWallet).toHaveBeenCalledWith('addr', 5);
+  });
+
+  it('routes wallet_explanation to ExplanationAgent.explainWallet', async () => {
+    const explanationAgent = { explainWallet: vi.fn().mockResolvedValue(mockAgentResponse()) } as unknown as ExplanationAgent;
+    const router = new AgentRouter(
+      {} as WalletIntelligenceAgent,
+      {} as TransactionIntelligenceAgent,
+      {} as RiskAgent,
+      {} as EvidenceEngine,
+      {} as AlertAgent,
+      explanationAgent,
+      {} as ResearchAgent,
+      {} as MarketEventAgent
+    );
+
+    await router.route('wallet_explanation', { address: 'addr', limit: 5 });
+
+    expect(explanationAgent.explainWallet).toHaveBeenCalledWith('addr', 5);
   });
 
   it('returns UNKNOWN instead of calling any agent when a required param is missing', async () => {
@@ -99,6 +122,7 @@ describe('AgentRouter', () => {
       {} as RiskAgent,
       {} as EvidenceEngine,
       {} as AlertAgent,
+      {} as ExplanationAgent,
       {} as ResearchAgent,
       {} as MarketEventAgent
     );

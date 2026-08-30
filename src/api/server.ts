@@ -10,7 +10,7 @@ import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { PriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
-import { ResearchAgent, WalletIntelligenceAgent, AlertAgent } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent } from '../agents/core_agents';
 import { EvidenceEngine } from '../agents/evidence-engine';
 import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
 
@@ -94,6 +94,7 @@ export class APIServer {
   private walletAgent: WalletIntelligenceAgent;
   private agentRouter: AgentRouter;
   private alertAgent: AlertAgent;
+  private explanationAgent: ExplanationAgent;
 
   constructor(
     port: number,
@@ -107,7 +108,8 @@ export class APIServer {
     researchAgent: ResearchAgent,
     walletAgent: WalletIntelligenceAgent,
     agentRouter: AgentRouter,
-    alertAgent: AlertAgent
+    alertAgent: AlertAgent,
+    explanationAgent: ExplanationAgent
   ) {
     this.port = port;
     this.app = express();
@@ -120,6 +122,7 @@ export class APIServer {
     this.evidenceEngine = evidenceEngine;
     this.researchAgent = researchAgent;
     this.alertAgent = alertAgent;
+    this.explanationAgent = explanationAgent;
     this.walletAgent = walletAgent;
     this.agentRouter = agentRouter;
 
@@ -264,6 +267,9 @@ export class APIServer {
     this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.handleWalletEvidence.bind(this));
     this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.handleWalletResearch.bind(this));
     this.app.get('/api/v1/wallet/:address/alerts', this.heavyLimiter, this.handleWalletAlerts.bind(this));
+    // Calls the ChainGPT API on top of the usual RPC reads - the heaviest
+    // per-request cost in the API alongside evidence, so it rides heavyLimiter too.
+    this.app.get('/api/v1/wallet/:address/explanation', this.heavyLimiter, this.handleWalletExplanation.bind(this));
 
     // Transaction endpoint
     this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.handleTransaction.bind(this));
@@ -588,6 +594,30 @@ export class APIServer {
         ...result,
         disclaimer:
           'Alerts are evaluated once, from the transactions examined in this request - not a live/streaming watch. Each alert cites the real numbers that triggered it. Not financial advice.',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Handle wallet explanation - a ChainGPT-generated plain-language
+   * rephrasing of already-real wallet/risk data (see ExplanationAgent).
+   * keyActivities/riskAssessment/patterns stay real even if ChainGPT is
+   * unreachable; only `summary` (and `summarySource`) reflect that.
+   */
+  private async handleWalletExplanation(req: Request, res: Response): Promise<void> {
+    try {
+      const address = validateWalletAddress(req.params.address);
+      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+
+      const result = await this.explanationAgent.explainWallet(address, limit);
+
+      res.json({
+        wallet: address,
+        ...result,
+        disclaimer:
+          'summary may be ChainGPT-generated (see data.summarySource) but is constrained to rephrasing real, deterministic pipeline output - it is never an independent source of facts. Not financial advice.',
       });
     } catch (error) {
       throw error;

@@ -24,10 +24,11 @@ import {
   MarketEventData,
   AlertAgent,
   AlertAgentData,
+  ExplanationAgent,
   EvidenceStatus,
 } from './core_agents';
 import { EvidenceEngine, WalletEvidenceReport } from './evidence-engine';
-import { RiskScore } from '../types/domain';
+import { RiskScore, AIExplanation } from '../types/domain';
 
 export type AgentIntent =
   | 'wallet_overview'
@@ -35,6 +36,7 @@ export type AgentIntent =
   | 'wallet_risk'
   | 'wallet_evidence'
   | 'wallet_alerts'
+  | 'wallet_explanation'
   | 'research_report'
   | 'market_events';
 
@@ -44,6 +46,7 @@ export const AGENT_INTENTS: readonly AgentIntent[] = [
   'wallet_risk',
   'wallet_evidence',
   'wallet_alerts',
+  'wallet_explanation',
   'research_report',
   'market_events',
 ];
@@ -61,6 +64,7 @@ export type AgentRouterResult =
   | AgentResponse<RiskScore>
   | AgentResponse<WalletEvidenceReport>
   | AgentResponse<AlertAgentData>
+  | AgentResponse<AIExplanation>
   | AgentResponse<ResearchReportData>
   | AgentResponse<MarketEventData>;
 
@@ -82,6 +86,7 @@ export class AgentRouter {
     private riskAgent: RiskAgent,
     private evidenceEngine: EvidenceEngine,
     private alertAgent: AlertAgent,
+    private explanationAgent: ExplanationAgent,
     private researchAgent: ResearchAgent,
     private marketAgent: MarketEventAgent
   ) {}
@@ -107,6 +112,10 @@ export class AgentRouter {
       case 'wallet_alerts':
         if (!params.address) return missingParam(intent, 'address');
         return this.alertAgent.evaluateWallet(params.address, params.limit);
+
+      case 'wallet_explanation':
+        if (!params.address) return missingParam(intent, 'address');
+        return this.explanationAgent.explainWallet(params.address, params.limit);
 
       case 'research_report':
         if (!params.address) return missingParam(intent, 'address');

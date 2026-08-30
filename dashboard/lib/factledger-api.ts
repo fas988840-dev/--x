@@ -85,6 +85,15 @@ export interface ResearchReportData {
   auditTrail: string[];
 }
 
+export interface AIExplanationData {
+  summary: string;
+  summarySource: 'chaingpt' | 'deterministic';
+  keyActivities: string[];
+  riskAssessment: string;
+  patterns: string[];
+  disclaimer: string;
+}
+
 export interface TokenBalance {
   mint: string;
   amount: string;
@@ -125,6 +134,10 @@ export function getWalletEvidence(address: string, limit = 10): Promise<ApiResul
 
 export function getWalletResearch(address: string, limit = 100): Promise<ApiResult<AgentEnvelope<ResearchReportData> & { wallet: string }>> {
   return fetchJson(`/api/v1/wallet/${encodeURIComponent(address)}/research?limit=${limit}`);
+}
+
+export function getWalletExplanation(address: string, limit = 100): Promise<ApiResult<AgentEnvelope<AIExplanationData> & { wallet: string }>> {
+  return fetchJson(`/api/v1/wallet/${encodeURIComponent(address)}/explanation?limit=${limit}`);
 }
 
 export function getWalletTokens(
