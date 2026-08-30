@@ -1,7 +1,7 @@
 {
-  "name": "plainsight",
+  "name": "factledger",
   "version": "0.1.0",
-  "description": "Plainsight: a read-only Solana wallet intelligence platform with transaction parsing and risk analysis",
+  "description": "FactLedger: a read-only Solana wallet intelligence platform with transaction parsing and risk analysis",
   "main": "dist/main.js",
   "type": "module",
   "scripts": {

@@ -1,8 +1,8 @@
-# Plainsight: Solana Wallet Intelligence Platform
+# FactLedger: Solana Wallet Intelligence Platform
 
 ## Overview
 
-Plainsight is a **read-only** Solana wallet analysis and intelligence platform. It provides deterministic behavioral analysis, transparent intelligence scoring, and risk assessment based purely on observable blockchain data.
+FactLedger is a **read-only** Solana wallet analysis and intelligence platform. It provides deterministic behavioral analysis, transparent intelligence scoring, and risk assessment based purely on observable blockchain data.
 
 **IMPORTANT**: This platform does NOT request, store, or handle private keys, seed phrases, passwords, or API secrets. It is read-only and never signs transactions.
 
@@ -72,7 +72,7 @@ Response:
 ```json
 {
   "status": "ok",
-  "service": "Plainsight",
+  "service": "FactLedger",
   "version": "0.1.0"
 }
 ```
@@ -162,8 +162,8 @@ Returns transaction metadata:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourorg/plainsight.git
-cd plainsight
+git clone https://github.com/yourorg/factledger.git
+cd factledger
 
 # Install dependencies
 npm install
@@ -267,7 +267,7 @@ HTTP Status Codes:
 
 ### No Private Keys
 
-✅ Plainsight NEVER:
+✅ FactLedger NEVER:
 - Requests private keys or seed phrases
 - Stores passwords or secrets
 - Signs transactions
@@ -393,7 +393,7 @@ This platform provides data analysis only. It is not financial advice, investmen
 
 ## License
 
-Copyright © 2026 Plainsight. All rights reserved.
+Copyright © 2026 FactLedger. All rights reserved.
 
 This software is proprietary. See [LICENSE](./LICENSE) for full terms. No part of this repository may be copied, modified, distributed, or used without express written permission from the copyright holder.
 
