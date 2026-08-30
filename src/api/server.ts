@@ -228,7 +228,7 @@ export class APIServer {
 
     const response: HealthResponse = {
       status: healthy ? 'ok' : 'degraded',
-      service: 'Plainsight',
+      service: 'FactLedger',
       version: '0.1.0',
     };
 
@@ -450,7 +450,7 @@ export class APIServer {
    */
   public start(): void {
     this.app.listen(this.port, () => {
-      console.log(`Plainsight API listening on port ${this.port}`);
+      console.log(`FactLedger API listening on port ${this.port}`);
       console.log(`Health check: http://localhost:${this.port}/api/v1/health`);
     });
   }

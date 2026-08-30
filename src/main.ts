@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const port = parseInt(process.env.PORT || '3000', 10);
   const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
-  console.log('Initializing Plainsight...');
+  console.log('Initializing FactLedger...');
   console.log(`RPC URL: ${rpcUrl}`);
   console.log(`Port: ${port}`);
 

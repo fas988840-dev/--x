@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Plainsight (package name: `plainsight`; formerly "PROJECT-X" / `solana-wallet-intelligence`) is a **read-only** Solana wallet analysis and intelligence platform. It exposes a REST API that turns raw on-chain data into deterministic behavioral metrics, an "intelligence" score, and a risk assessment for a given wallet address.
+FactLedger (package name: `factledger`; formerly "PROJECT-X" / `solana-wallet-intelligence`) is a **read-only** Solana wallet analysis and intelligence platform. It exposes a REST API that turns raw on-chain data into deterministic behavioral metrics, an "intelligence" score, and a risk assessment for a given wallet address.
 
 The platform never requests or stores private keys/seed phrases/secrets and never signs transactions — it only reads from Solana RPC. This constraint shapes the entire codebase (see "Core design invariants" below) and should not be relaxed when adding features.
 
