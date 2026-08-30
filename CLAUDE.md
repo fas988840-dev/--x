@@ -28,6 +28,8 @@ To run a single test file with Vitest: `npx vitest run src/services/instruction-
 
 Tests live next to the code they test as `*.test.ts` (e.g. `src/services/instruction-parser.test.ts`), not in a separate `test/` directory. `tsconfig.json` excludes `**/*.test.ts` from the build.
 
+`.github/workflows/ci.yml` runs `npm install`, `lint`, `type-check`, `test`, and `build` on every push/PR to any branch. `src/services/determinism.test.ts` is part of that `test` run — it calls `RiskAssessor`/`IntelligenceScorer`/`BehaviorAnalyzer` twice with identical fixed input and asserts exact equality, as a direct, automated check of the "scores must be deterministic" invariant below (not just an assertion in prose).
+
 ### Repo inconsistencies (fixed)
 
 The following were found broken and have been corrected — mentioned here so the history in git log makes sense:
