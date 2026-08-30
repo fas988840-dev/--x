@@ -1,7 +1,7 @@
 {
-  "name": "solana-wallet-intelligence",
+  "name": "plainsight",
   "version": "0.1.0",
-  "description": "Read-only Solana wallet intelligence platform with transaction parsing and risk analysis",
+  "description": "Plainsight: a read-only Solana wallet intelligence platform with transaction parsing and risk analysis",
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
