@@ -67,8 +67,8 @@ export function buildMcpServer(): McpServer {
   const behaviorAnalyzer = new BehaviorAnalyzer();
   const riskAssessor = new RiskAssessor();
 
-  const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
   const txAgent = new TransactionIntelligenceAgent(transactionRetriever, rpcClient, instructionParser);
+  const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, txAgent);
   const riskAgent = new RiskAgent(transactionRetriever, behaviorAnalyzer, riskAssessor);
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const marketAgent = new MarketEventAgent();

@@ -41,26 +41,80 @@ describe('WalletIntelligenceAgent', () => {
       getTokenBalances: vi.fn().mockResolvedValue([{ mint: 'So1111...', amount: '100', decimals: 6 }]),
     } as unknown as SolanaRpcClient;
 
-    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const transactionIntelligenceAgent = {
+      parseTx: vi.fn().mockResolvedValue({
+        agentId: 'tx_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.UNKNOWN,
+        confidenceScore: 0,
+        data: null,
+        justification: 'not found',
+      }),
+    } as unknown as TransactionIntelligenceAgent;
+
+    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, transactionIntelligenceAgent);
     const result = await agent.analyzeWallet(VALID_ADDRESS);
 
     expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
     expect(result.confidenceScore).toBe(1);
     expect(result.data?.transactionCount).toBe(1);
     expect(result.data?.solBalanceLamports).toBe('1000000000');
-    expect(result.data?.knownProtocolsDetected).toEqual([]); // never invented
+    expect(result.data?.knownProtocolsDetected).toEqual([]); // never invented - no instruction actually matched an adapter
+  });
+
+  it('populates knownProtocolsDetected from real per-instruction parsing, honestly labeling candidate matches', async () => {
+    const mockTx: TransactionMeta = {
+      signature: validateTransactionSignature(VALID_SIGNATURE),
+      slot: 1,
+      blockTime: null,
+      status: 'success',
+      fee: '5000',
+      logMessages: [],
+    };
+    const transactionRetriever = {
+      getWalletTransactionsMeta: vi.fn().mockResolvedValue([mockTx]),
+    } as unknown as TransactionRetriever;
+    const rpcClient = {
+      getSolBalance: vi.fn().mockResolvedValue(0),
+      getTokenBalances: vi.fn().mockResolvedValue([]),
+    } as unknown as SolanaRpcClient;
+    const transactionIntelligenceAgent = {
+      parseTx: vi.fn().mockResolvedValue({
+        agentId: 'tx_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {
+          status: 'success',
+          fee: '5000',
+          blockTime: null,
+          instructions: [
+            { programId: 'RaydiumProgramId', programName: 'Raydium AMM V4', status: 'candidate' },
+            { programId: 'UnknownProgramId', programName: 'Unknown Program', status: 'unknown' },
+          ],
+        },
+        justification: 'ok',
+      }),
+    } as unknown as TransactionIntelligenceAgent;
+
+    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, transactionIntelligenceAgent);
+    const result = await agent.analyzeWallet(VALID_ADDRESS);
+
+    expect(result.data?.knownProtocolsDetected).toEqual(['Raydium AMM V4 (candidate)']);
   });
 
   it('returns UNKNOWN for an invalid address instead of throwing', async () => {
     const transactionRetriever = {} as unknown as TransactionRetriever;
     const rpcClient = {} as unknown as SolanaRpcClient;
+    const transactionIntelligenceAgent = { parseTx: vi.fn() } as unknown as TransactionIntelligenceAgent;
 
-    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, transactionIntelligenceAgent);
     const result = await agent.analyzeWallet('not-a-real-address');
 
     expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
     expect(result.data).toBeNull();
     expect(result.confidenceScore).toBe(0);
+    expect(transactionIntelligenceAgent.parseTx).not.toHaveBeenCalled();
   });
 });
 
@@ -203,7 +257,7 @@ describe('ResearchAgent', () => {
       getTokenBalances: vi.fn().mockResolvedValue([]),
     } as unknown as SolanaRpcClient;
 
-    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, { parseTx: vi.fn() } as unknown as TransactionIntelligenceAgent);
     const riskAgent = new RiskAgent(transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor());
     const research = new ResearchAgent(walletAgent, riskAgent);
 
@@ -225,7 +279,7 @@ describe('ExplanationAgent', () => {
       getTokenBalances: vi.fn().mockResolvedValue([]),
     } as unknown as SolanaRpcClient;
 
-    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, { parseTx: vi.fn() } as unknown as TransactionIntelligenceAgent);
     const riskAgent = new RiskAgent(transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor());
     return { walletAgent, riskAgent };
   }

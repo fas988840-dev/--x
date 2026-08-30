@@ -56,8 +56,11 @@ async function main(): Promise<void> {
 
   // Agents - thin, honest facades over the services above (see
   // src/agents/core_agents.ts and CLAUDE.md)
-  const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
   const txAgent = new TransactionIntelligenceAgent(transactionRetriever, rpcClient, instructionParser);
+  // WalletIntelligenceAgent depends on TransactionIntelligenceAgent for its
+  // (bounded, RPC-cost-conscious) real protocol detection - see
+  // WalletIntelligenceAgent.detectKnownProtocols() in core_agents.ts.
+  const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, txAgent);
   const riskAgent = new RiskAgent(transactionRetriever, behaviorAnalyzer, riskAssessor);
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const evidenceEngine = new EvidenceEngine(transactionRetriever, txAgent);

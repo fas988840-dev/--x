@@ -26,6 +26,7 @@
 import {
   WalletAddress,
   TransactionSignature,
+  TransactionMeta,
   validateWalletAddress,
   validateTransactionSignature,
   RiskScore,
@@ -76,16 +77,26 @@ export interface WalletIntelligenceData {
   failedTransactions: number;
   solBalanceLamports: string;
   tokenBalances: Array<{ mint: string; amount: string; decimals: number }>;
-  // DEX/protocol identification requires working DexRegistry adapters,
-  // which are unimplemented placeholders in this codebase (see
-  // src/services/dex-registry.ts) - always empty until that's real.
+  // Real DexRegistry-backed detection (see below) over only the wallet's
+  // most recent PROTOCOL_SCAN_LIMIT transactions - never the full `limit`
+  // requested, since each one costs an extra RPC round-trip (same
+  // trade-off EvidenceEngine makes). Values are program names, suffixed
+  // "(candidate)" when the adapter only verified instruction *type* (see
+  // dex-registry.ts) rather than fully decoding it - never silently
+  // upgraded to look more certain than it is.
   knownProtocolsDetected: string[];
 }
 
 export class WalletIntelligenceAgent {
+  // Bounded independently of `limit` - protocol detection costs one extra
+  // RPC round-trip per transaction scanned (raw fetch + instruction
+  // parse), so it stays cheap even when a caller asks for limit=1000.
+  private static readonly PROTOCOL_SCAN_LIMIT = 10;
+
   constructor(
     private transactionRetriever: TransactionRetriever,
-    private rpcClient: SolanaRpcClient
+    private rpcClient: SolanaRpcClient,
+    private transactionIntelligenceAgent: TransactionIntelligenceAgent
   ) {}
 
   async analyzeWallet(address: string, limit = 100): Promise<AgentResponse<WalletIntelligenceData>> {
@@ -103,26 +114,60 @@ export class WalletIntelligenceAgent {
         this.rpcClient.getTokenBalances(validated),
       ]);
 
+      const knownProtocolsDetected = await this.detectKnownProtocols(transactions);
+
       const data: WalletIntelligenceData = {
         transactionCount: transactions.length,
         successfulTransactions: transactions.filter((tx) => tx.status === 'success').length,
         failedTransactions: transactions.filter((tx) => tx.status === 'failed').length,
         solBalanceLamports: String(solBalance),
         tokenBalances,
-        knownProtocolsDetected: [],
+        knownProtocolsDetected,
       };
 
+      const scanned = Math.min(transactions.length, WalletIntelligenceAgent.PROTOCOL_SCAN_LIMIT);
       return {
         agentId: 'wallet_intel_v1',
         timestamp: Date.now(),
         evidenceStatus: EvidenceStatus.VERIFIED,
         confidenceScore: 1,
         data,
-        justification: `Read directly from Solana RPC: ${transactions.length} transactions, SOL balance, and ${tokenBalances.length} token account(s). Protocol/DEX identification not yet implemented, so knownProtocolsDetected is always empty rather than guessed.`,
+        justification: `Read directly from Solana RPC: ${transactions.length} transactions, SOL balance, and ${tokenBalances.length} token account(s). knownProtocolsDetected comes from real DexRegistry-based instruction parsing of the ${scanned} most recent transaction(s) (bounded separately from the ${limit}-transaction limit to control RPC cost) - never a guess, and empty when none of those instructions matched a registered adapter.`,
       };
     } catch (error) {
       return unknownResponse<WalletIntelligenceData>('wallet_intel_v1', `RPC read failed: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /**
+   * Real protocol detection via DexRegistry (through
+   * TransactionIntelligenceAgent, same parser EvidenceEngine uses) over
+   * only the most recent PROTOCOL_SCAN_LIMIT transactions. A transaction
+   * that fails to fetch/parse is silently skipped here (not an error for
+   * the caller - analyzeWallet's own transaction list already reports the
+   * real counts); this method only ever adds a name when a real
+   * instruction actually matched a registered adapter.
+   */
+  private async detectKnownProtocols(transactions: TransactionMeta[]): Promise<string[]> {
+    const sample = transactions.slice(0, WalletIntelligenceAgent.PROTOCOL_SCAN_LIMIT);
+    const found = new Set<string>();
+
+    for (const tx of sample) {
+      const parsed = await this.transactionIntelligenceAgent.parseTx(tx.signature);
+      if (!parsed.data) continue;
+
+      for (const ix of parsed.data.instructions) {
+        if (ix.status === 'confirmed') {
+          found.add(ix.programName);
+        } else if (ix.status === 'candidate') {
+          // Honest about confidence - never collapsed into the same label
+          // as a fully-confirmed match (see dex-registry.ts).
+          found.add(`${ix.programName} (candidate)`);
+        }
+      }
+    }
+
+    return Array.from(found);
   }
 }
 
