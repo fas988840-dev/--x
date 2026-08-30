@@ -1,8 +1,8 @@
-# PROJECT-X: Solana Wallet Intelligence Platform
+# Plainsight: Solana Wallet Intelligence Platform
 
 ## Overview
 
-PROJECT-X is a **read-only** Solana wallet analysis and intelligence platform. It provides deterministic behavioral analysis, transparent intelligence scoring, and risk assessment based purely on observable blockchain data.
+Plainsight is a **read-only** Solana wallet analysis and intelligence platform. It provides deterministic behavioral analysis, transparent intelligence scoring, and risk assessment based purely on observable blockchain data.
 
 **IMPORTANT**: This platform does NOT request, store, or handle private keys, seed phrases, passwords, or API secrets. It is read-only and never signs transactions.
 
@@ -72,7 +72,7 @@ Response:
 ```json
 {
   "status": "ok",
-  "service": "PROJECT-X",
+  "service": "Plainsight",
   "version": "0.1.0"
 }
 ```
@@ -162,8 +162,8 @@ Returns transaction metadata:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourorg/PROJECT-X.git
-cd PROJECT-X
+git clone https://github.com/yourorg/plainsight.git
+cd plainsight
 
 # Install dependencies
 npm install
@@ -267,7 +267,7 @@ HTTP Status Codes:
 
 ### No Private Keys
 
-✅ PROJECT-X NEVER:
+✅ Plainsight NEVER:
 - Requests private keys or seed phrases
 - Stores passwords or secrets
 - Signs transactions
@@ -393,7 +393,9 @@ This platform provides data analysis only. It is not financial advice, investmen
 
 ## License
 
-Proprietary - All rights reserved
+Copyright © 2026 Plainsight. All rights reserved.
+
+This software is proprietary. See [LICENSE](./LICENSE) for full terms. No part of this repository may be copied, modified, distributed, or used without express written permission from the copyright holder.
 
 ## Support
 
