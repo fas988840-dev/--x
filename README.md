@@ -1,5 +1,15 @@
 # FactLedger: Solana Wallet Intelligence Platform
 
+[![CI](https://github.com/fas988840-dev/PROJECT-x/actions/workflows/ci.yml/badge.svg)](https://github.com/fas988840-dev/PROJECT-x/actions/workflows/ci.yml)
+
+This badge is rendered live by GitHub from `.github/workflows/ci.yml`'s
+actual run status - it is not a static image. It goes green only after a
+real `npm install && npm run lint && npm run type-check && npm test &&
+npm run build` succeeds on GitHub's own runners (unaffected by this
+sandbox's blocked npm registry). `npm test` includes
+`src/services/determinism.test.ts`, which calls each scoring function
+twice with identical input and asserts the outputs are exactly equal.
+
 ## Overview
 
 FactLedger is a **read-only** Solana wallet analysis and intelligence platform. It provides deterministic behavioral analysis, transparent intelligence scoring, and risk assessment based purely on observable blockchain data.
@@ -435,6 +445,7 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [x] REST API
 - [x] Read-only agent facades (`src/agents/core_agents.ts`) - no LLM calls, honest UNKNOWN when data isn't real
 - [~] MCP server (`src/mcp/`) - implemented, **API surface unverified** (docs were unreachable when written; run `npm install && npm test` before relying on it)
+- [x] CI (`.github/workflows/ci.yml`) - lint, type-check, test (incl. an automated determinism check), build, on every push/PR
 - [ ] Real price provider (CoinGecko/Birdeye)
 - [ ] DEX protocol adapters (Raydium, Jupiter, etc.)
 - [ ] Alert system
