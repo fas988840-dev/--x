@@ -113,21 +113,38 @@ export class APIServer {
     // Secure HTTP headers (hides X-Powered-By, sets CSP/HSTS/etc. defaults)
     this.app.use(helmet());
 
-    // CORS - safe by default
+    // CORS - allowlist of exact origins, comma-separated in CORS_ORIGIN.
+    // NOTE: CORS is a browser-enforced mechanism only - it stops a script
+    // running on someone else's web page from reading the response, but it
+    // does NOT stop curl/server-to-server/scraper access (those requests
+    // carry no Origin header at all). apiKeyAuth below is what actually
+    // gates access to the data.
+    const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean);
+
     this.app.use(
       cors({
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        origin: (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(null, false);
+          }
+        },
         credentials: false,
         methods: ['GET', 'OPTIONS'],
-        allowedHeaders: ['Content-Type'],
+        allowedHeaders: ['Content-Type', 'X-API-Key'],
       })
     );
 
-    // Rate limiting - mitigates scraping/abuse of the public read API
+    // Rate limiting - mitigates scraping/abuse of the public read API.
+    // A stricter per-route limit is applied to RPC-heavy endpoints in setupRoutes().
     this.app.use(
       rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
-        limit: 100, // 100 requests per IP per window
+        limit: 60, // 60 requests per IP per window
         standardHeaders: true,
         legacyHeaders: false,
         message: {
@@ -147,7 +164,65 @@ export class APIServer {
       console.log(`${req.method} ${req.path}`);
       next();
     });
+
+    // API key authentication - opt-in via API_KEYS (comma-separated).
+    // Left unset, the API stays open (dev-friendly default); set it in
+    // production to require a valid X-API-Key header on every route
+    // except the health check.
+    this.app.use(this.apiKeyAuth);
   }
+
+  /**
+   * API key authentication middleware.
+   * No-ops (open access) when API_KEYS is not configured.
+   */
+  private apiKeyAuth = (req: Request, res: Response, next: NextFunction): void => {
+    if (req.path === '/api/v1/health') {
+      next();
+      return;
+    }
+
+    const configuredKeys = (process.env.API_KEYS || '')
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean);
+
+    if (configuredKeys.length === 0) {
+      next();
+      return;
+    }
+
+    const providedKey = req.header('x-api-key');
+
+    if (!providedKey || !configuredKeys.includes(providedKey)) {
+      res.status(401).json({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Missing or invalid API key. Provide a valid X-API-Key header.',
+        },
+      } as ErrorResponse);
+      return;
+    }
+
+    next();
+  };
+
+  /**
+   * Stricter rate limit for endpoints that fetch/parse RPC data
+   * (each request can trigger many upstream Solana RPC calls).
+   */
+  private heavyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 20, // 20 requests per IP per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many requests to this endpoint, please try again later.',
+      },
+    },
+  });
 
   /**
    * Setup routes
@@ -156,16 +231,16 @@ export class APIServer {
     // Health check
     this.app.get('/api/v1/health', this.handleHealth.bind(this));
 
-    // Wallet endpoints
-    this.app.get('/api/v1/wallet/:address/transactions', this.handleWalletTransactions.bind(this));
+    // Wallet endpoints - RPC-heavy ones carry an extra, stricter rate limit
+    this.app.get('/api/v1/wallet/:address/transactions', this.heavyLimiter, this.handleWalletTransactions.bind(this));
     this.app.get('/api/v1/wallet/:address/tokens', this.handleWalletTokens.bind(this));
-    this.app.get('/api/v1/wallet/:address/behavior', this.handleWalletBehavior.bind(this));
-    this.app.get('/api/v1/wallet/:address/intelligence', this.handleWalletIntelligence.bind(this));
-    this.app.get('/api/v1/wallet/:address/risk', this.handleWalletRisk.bind(this));
-    this.app.get('/api/v1/wallet/:address/analysis', this.handleWalletAnalysis.bind(this));
+    this.app.get('/api/v1/wallet/:address/behavior', this.heavyLimiter, this.handleWalletBehavior.bind(this));
+    this.app.get('/api/v1/wallet/:address/intelligence', this.heavyLimiter, this.handleWalletIntelligence.bind(this));
+    this.app.get('/api/v1/wallet/:address/risk', this.heavyLimiter, this.handleWalletRisk.bind(this));
+    this.app.get('/api/v1/wallet/:address/analysis', this.heavyLimiter, this.handleWalletAnalysis.bind(this));
 
     // Transaction endpoint
-    this.app.get('/api/v1/transaction/:signature', this.handleTransaction.bind(this));
+    this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.handleTransaction.bind(this));
 
     // 404 handler
     this.app.use((_req: Request, res: Response) => {
