@@ -9,7 +9,8 @@ import { TransactionRetriever } from './services/transaction-retriever';
 import { BehaviorAnalyzer } from './services/behavior-analyzer';
 import { IntelligenceScorer } from './services/intelligence-scorer';
 import { RiskAssessor } from './services/risk-assessor';
-import { StubPriceProvider } from './services/price-provider';
+import { PriceProvider, StubPriceProvider } from './services/price-provider';
+import { CoinGeckoPriceProvider } from './services/coingecko-price-provider';
 import { DexRegistry } from './services/dex-registry';
 import { InstructionParser } from './services/instruction-parser';
 import { APIServer } from './api/server';
@@ -43,7 +44,11 @@ async function main(): Promise<void> {
   const behaviorAnalyzer = new BehaviorAnalyzer();
   const intelligenceScorer = new IntelligenceScorer();
   const riskAssessor = new RiskAssessor();
-  const priceProvider = new StubPriceProvider();
+  // PRICE_PROVIDER=stub opts back into the always-null stub (useful
+  // offline/in tests); anything else (default) uses the real CoinGecko
+  // integration - see src/services/coingecko-price-provider.ts.
+  const priceProvider: PriceProvider =
+    process.env.PRICE_PROVIDER === 'stub' ? new StubPriceProvider() : new CoinGeckoPriceProvider();
 
   // Agents - thin, honest facades over the services above (see
   // src/agents/core_agents.ts and CLAUDE.md)

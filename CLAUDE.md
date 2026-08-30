@@ -53,8 +53,9 @@ SolanaRpcClient          → raw, read-only calls to @solana/web3.js Connection
       → DexRegistry        → holds verified DexProtocolAdapters (program ID → decoder);
                              adapters here are currently stub/placeholder decoders
     → TokenBalanceDeltaCalculator → diffs pre/post token balances into TokenBalanceDelta
-    → PriceProvider        → looks up USD prices (StubPriceProvider always returns null —
-                             no real price integration exists yet)
+    → PriceProvider        → looks up USD prices; CoinGeckoPriceProvider (default) calls
+                             CoinGecko's free public API, StubPriceProvider (PRICE_PROVIDER=stub)
+                             always returns null — both return null honestly on any failure
       → BehaviorAnalyzer    → aggregates TransactionMeta + SwapEvents into BehaviorMetrics
                              (frequency, failure rate, diversity, volume, timing)
         → IntelligenceScorer → BehaviorMetrics → IntelligenceScore (activity/sophistication/
@@ -83,7 +84,7 @@ SolanaRpcClient          → raw, read-only calls to @solana/web3.js Connection
 
 These constraints are enforced throughout the codebase and are called out explicitly in file-level comments — preserve them when modifying or extending services:
 
-- **Never fabricate blockchain data.** When a value is unknown/unavailable (price, fee, block time, decoded instruction), return `null` or an explicit `'unknown'`/`'unknown'` status instead of guessing or defaulting. `StubPriceProvider` always returns `priceUSD: null` for this reason — do not hardcode or approximate prices.
+- **Never fabricate blockchain data.** When a value is unknown/unavailable (price, fee, block time, decoded instruction), return `null` or an explicit `'unknown'`/`'unknown'` status instead of guessing or defaulting. `CoinGeckoPriceProvider` returns `priceUSD: null` on any failure (rate limit, unlisted token, network error, or a historical timestamp the free endpoint can't serve) instead of guessing; `StubPriceProvider` always returns `null`. Never hardcode or approximate a price.
 - **Preserve precision for on-chain amounts.** Amounts and fees are kept as `string` (Lamports/raw token amounts), never as `number`, to avoid float precision loss. `token-balance-delta.ts`'s `normalizeAmount()` returns `null` rather than a lossy value when an amount exceeds what can be safely represented as a JS `number`.
 - **Read-only, no signing, no secrets.** `SolanaRpcClient` only ever calls read methods on `Connection` (`getSignaturesForAddress`, `getParsedTransaction`, `getParsedTokenAccountsByOwner`, `getBalance`, `getSlot`). Nothing in the codebase should request or persist private keys, seed phrases, or credentials.
 - **DEX/program identification is honest about confidence.** `DexRegistry` only registers adapters with verified program IDs; `InstructionParser`/`ParsedInstructionStatus` distinguishes `confirmed` (known adapter decoded it) from `candidate` (looks like a swap but unverified) from `unknown` — never collapse this distinction to make output look more complete than it is. The Raydium/Jupiter decoders in `dex-registry.ts` are explicitly unimplemented placeholders (`decode()` always returns `null`) — do not treat their presence as working swap detection.
