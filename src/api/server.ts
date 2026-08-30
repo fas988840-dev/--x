@@ -10,8 +10,9 @@ import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { PriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
-import { ResearchAgent } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent } from '../agents/core_agents';
 import { EvidenceEngine } from '../agents/evidence-engine';
+import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
 
 /**
  * API Error Response
@@ -90,6 +91,8 @@ export class APIServer {
   private dexRegistry: DexRegistry;
   private evidenceEngine: EvidenceEngine;
   private researchAgent: ResearchAgent;
+  private walletAgent: WalletIntelligenceAgent;
+  private agentRouter: AgentRouter;
 
   constructor(
     port: number,
@@ -100,7 +103,9 @@ export class APIServer {
     priceProvider: PriceProvider,
     dexRegistry: DexRegistry,
     evidenceEngine: EvidenceEngine,
-    researchAgent: ResearchAgent
+    researchAgent: ResearchAgent,
+    walletAgent: WalletIntelligenceAgent,
+    agentRouter: AgentRouter
   ) {
     this.port = port;
     this.app = express();
@@ -112,6 +117,8 @@ export class APIServer {
     this.dexRegistry = dexRegistry;
     this.evidenceEngine = evidenceEngine;
     this.researchAgent = researchAgent;
+    this.walletAgent = walletAgent;
+    this.agentRouter = agentRouter;
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -263,6 +270,11 @@ export class APIServer {
     // hardcoded protocol list.)
     this.app.get('/api/v1/protocols', this.handleProtocols.bind(this));
 
+    // Agent Router - single entry point for MCP-style clients that don't
+    // want to hardcode 5 different endpoints. Deterministic dispatch only
+    // (no NLP/intent guessing) - see src/agents/agent-router.ts.
+    this.app.get('/api/v1/agents/:intent', this.heavyLimiter, this.handleAgentRouter.bind(this));
+
     // 404 handler
     this.app.use((_req: Request, res: Response) => {
       res.status(404).json({
@@ -358,18 +370,23 @@ export class APIServer {
   }
 
   /**
-   * Handle wallet tokens
+   * Handle wallet tokens - real token balances via WalletIntelligenceAgent
+   * (which reads SolanaRpcClient.getTokenBalances()), not a placeholder.
    */
   private async handleWalletTokens(req: Request, res: Response): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
 
-      // This would require token balance retrieval from RPC
-      // For now, return placeholder
+      const result = await this.walletAgent.analyzeWallet(address);
+
       res.json({
         wallet: address,
-        tokens: [],
-        disclaimer: 'Token balance data requires additional RPC integration',
+        tokens: result.data?.tokenBalances ?? [],
+        evidenceStatus: result.evidenceStatus,
+        disclaimer:
+          result.data === null
+            ? `Token balances unavailable: ${result.justification}`
+            : 'Token balances read directly from Solana RPC (SPL token accounts only).',
       });
     } catch (error) {
       throw error;
@@ -564,6 +581,39 @@ export class APIServer {
         programIds.length === 0
           ? 'No DEX protocol adapters are currently registered in this deployment - see CLAUDE.md. This is an empty list, not an error, so downstream callers do not mistake it for a fabricated one.'
           : 'Protocol identification reflects only adapters registered in DexRegistry.',
+    });
+  }
+
+  /**
+   * Handle agent router dispatch - GET /api/v1/agents/:intent
+   * ?address=...&signature=...&topic=...&limit=...
+   * Deterministic dispatch only - see src/agents/agent-router.ts.
+   */
+  private async handleAgentRouter(req: Request, res: Response): Promise<void> {
+    const intentParam = req.params.intent;
+
+    if (!AGENT_INTENTS.includes(intentParam as AgentIntent)) {
+      res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Unknown intent '${intentParam}'. Valid intents: ${AGENT_INTENTS.join(', ')}.`,
+        },
+      } as ErrorResponse);
+      return;
+    }
+
+    const limitRaw = parseInt(req.query.limit as string);
+    const result = await this.agentRouter.route(intentParam as AgentIntent, {
+      address: typeof req.query.address === 'string' ? req.query.address : undefined,
+      signature: typeof req.query.signature === 'string' ? req.query.signature : undefined,
+      topic: typeof req.query.topic === 'string' ? req.query.topic : undefined,
+      limit: Number.isFinite(limitRaw) ? Math.min(limitRaw, 1000) : undefined,
+    });
+
+    res.json({
+      intent: intentParam,
+      ...result,
+      disclaimer: 'Routed deterministically to one agent based on the intent parameter - not a financial advice, and not an AI-guessed interpretation of a free-form question.',
     });
   }
 

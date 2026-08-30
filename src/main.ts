@@ -13,8 +13,9 @@ import { StubPriceProvider } from './services/price-provider';
 import { DexRegistry } from './services/dex-registry';
 import { InstructionParser } from './services/instruction-parser';
 import { APIServer } from './api/server';
-import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent } from './agents/core_agents';
+import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent } from './agents/core_agents';
 import { EvidenceEngine } from './agents/evidence-engine';
+import { AgentRouter } from './agents/agent-router';
 
 /**
  * Initialize and start the application
@@ -51,6 +52,14 @@ async function main(): Promise<void> {
   const riskAgent = new RiskAgent(transactionRetriever, behaviorAnalyzer, riskAssessor);
   const researchAgent = new ResearchAgent(walletAgent, riskAgent);
   const evidenceEngine = new EvidenceEngine(transactionRetriever, txAgent);
+  const marketAgent = new MarketEventAgent();
+  const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, researchAgent, marketAgent);
+
+  if (process.env.NODE_ENV === 'production' && !process.env.API_KEYS) {
+    console.warn(
+      'WARNING: running with NODE_ENV=production but API_KEYS is unset - the API is open to any caller. Set API_KEYS to require authentication.'
+    );
+  }
 
   // Create and start API server
   const server = new APIServer(
@@ -62,7 +71,9 @@ async function main(): Promise<void> {
     priceProvider,
     dexRegistry,
     evidenceEngine,
-    researchAgent
+    researchAgent,
+    walletAgent,
+    agentRouter
   );
 
   server.start();

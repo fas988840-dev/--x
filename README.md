@@ -101,7 +101,8 @@ Returns list of wallet transactions with status, fees, and log messages.
 GET /api/v1/wallet/:address/tokens
 ```
 
-Returns token balances (requires token balance RPC integration).
+Returns real SPL token balances, read via `WalletIntelligenceAgent` /
+`SolanaRpcClient.getTokenBalances()` — not a placeholder.
 
 #### Behavior
 ```
@@ -182,6 +183,19 @@ GET /api/v1/protocols
 Returns `DexRegistry`'s registered adapters. Currently always an empty
 array — no adapters are registered in this deployment (see CLAUDE.md) —
 returned explicitly as `[]` rather than a hardcoded protocol list.
+
+### Agent Router
+
+```
+GET /api/v1/agents/:intent?address=...&signature=...&topic=...&limit=...
+```
+
+Single dispatch endpoint over the agents above — `intent` must be one of
+`wallet_overview`, `transaction_lookup`, `wallet_risk`, `wallet_evidence`,
+`research_report`, `market_events`. This is **deterministic dispatch**,
+not NLP: an unrecognized intent returns `400`, it never guesses what a
+free-form question means. Useful for MCP-style clients that want one
+endpoint instead of hardcoding five.
 
 ### Transaction Endpoints
 
@@ -374,17 +388,28 @@ HTTP Status Codes:
 
 ### API Key Authentication
 
-Optional, opt-in via the `API_KEYS` environment variable (comma-separated
-list of valid keys):
+⚠️ **Required before any public deployment.** Optional/opt-in via the
+`API_KEYS` environment variable (comma-separated list of valid keys):
 - **Unset (default)**: the API is open, no key required — convenient for
-  local development.
+  local development, **not safe for production**.
 - **Set**: every route except `/api/v1/health` requires a matching
   `X-API-Key` header, or the request is rejected with `401 UNAUTHORIZED`.
+
+`src/main.ts` prints a startup warning to stderr if `NODE_ENV=production`
+and `API_KEYS` is unset, so an unauthenticated production deploy doesn't
+happen silently.
 
 ```bash
 curl -H "X-API-Key: your-key-here" \
   'http://localhost:3000/api/v1/wallet/11111111111111111111111111111112/analysis'
 ```
+
+### Dependency Scanning
+
+- `.github/dependabot.yml` opens weekly update PRs for npm and GitHub
+  Actions dependencies.
+- CI runs `npm audit --audit-level=high` on every push/PR — a high/critical
+  vulnerability in a dependency fails the build.
 
 ### Rate Limiting
 
@@ -479,8 +504,11 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [x] Risk assessment
 - [x] REST API
 - [x] Read-only agent facades (`src/agents/core_agents.ts`) - no LLM calls, honest UNKNOWN when data isn't real
+- [x] Evidence Engine (`src/agents/evidence-engine.ts`) - per-instruction evidence, fixed confidence mapping
+- [x] Agent Router (`src/agents/agent-router.ts`) - deterministic dispatch, no NLP
 - [~] MCP server (`src/mcp/`) - implemented, **API surface unverified** (docs were unreachable when written; run `npm install && npm test` before relying on it)
-- [x] CI (`.github/workflows/ci.yml`) - lint, type-check, test (incl. an automated determinism check), build, on every push/PR
+- [x] CI (`.github/workflows/ci.yml`) - npm audit, lint, type-check, test (incl. an automated determinism check), build, on every push/PR
+- [x] Dependabot (`.github/dependabot.yml`) - weekly npm + GitHub Actions update PRs
 - [ ] Real price provider (CoinGecko/Birdeye)
 - [ ] DEX protocol adapters (Raydium, Jupiter, etc.)
 - [ ] Alert system

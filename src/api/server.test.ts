@@ -7,7 +7,8 @@ import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { EvidenceEngine } from '../agents/evidence-engine';
-import { ResearchAgent, EvidenceStatus } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, EvidenceStatus } from '../agents/core_agents';
+import { AgentRouter } from '../agents/agent-router';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 describe('API Server', () => {
@@ -16,6 +17,8 @@ describe('API Server', () => {
   let mockTransactionRetriever: any;
   let mockEvidenceEngine: any;
   let mockResearchAgent: any;
+  let mockWalletAgent: any;
+  let mockAgentRouter: any;
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -46,6 +49,33 @@ describe('API Server', () => {
         justification: 'test',
       }),
     };
+    mockWalletAgent = {
+      analyzeWallet: vi.fn().mockResolvedValue({
+        agentId: 'wallet_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {
+          transactionCount: 0,
+          successfulTransactions: 0,
+          failedTransactions: 0,
+          solBalanceLamports: '0',
+          tokenBalances: [{ mint: 'So1111...', amount: '100', decimals: 6 }],
+          knownProtocolsDetected: [],
+        },
+        justification: 'test',
+      }),
+    };
+    mockAgentRouter = {
+      route: vi.fn().mockResolvedValue({
+        agentId: 'wallet_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {},
+        justification: 'test',
+      }),
+    };
 
     // Create server with mocked services
     server = new APIServer(
@@ -57,7 +87,9 @@ describe('API Server', () => {
       new StubPriceProvider(),
       new DexRegistry(),
       mockEvidenceEngine as EvidenceEngine,
-      mockResearchAgent as ResearchAgent
+      mockResearchAgent as ResearchAgent,
+      mockWalletAgent as WalletIntelligenceAgent,
+      mockAgentRouter as AgentRouter
     );
 
     app = server.getApp();
@@ -251,15 +283,41 @@ describe('API Server', () => {
   });
 
   describe('GET /api/v1/wallet/:address/tokens', () => {
-    it('should return wallet tokens', async () => {
+    it('should return real token balances from WalletIntelligenceAgent, not a placeholder', async () => {
       const address = validateWalletAddress('11111111111111111111111111111112');
 
       const response = await request(app).get(`/api/v1/wallet/${address}/tokens`);
 
       expect(response.status).toBe(200);
       expect(response.body.wallet).toBe(address);
-      expect(response.body.tokens).toBeDefined();
-      expect(response.body.disclaimer).toBeDefined();
+      expect(response.body.tokens).toEqual([{ mint: 'So1111...', amount: '100', decimals: 6 }]);
+      expect(response.body.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
+      expect(mockWalletAgent.analyzeWallet).toHaveBeenCalledWith(address);
+    });
+  });
+
+  describe('GET /api/v1/agents/:intent', () => {
+    it('dispatches a valid intent to the AgentRouter with parsed query params', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/agents/wallet_overview`).query({ address, limit: 5 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.intent).toBe('wallet_overview');
+      expect(mockAgentRouter.route).toHaveBeenCalledWith('wallet_overview', {
+        address,
+        signature: undefined,
+        topic: undefined,
+        limit: 5,
+      });
+    });
+
+    it('rejects an unknown intent with 400 instead of forwarding it to the router', async () => {
+      const response = await request(app).get('/api/v1/agents/not_a_real_intent');
+
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(mockAgentRouter.route).not.toHaveBeenCalled();
     });
   });
 
