@@ -32,7 +32,7 @@ import { SolanaRpcClient } from '../services/solana-rpc-client';
 import { TransactionRetriever } from '../services/transaction-retriever';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { RiskAssessor } from '../services/risk-assessor';
-import { DexRegistry } from '../services/dex-registry';
+import { createDefaultDexRegistry } from '../services/dex-registry';
 import { InstructionParser } from '../services/instruction-parser';
 import { SolanaConfig } from '../types/config';
 
@@ -58,7 +58,7 @@ export function buildMcpServer(): McpServer {
 
   const rpcClient = new SolanaRpcClient(solanaConfig);
   const transactionRetriever = new TransactionRetriever(rpcClient);
-  const dexRegistry = new DexRegistry(); // no adapters registered - see CLAUDE.md
+  const dexRegistry = createDefaultDexRegistry(); // Raydium + Jupiter registered - see src/services/dex-registry.ts
   const instructionParser = new InstructionParser(dexRegistry);
   const behaviorAnalyzer = new BehaviorAnalyzer();
   const riskAssessor = new RiskAssessor();

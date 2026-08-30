@@ -11,7 +11,7 @@ import { IntelligenceScorer } from './services/intelligence-scorer';
 import { RiskAssessor } from './services/risk-assessor';
 import { PriceProvider, StubPriceProvider } from './services/price-provider';
 import { CoinGeckoPriceProvider } from './services/coingecko-price-provider';
-import { DexRegistry } from './services/dex-registry';
+import { createDefaultDexRegistry } from './services/dex-registry';
 import { InstructionParser } from './services/instruction-parser';
 import { APIServer } from './api/server';
 import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent } from './agents/core_agents';
@@ -39,7 +39,9 @@ async function main(): Promise<void> {
 
   const rpcClient = new SolanaRpcClient(solanaConfig);
   const transactionRetriever = new TransactionRetriever(rpcClient);
-  const dexRegistry = new DexRegistry(); // no adapters registered - see CLAUDE.md
+  // Raydium AMM V4 + Jupiter V6 registered under verified program IDs - see
+  // src/services/dex-registry.ts for what's verified vs. still unknown.
+  const dexRegistry = createDefaultDexRegistry();
   const instructionParser = new InstructionParser(dexRegistry);
   const behaviorAnalyzer = new BehaviorAnalyzer();
   const intelligenceScorer = new IntelligenceScorer();

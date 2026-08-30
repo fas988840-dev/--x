@@ -511,7 +511,7 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [x] Dependabot (`.github/dependabot.yml`) - weekly npm + GitHub Actions update PRs
 - [~] Dashboard UI (`dashboard/`) - Next.js app, implemented but **unverified** (npm registry unreachable when written; run `npm install` in `dashboard/` before relying on it)
 - [x] Real price provider (`CoinGeckoPriceProvider`, `src/services/coingecko-price-provider.ts`) - CoinGecko's free public API, no key required
-- [ ] DEX protocol adapters (Raydium, Jupiter, etc.)
+- [~] DEX protocol adapters (Raydium, Jupiter) - verified program IDs registered by default; instruction *type* detection only (`candidate` status), amount/mint extraction not yet implemented (see CLAUDE.md)
 - [ ] Alert system
 - [ ] Track record database - deliberately not started; the platform is stateless/read-only by design, and no concrete persistence requirement has been established yet (see `dashboard/README.md`)
 - [ ] WebSocket support
