@@ -13,7 +13,7 @@ The platform never requests or stores private keys/seed phrases/secrets and neve
 ```bash
 npm run dev            # Run the server with hot reload (tsx watch)
 npm run build           # Type-compile to dist/ via tsc
-npm start               # Run the compiled server (node dist/index.js)
+npm start               # Run the compiled server (node dist/main.js)
 
 npm test                 # Run all tests once (vitest run)
 npm run test:watch      # Run tests in watch mode
@@ -28,11 +28,14 @@ To run a single test file with Vitest: `npx vitest run src/services/instruction-
 
 Tests live next to the code they test as `*.test.ts` (e.g. `src/services/instruction-parser.test.ts`), not in a separate `test/` directory. `tsconfig.json` excludes `**/*.test.ts` from the build.
 
-### ⚠️ Known repo inconsistencies (verify before relying on `npm run dev`/`npm test`)
+### Repo inconsistencies (fixed)
 
-- `package.json`'s `dev`/`start` scripts point at `src/index.ts` / `dist/index.js`, but the actual entry point is `src/main.ts`. `npm run dev` will fail until this is fixed (either rename `main.ts` to `index.ts` or update the script).
-- `src/api/server.ts` imports `cors`, and `src/api/server.test.ts` imports `supertest`, but neither package (nor their `@types/*`) is listed in `package.json`. Installing them is required before the API server or its tests will run.
-- `apps/api/src/solana.ts` is an empty file, apparently a leftover from before the project moved to the `src/` layout. `apps/` is not part of the active codebase — all real code lives under `src/`.
+The following were found broken and have been corrected — mentioned here so the history in git log makes sense:
+
+- `package.json`'s `dev`/`start`/`main` fields pointed at `src/index.ts` / `dist/index.js`, but the actual entry point is `src/main.ts`. Scripts now point at `src/main.ts` / `dist/main.js`.
+- `src/api/server.ts` imported `cors`, and `src/api/server.test.ts` imported `supertest`, but neither package (nor `helmet`/`express-rate-limit`, added for hardening — see below) was listed in `package.json`. All are now declared as dependencies with their `@types/*` counterparts.
+- `src/api/server.ts` imported its service classes (`TransactionRetriever`, `BehaviorAnalyzer`, etc.) from `./` instead of `../services/`, which would have failed to resolve at build time since those files live in `src/services/`, not `src/api/`. Import paths are now corrected.
+- `apps/api/src/solana.ts` is still an empty leftover file from before the project moved to the `src/` layout. `apps/` is not part of the active codebase — all real code lives under `src/`. Left in place but do not build on it.
 
 ## Architecture
 
@@ -65,7 +68,7 @@ SolanaRpcClient          → raw, read-only calls to @solana/web3.js Connection
 - `src/types/errors.ts` — `ValidationError`, `RpcError` (carries `statusCode`), `PriceUnavailableError`, `DecodingError`. `APIServer`'s centralized error handler switches on these types to pick the HTTP status code.
 - `src/types/config.ts` — config interfaces (`SolanaConfig`, `PriceProviderConfig`, `DexRegistryConfig`, `AppConfig`). Only `SolanaConfig` is currently constructed/used (in `main.ts`); the rest are defined for future wiring.
 - `src/services/` — one file per pipeline stage, matching the flow above.
-- `src/api/server.ts` — Express app: middleware (CORS, JSON body limit, request logging), routes, centralized error handler.
+- `src/api/server.ts` — Express app: middleware (Helmet security headers, CORS, rate limiting, JSON body limit, request logging), routes, centralized error handler.
 - `src/main.ts` — composition root: reads env vars, constructs every service, injects them into `APIServer`, starts listening.
 
 ## Core design invariants
@@ -78,6 +81,7 @@ These constraints are enforced throughout the codebase and are called out explic
 - **DEX/program identification is honest about confidence.** `DexRegistry` only registers adapters with verified program IDs; `InstructionParser`/`ParsedInstructionStatus` distinguishes `confirmed` (known adapter decoded it) from `candidate` (looks like a swap but unverified) from `unknown` — never collapse this distinction to make output look more complete than it is. The Raydium/Jupiter decoders in `dex-registry.ts` are explicitly unimplemented placeholders (`decode()` always returns `null`) — do not treat their presence as working swap detection.
 - **Scores must stay explainable.** `IntelligenceScorer` and `RiskAssessor` are deterministic weighted combinations of named factors, and both return a `factors`/`reasoning` string array alongside the numeric score. Any new scoring signal should be similarly deterministic (reproducible from the same input) and paired with a human-readable explanation — not an opaque ML output.
 - **Responses always carry a disclaimer.** Intelligence/risk/analysis endpoints return a `disclaimer` field stating the data is not financial advice. Keep this on any new endpoint that surfaces a score.
+- **API surface is hardened by default.** `APIServer.setupMiddleware()` applies `helmet()` (secure headers, hides `X-Powered-By`), a scoped CORS allowlist (`GET`/`OPTIONS` only, no credentials), and `express-rate-limit` (100 req / 15 min per IP) ahead of body parsing and routing. Any new route rides on this same middleware chain — don't bypass it with a separate `express()` instance or router mounted outside `setupRoutes()`.
 
 ## Conventions
 

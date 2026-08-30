@@ -1,12 +1,14 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { validateWalletAddress, validateTransactionSignature } from '../types/domain';
 import { ValidationError, RpcError } from '../types/errors';
-import { TransactionRetriever } from './transaction-retriever';
-import { BehaviorAnalyzer } from './behavior-analyzer';
-import { IntelligenceScorer } from './intelligence-scorer';
-import { RiskAssessor } from './risk-assessor';
-import { PriceProvider } from './price-provider';
+import { TransactionRetriever } from '../services/transaction-retriever';
+import { BehaviorAnalyzer } from '../services/behavior-analyzer';
+import { IntelligenceScorer } from '../services/intelligence-scorer';
+import { RiskAssessor } from '../services/risk-assessor';
+import { PriceProvider } from '../services/price-provider';
 
 /**
  * API Error Response
@@ -108,6 +110,9 @@ export class APIServer {
    * Setup middleware
    */
   private setupMiddleware(): void {
+    // Secure HTTP headers (hides X-Powered-By, sets CSP/HSTS/etc. defaults)
+    this.app.use(helmet());
+
     // CORS - safe by default
     this.app.use(
       cors({
@@ -115,6 +120,22 @@ export class APIServer {
         credentials: false,
         methods: ['GET', 'OPTIONS'],
         allowedHeaders: ['Content-Type'],
+      })
+    );
+
+    // Rate limiting - mitigates scraping/abuse of the public read API
+    this.app.use(
+      rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        limit: 100, // 100 requests per IP per window
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: {
+          error: {
+            code: 'RATE_LIMITED',
+            message: 'Too many requests, please try again later.',
+          },
+        },
       })
     );
 
