@@ -293,8 +293,34 @@ HTTP Status Codes:
 
 ✅ Safe default CORS configuration:
 - Only allows GET and OPTIONS methods
-- Controlled origin whitelist
+- Controlled origin allowlist (`CORS_ORIGIN`, comma-separated exact origins)
 - No credentials passed
+- Note: CORS is a browser-side control only. It stops a script on another
+  website from reading responses in a visitor's browser, but it does
+  **not** stop direct/scripted access (curl, bots, server-to-server) —
+  that's what API key authentication (below) is for.
+
+### API Key Authentication
+
+Optional, opt-in via the `API_KEYS` environment variable (comma-separated
+list of valid keys):
+- **Unset (default)**: the API is open, no key required — convenient for
+  local development.
+- **Set**: every route except `/api/v1/health` requires a matching
+  `X-API-Key` header, or the request is rejected with `401 UNAUTHORIZED`.
+
+```bash
+curl -H "X-API-Key: your-key-here" \
+  'http://localhost:3000/api/v1/wallet/11111111111111111111111111111112/analysis'
+```
+
+### Rate Limiting
+
+✅ Two tiers via `express-rate-limit`, per IP:
+- General endpoints: 60 requests / 15 minutes
+- RPC-heavy endpoints (`transactions`, `behavior`, `intelligence`, `risk`,
+  `analysis`, `transaction/:signature` — each can trigger many upstream
+  Solana RPC calls): 20 requests / 15 minutes
 
 ### Environment Variables
 
