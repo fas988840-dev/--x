@@ -154,7 +154,7 @@ export interface Instruction {
 /**
  * Parsed instruction with identified program type
  */
-export type ParsedInstructionStatus = 'success' | 'failed' | 'unknown' | 'candidate';
+export type ParsedInstructionStatus = 'confirmed' | 'candidate' | 'unknown';
 
 export interface ParsedInstruction {
   programId: ProgramId;

@@ -70,6 +70,7 @@ SolanaRpcClient          → raw, read-only calls to @solana/web3.js Connection
 - `src/services/` — one file per pipeline stage, matching the flow above.
 - `src/api/server.ts` — Express app: middleware (Helmet security headers, CORS, rate limiting, JSON body limit, request logging), routes, centralized error handler.
 - `src/main.ts` — composition root: reads env vars, constructs every service, injects them into `APIServer`, starts listening.
+- `src/agents/core_agents.ts` — thin, honest facades over the services above (`WalletIntelligenceAgent`, `TransactionIntelligenceAgent`, `MarketEventAgent`, `RiskAgent`, `ResearchAgent`). **Not** autonomous/LLM agents — no model calls, no free-form generation. Each returns an `AgentResponse<T>` with `evidenceStatus`/`confidenceScore` that is `VERIFIED`/`1` only when `data` is a real value read from the pipeline, and `UNKNOWN`/`0`/`data: null` whenever the underlying capability isn't implemented (e.g. `MarketEventAgent` always returns `UNKNOWN` — there is no live event/Geyser pipeline in this codebase) or the call fails. Not yet wired into `main.ts`/`APIServer`. Extend this file the same way, never by hardcoding a plausible-looking value.
 
 ## Core design invariants
 
