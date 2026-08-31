@@ -83,6 +83,21 @@ export function buildMcpServer(): McpServer {
     version: '0.1.0',
   });
 
+  // TS2589 ("Type instantiation is excessively deep and possibly
+  // infinite") on the line below: this is the first server.registerTool()
+  // call in the file, and removing the callback's redundant explicit
+  // parameter type annotation (tried first) only moved the error from the
+  // callback to this call site, not away - the recursion is in
+  // McpServer.registerTool's own generic resolution against this
+  // inputSchema shape, not in anything specific to our code, and every
+  // other registerTool call below (same general shape: an object of Zod
+  // fields + an async callback) type-checks fine on its own. Suppressing
+  // this one, narrowly, with the real TS error code named, rather than
+  // guessing further at an SDK whose exact generic internals were never
+  // independently verified here (see this file's header comment) -
+  // runtime behavior is unaffected; only compile-time checking of this
+  // one call is skipped.
+  // @ts-expect-error TS2589: excessively deep type instantiation in registerTool's own generics, not this call's arguments
   server.registerTool(
     'wallet_intelligence',
     {
@@ -90,16 +105,7 @@ export function buildMcpServer(): McpServer {
         'Read-only facts about a Solana wallet: transaction counts, SOL balance, token balances. Returns evidenceStatus UNKNOWN with data: null when the address is invalid or the RPC read fails - never a guessed value.',
       inputSchema: { address: addressParam, limit: limitParam },
     },
-    // No explicit parameter type annotation here (unlike the other tools
-    // below) - McpServer.registerTool's own generic inference from
-    // `inputSchema` was hitting TS2589 ("Type instantiation is excessively
-    // deep and possibly infinite") the one time this file was actually
-    // type-checked, specifically when paired with an explicit duplicate
-    // annotation on the first tool registered. Letting TS infer the
-    // callback's parameter type from inputSchema avoids the conflict;
-    // the shape is identical to the explicit one (address: string,
-    // limit?: number).
-    async ({ address, limit }) => jsonResult(await walletAgent.analyzeWallet(address, limit))
+    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await walletAgent.analyzeWallet(address, limit))
   );
 
   server.registerTool(
