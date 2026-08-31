@@ -149,6 +149,15 @@ export class APIServer {
    */
   private setupMiddleware(): void {
     // Secure HTTP headers (hides X-Powered-By, sets CSP/HSTS/etc. defaults)
+    // Render, Fly and Railway all put the app behind their own proxy, so the
+    // socket address is the proxy's, not the caller's. Without this,
+    // express-rate-limit buckets every request under one IP and the 60/15min
+    // limit becomes global rather than per-client: one busy caller would lock
+    // out everyone, health checks included. 1 = trust exactly one hop, which
+    // is what these platforms put in front of us - `true` would trust any
+    // X-Forwarded-For a client sends and make the limit trivially bypassable.
+    this.app.set('trust proxy', 1);
+
     this.app.use(helmet());
 
     // CORS - allowlist of exact origins, comma-separated in CORS_ORIGIN.
@@ -185,6 +194,11 @@ export class APIServer {
         limit: 60, // 60 requests per IP per window
         standardHeaders: true,
         legacyHeaders: false,
+        // Liveness endpoints must never be throttled. A platform health check
+        // that gets a 429 reads as the service being down, and the platform
+        // stops routing traffic to a server that is working - the same failure
+        // mode as the health route depending on CoinGecko, by another route.
+        skip: (req) => req.path === '/' || req.path === '/api/v1/health',
         message: {
           error: {
             code: 'RATE_LIMITED',

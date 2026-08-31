@@ -169,6 +169,29 @@ describe('API Server', () => {
     });
   });
 
+  describe('Rate limiting', () => {
+    // Regression: the general limiter had no skip, so a platform health check
+    // could be answered with 429 once other traffic used the window up. The
+    // platform reads that as the service being down.
+    it('should not throttle the liveness endpoints', async () => {
+      for (let i = 0; i < 65; i++) {
+        await request(app).get('/api/v1/health');
+      }
+      const response = await request(app).get('/api/v1/health');
+
+      expect(response.status).toBe(200);
+    });
+
+    it('should not throttle the service index', async () => {
+      for (let i = 0; i < 65; i++) {
+        await request(app).get('/');
+      }
+      const response = await request(app).get('/');
+
+      expect(response.status).toBe(200);
+    });
+  });
+
   describe('GET /api/v1/health', () => {
     it('should return health status', async () => {
       const response = await request(app).get('/api/v1/health');
