@@ -44,7 +44,7 @@ Earlier drafts of this file claimed a confirmed $15,000 Colosseum grant.
 **That claim was incorrect and has been removed.**
 
 If you want to apply: https://colosseum.org — answers are prepared in
-`COPY_PASTE_ANSWERS.txt` and `docs/send-grants.html`.
+`COPY_PASTE_ANSWERS.txt` and `GRANTS/send-grants.html`.
 
 ### 4. ChainGPT Research — NOT SUBMITTED
 
@@ -108,7 +108,7 @@ somewhere with npm registry access.
 
 ## Open issue: the "live demo" link
 
-About 20 places across `GRANTS/`, `docs/grant-answers.html`, and
+About 20 places across `GRANTS/`, `GRANTS/grant-answers.html`, and
 `COPY_PASTE_ANSWERS.txt` present this URL as a **"Live demo (public docs
 page, live now)"**:
 

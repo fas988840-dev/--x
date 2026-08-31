@@ -33,7 +33,7 @@
 #### Setup & Submission Guides
 - ✅ `GRANTS/SUBMISSION_GUIDE.md` - High-level submission overview
 - ✅ `GRANTS/DETAILED_INSTRUCTIONS.md` - Step-by-step for each platform
-- ✅ `docs/grant-answers.html` - Copy-paste ready answers
+- ✅ `GRANTS/grant-answers.html` - Copy-paste ready answers
 - ✅ `docs/proposal.html` - Formatted proposal page
 
 #### Deployment Guides
@@ -132,7 +132,7 @@ Deploy
 Go to: https://chaingpt.org/grants
 Click: Apply for Research Grant
 Follow: GRANTS/DETAILED_INSTRUCTIONS.md (ChainGPT section)
-Copy answers from: docs/grant-answers.html
+Copy answers from: GRANTS/grant-answers.html
 Submit
 ```
 
@@ -142,7 +142,7 @@ Go to: https://colosseum.org
 Click: Apply
 Select: Solana DeFi Infrastructure
 Follow: GRANTS/DETAILED_INSTRUCTIONS.md (Colosseum section)
-Copy answers from: docs/grant-answers.html
+Copy answers from: GRANTS/grant-answers.html
 Submit
 ```
 
@@ -152,7 +152,7 @@ Go to: https://earn.superteam.fun
 Click: Grants → Apply for Grant
 Select: Developer Tools
 Follow: GRANTS/DETAILED_INSTRUCTIONS.md (Superteam section)
-Copy answers from: docs/grant-answers.html
+Copy answers from: GRANTS/grant-answers.html
 Submit
 ```
 
@@ -176,7 +176,7 @@ Submit
 |------|---------|
 | `GRANTS/DETAILED_INSTRUCTIONS.md` | Step-by-step guide for each platform |
 | `GRANTS/SUBMISSION_GUIDE.md` | Overview of all submissions |
-| `docs/grant-answers.html` | Copy-paste answers (click "Copy" buttons) |
+| `GRANTS/grant-answers.html` | Copy-paste answers (click "Copy" buttons) |
 | `docs/proposal.html` | Formatted proposal for review |
 
 ### Setup & Configuration
@@ -217,7 +217,7 @@ Submit
 - Solana Wallet: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
 
 **Local Files:**
-- Copy answers from: `docs/grant-answers.html`
+- Copy answers from: `GRANTS/grant-answers.html`
 - Submission instructions: `GRANTS/DETAILED_INSTRUCTIONS.md`
 - Deployment guide: `DEPLOYMENT.md`
 

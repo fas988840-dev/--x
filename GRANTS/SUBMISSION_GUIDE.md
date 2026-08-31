@@ -17,7 +17,7 @@
 
 **File to Use:**
 - `/GRANTS/chaingpt-research-grant.md`
-- `../docs/grant-answers.html` → Copy "ChainGPT Research Grant" section
+- `grant-answers.html` → Copy "ChainGPT Research Grant" section
 
 **Steps:**
 1. Go to https://chaingpt.org/grants
@@ -44,7 +44,7 @@
 
 **File to Use:**
 - `/GRANTS/colosseum-eternal-grant.md`
-- `../docs/grant-answers.html` → Copy "Colosseum" section
+- `grant-answers.html` → Copy "Colosseum" section
 
 **Steps:**
 1. Go to https://colosseum.org/apply
@@ -67,7 +67,7 @@
 
 **File to Use:**
 - `/GRANTS/superteam-earn-grant.md`
-- `../docs/grant-answers.html` → Copy "Superteam" section
+- `grant-answers.html` → Copy "Superteam" section
 
 **Steps:**
 1. Go to https://earn.superteam.fun/grants
@@ -119,7 +119,7 @@
 | `GRANTS/chaingpt-research-grant.md` | ChainGPT grant application |
 | `GRANTS/colosseum-eternal-grant.md` | Colosseum grant application |
 | `GRANTS/superteam-earn-grant.md` | Superteam grant application |
-| `docs/grant-answers.html` | Copy-paste answer sheet for all platforms |
+| `GRANTS/grant-answers.html` | Copy-paste answer sheet for all platforms |
 | `docs/proposal.html` | Formatted version of proposal (for review) |
 | `DEPLOYMENT.md` | How to deploy the API to production |
 

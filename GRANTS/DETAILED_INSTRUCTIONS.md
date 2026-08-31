@@ -44,7 +44,7 @@ GitHub Repository: https://github.com/fas988840-dev/PROJECT-x
 Website/Demo: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
 ```
 
-**Step 4: Copy-paste long-form answers from** `docs/grant-answers.html`
+**Step 4: Copy-paste long-form answers from** `GRANTS/grant-answers.html`
 
 For each field, find the matching section in grant-answers.html:
 
@@ -218,7 +218,7 @@ Note the confirmation number
 
 ### Copy-Paste Efficiently
 
-1. Open `docs/grant-answers.html` in browser
+1. Open `GRANTS/grant-answers.html` in browser
 2. Look for the grant name in bold
 3. Click "Copy" next to each answer
 4. Paste into the form field

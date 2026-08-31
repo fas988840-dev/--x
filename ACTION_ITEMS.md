@@ -18,7 +18,7 @@
   - ChainGPT Research Grant (`GRANTS/chaingpt-research-grant.md`)
   - Colosseum Eternal Grant (`GRANTS/colosseum-eternal-grant.md`)
   - Superteam Earn Grant (`GRANTS/superteam-earn-grant.md`)
-- [x] Grant answers sheet created (`docs/grant-answers.html`) with copy-to-clipboard
+- [x] Grant answers sheet created (`GRANTS/grant-answers.html`) with copy-to-clipboard
 - [x] Formatted proposal page created (`docs/proposal.html`)
 - [x] Deployment guide written (`DEPLOYMENT.md`)
 - [x] Submission guide created (`GRANTS/SUBMISSION_GUIDE.md`)
@@ -124,7 +124,7 @@ flyctl deploy
 - [ ] Repository is public
 - [ ] CI shows green (all tests passing)
 - [ ] Live API URL is ready (or use demo URL)
-- [ ] Have all answers from `docs/grant-answers.html`
+- [ ] Have all answers from `GRANTS/grant-answers.html`
 
 ---
 
@@ -152,7 +152,7 @@ flyctl deploy
 **Setup Guides:**
 - Deployment: `DEPLOYMENT.md`
 - Submission: `GRANTS/SUBMISSION_GUIDE.md`
-- Answers: `docs/grant-answers.html`
+- Answers: `GRANTS/grant-answers.html`
 
 **GitHub:**
 - Repo: https://github.com/fas988840-dev/PROJECT-x

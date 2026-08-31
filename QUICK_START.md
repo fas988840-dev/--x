@@ -1,10 +1,9 @@
 # 🚀 Quick Start
 
 > ⚠️ **This file is out of date.** It was written when the repository was
-> private and no grant had been filed. Since then the repository was made
-> public and then **archived** (read-only), and one grant application was
-> submitted. Its step 1 below (make the repo public) is already done; what
-> is actually needed now is the opposite — **unarchiving** it.
+> private and no grant had been filed. The repository is now public and
+> unarchived, CI is green again, and one grant application has been
+> submitted, so step 1 below is already done.
 >
 > For the current state and next steps, read `GRANTS_COMPLETION_REPORT.md`.
 > The "3 grants = $40,000+" figure below is a plan, not a record of
@@ -14,7 +13,7 @@
 
 ## ⚡ Ultra-Quick Version (Copy & Paste)
 
-### Step 1: Make Repository Public — ALREADY DONE (now archived instead)
+### Step 1: Make Repository Public — ✅ ALREADY DONE
 
 Go to your browser and:
 ```
@@ -57,7 +56,7 @@ After deployment, you'll see links to:
 
 For each one, use the step-by-step guide: `GRANTS/DETAILED_INSTRUCTIONS.md`
 
-Copy answers from: `docs/grant-answers.html` (click "Copy" buttons)
+Copy answers from: `GRANTS/grant-answers.html` (click "Copy" buttons)
 
 ---
 
@@ -135,7 +134,7 @@ Wallet: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
 → See `DEPLOYMENT.md` for manual deployment
 
 ### "Can't find answers to copy"
-→ Open `docs/grant-answers.html` in browser, use "Copy" buttons
+→ Open `GRANTS/grant-answers.html` in browser, use "Copy" buttons
 
 ### "Which platform should I deploy to?"
 → Choose Fly.io (free tier, easiest)
@@ -168,7 +167,7 @@ bash scripts/complete-setup.sh
 #    - Colosseum: https://colosseum.org
 #    - Superteam: https://earn.superteam.fun
 
-# 4. Copy answers from: docs/grant-answers.html
+# 4. Copy answers from: GRANTS/grant-answers.html
 ```
 
 **That's all you need to do.** ✨

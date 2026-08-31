@@ -186,7 +186,7 @@ See `GRANTS/DETAILED_INSTRUCTIONS.md` for step-by-step
    - Deploy to your chosen platform
    - Get grant submission instructions
 
-3. **Submit grants** using the answers in `docs/grant-answers.html`
+3. **Submit grants** using the answers in `GRANTS/grant-answers.html`
 
 ---
 
