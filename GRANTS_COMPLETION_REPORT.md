@@ -101,8 +101,8 @@ somewhere with npm registry access.
   resolve correctly and do not need rewriting. (Caveat: GitHub's rename
   redirect stops working if a new repo named `PROJECT-x` is later created
   under this account.)
-- Repository was **archived** on Aug 31, 2026 and is read-only. It must be
-  unarchived before anything can be pushed.
+- Repository was archived on Aug 31, 2026 and has since been **unarchived**;
+  it accepts writes again.
 
 ---
 
@@ -134,11 +134,13 @@ it with one of:
 
 ## What to do next
 
-1. **Unarchive the repository** — Settings → Danger Zone → Unarchive.
-2. **Check `fas988840@gmail.com`** for the Solana Foundation confirmation
+1. ~~Unarchive the repository~~ — done.
+2. **Test the "live demo" link** in a private/incognito window (see the
+   section above). This is the one open item that could still be misleading
+   reviewers of already-submitted proposals.
+3. **Check `fas988840@gmail.com`** for the Solana Foundation confirmation
    and update the table above with what you actually find.
-3. **Decide on Colosseum** — it was never submitted. Apply or drop it.
-4. **Fix the repo links** if `PROJECT-x` does not redirect to `--x`.
+4. **Decide on Colosseum** — it was never submitted. Apply or drop it.
 5. Wait for a response on the Webacy/DD.xyz application.
 
 ---
