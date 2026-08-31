@@ -14,6 +14,11 @@
 > that goes stale — check the live CI badge in
 > [README.md](https://github.com/fas988840-dev/PROJECT-x/blob/main/README.md)
 > for the current state at any later date.
+> 
+> 🔗 **Live demo:** https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+> — the project's public-facing page, live now (published as an interactive
+> page, ahead of GitHub Pages being enabled on the repo). A short screen-recorded
+> walkthrough of this same page is attached separately with this application.
 
 ## Proof of Work (What's Built)
 
