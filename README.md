@@ -667,8 +667,8 @@ reflects the last run before archiving rather than current state.
 - **Startup Accelerator Grant** (Webacy / DD.xyz, listed on Superteam Earn) —
   submitted Aug 31, 2026; listing states an award of up to $10,000.
   Confirmation screen observed.
-- **Solana Foundation** — reported submitted in an earlier session; not
-  independently confirmed. Verify against the confirmation email.
+- **Solana Foundation** — submitted, confirmed by email from Solana Grants.
+  Requesting $25,000. They state a response within one month of submission.
 - **Colosseum Eternal** — not submitted.
 - **ChainGPT Research** — not submitted (`chaingpt.org/grants` returned 404).
 

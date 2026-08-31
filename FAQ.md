@@ -77,8 +77,8 @@ As of this writing the confirmed record is:
 
 - **Startup Accelerator Grant** (Webacy / DD.xyz, listed on Superteam Earn) —
   submitted Aug 31, 2026. The listing states an award of up to $10,000.
-- **Solana Foundation** — believed submitted, not independently confirmed.
-  Check your email before naming it.
+- **Solana Foundation** — submitted and confirmed by email. Requesting
+  $25,000. Response expected within one month of submission.
 - **Colosseum Eternal** — not submitted.
 - **ChainGPT Research** — not submitted.
 

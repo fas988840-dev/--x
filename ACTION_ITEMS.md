@@ -9,10 +9,9 @@
 
 - [x] Startup Accelerator Grant (Webacy / DD.xyz, via Superteam Earn) submitted
       Aug 31, 2026 — confirmation screen observed, promo code `AINSIDER1872`
-- [?] Solana Foundation grant application — applicant reported a confirmation
-      email, but this was never independently verified. **Check the inbox and
-      settle this**, since the answer changes what you tell other funders when
-      they ask about concurrent applications.
+- [x] Solana Foundation grant application ($25,000) submitted — confirmed by
+      email from Solana Grants. They state a response within one month of the
+      submission date.
 - [x] All 4 grant proposal documents created and ready:
   - Solana Foundation Proposal (`GRANTS/solana-foundation-proposal-doc.md`)
   - ChainGPT Research Grant (`GRANTS/chaingpt-research-grant.md`)

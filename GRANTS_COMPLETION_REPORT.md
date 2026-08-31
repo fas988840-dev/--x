@@ -31,11 +31,10 @@ grant program was confirmed.
 
 | Field | Value |
 |---|---|
-| Status | **Reported submitted in an earlier session** |
-| Evidence | Not independently verifiable from this session. No confirmation screen or email was observed here. |
-
-Treat as unconfirmed until the confirmation email in `fas988840@gmail.com`
-is checked directly.
+| Status | **Submitted — CONFIRMED** |
+| Evidence | Confirmation email from "Solana Grants", subject "Solana Grant Submission Confirmation", received 10:30 AM. Signed Solana Foundation, Damstrasse 16, 6300 Zug, Switzerland. |
+| Amount | $25,000, per `GRANTS/solana-foundation-proposal-doc.md`. The email does not restate an amount. |
+| Response window | The email states review and response **within one month of the submission date**, varying with application volume. They contact applicants directly if a team member wants to know more. |
 
 ### 3. Colosseum Eternal — NOT SUBMITTED
 
