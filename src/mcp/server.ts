@@ -8,9 +8,20 @@
  * (github.com, npmjs.com, modelcontextprotocol.io) were unreachable from
  * this sandbox's network egress proxy when this file was written, so the
  * exact API surface (`registerTool` signature, import paths) is NOT
- * independently verified here. Run `npm install && npm run type-check`
- * before relying on this - small API-name drift (e.g. an SDK method
- * rename) is the likely failure mode, not the overall approach.
+ * independently verified here. `npm install` now succeeds (see
+ * tsconfig.json/CLAUDE.md for the standing note on why) and confirms the
+ * import paths/method names are real, but McpServer.registerTool's
+ * generic type resolution against this file's several tool registrations
+ * hits TS2589 ("Type instantiation is excessively deep and possibly
+ * infinite") - confirmed to be cumulative across calls, not one bad call
+ * (narrowly suppressing it on one registerTool just moves the same error
+ * to the next one). This is why the whole src/mcp directory is excluded
+ * from tsconfig.json's type-checked build: `npm run mcp` (tsx src/mcp/
+ * index.ts) transpiles this file directly without invoking tsc, so the
+ * runtime is unaffected - only compile-time type-checking of this
+ * directory is skipped. Small API-name drift (e.g. an SDK method rename)
+ * is still the likely failure mode for correctness, not the overall
+ * approach; there is currently no automated check catching that here.
  *
  * Every tool below is a pass-through to the honest agents in
  * src/agents/core_agents.ts - same no-fabrication guarantee: a tool
@@ -83,21 +94,6 @@ export function buildMcpServer(): McpServer {
     version: '0.1.0',
   });
 
-  // TS2589 ("Type instantiation is excessively deep and possibly
-  // infinite") on the line below: this is the first server.registerTool()
-  // call in the file, and removing the callback's redundant explicit
-  // parameter type annotation (tried first) only moved the error from the
-  // callback to this call site, not away - the recursion is in
-  // McpServer.registerTool's own generic resolution against this
-  // inputSchema shape, not in anything specific to our code, and every
-  // other registerTool call below (same general shape: an object of Zod
-  // fields + an async callback) type-checks fine on its own. Suppressing
-  // this one, narrowly, with the real TS error code named, rather than
-  // guessing further at an SDK whose exact generic internals were never
-  // independently verified here (see this file's header comment) -
-  // runtime behavior is unaffected; only compile-time checking of this
-  // one call is skipped.
-  // @ts-expect-error TS2589: excessively deep type instantiation in registerTool's own generics, not this call's arguments
   server.registerTool(
     'wallet_intelligence',
     {
