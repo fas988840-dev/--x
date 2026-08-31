@@ -3,11 +3,15 @@
 Two videos are required, each under 3 minutes. Below is a word-for-word
 script for each, with timing.
 
-**Every factual claim in these scripts is verifiable.** The test counts come
-from CI run `33426707893` (Aug 31, 2026), which a reviewer can open. Nothing
-here claims users, revenue, deployment, or partnerships that do not exist —
-partly because that would be false, and partly because for *this* product,
-refusing to overstate is the demonstration.
+**Every factual claim in these scripts is verifiable.** The test counts are
+from CI on `main` and a reviewer can open the latest run at
+github.com/fas988840-dev/--x/actions to check them. **If you re-record after
+further commits, re-read the current count first** — the figure spoken aloud
+has to match the run on screen.
+
+Nothing here claims users, revenue, or partnerships that do not exist — partly
+because that would be false, and partly because for *this* product, refusing
+to overstate is the demonstration.
 
 ---
 
@@ -22,7 +26,7 @@ refusing to overstate is the demonstration.
 
 **Have open in tabs, ready to click:**
 1. The GitHub repo
-2. The CI run: `github.com/fas988840-dev/--x/actions/runs/33426707893`
+2. The CI run: `github.com/fas988840-dev/--x/actions` — open the latest green run on `main`
 3. `src/services/determinism.test.ts`
 4. `src/services/instruction-parser.ts`
 5. A terminal
@@ -78,10 +82,11 @@ checkable detail answers both. Superlatives answer neither.
 > Let me be straight about where this is, because that's the whole point of
 > the product.
 >
-> It's a solo project. No users yet. Not deployed to a public URL yet. And
-> Raydium and Jupiter detection verifies the instruction type but not the
-> account layout — so swap amounts come back null and the status stays
-> "candidate", not "confirmed."
+> It's a solo project. No users yet. It's deployed, but on a free tier and the
+> public Solana RPC. And Raydium and Jupiter detection verifies the instruction
+> type but not the account layout — so swap amounts come back null and the
+> status stays "candidate", not "confirmed."
+
 >
 > I could have hidden that. The codebase is built to refuse exactly that
 > move, so hiding it in a pitch would make the pitch a lie about the product.
@@ -102,10 +107,10 @@ checkable detail answers both. Superlatives answer neither.
 
 ### [2:15–2:40] What's real today, and the ask
 
-> What exists right now: 133 tests passing on GitHub's runners — including a
-> determinism check that runs on every push. TypeScript strict mode. Twelve
+> What exists right now: 143 tests passing on GitHub's runners — including a
+> determinism check that runs on every push. TypeScript strict mode. Thirteen
 > REST endpoints, an MCP server, a read-only architecture that never touches
-> a private key.
+> a private key — deployed and answering right now.
 >
 > The CI run is linked in the submission. Everything I just said is checkable
 > before you talk to me.
@@ -131,7 +136,7 @@ show the thing, say what it proves.
 
 *Open the CI run. Scroll to the test output.*
 
-> This is a real run on GitHub's runners. Fifteen test files, 133 tests,
+> This is a real run on GitHub's runners. Sixteen test files, 143 tests,
 > all passing. Lint clean, type-check clean, build clean.
 
 *Open `src/services/determinism.test.ts`.*

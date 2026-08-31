@@ -12,13 +12,20 @@ anything. If a field on the real form doesn't match anything here, screenshot
 it and ask rather than improvising.
 
 **Which tier to pick:** *Builder* (early-stage). FactLedger is built and
-tested but not deployed and has no users — that is what builder-stage means.
+tested and now deployed, but has no users yet — that is what builder-stage means.
 Claiming *growth* invites questions about traction you don't have yet.
 
-**What to request:** $15,000–$20,000. Not the $50,000 maximum. The milestones
-below cost roughly that, a solo developer asking for the ceiling reads as
-unconsidered, and a right-sized ask with costed milestones is more fundable
-than a big round number.
+**⚠️ VERIFY THE CEILING BEFORE SENDING.** Two figures are in circulation and
+they disagree: a search summary gave "up to $50,000 per project" across the
+programme, while the grant page reportedly caps the **builder** tier at
+**$5,000 USDC plus $10,000 in API credits**. chaingpt.org is unreachable from
+where this was written, so it could not be checked here.
+
+The amount and milestones below are written for the **$5,000 + credits**
+reading, because that is the safer error: asking under a ceiling costs some
+money, asking 3.6x over one reads as not having read the terms and can sink
+the application outright. **If the page says the builder tier allows more,
+scale the milestones up before sending.**
 
 ---
 
@@ -69,7 +76,7 @@ it is never confidently wrong about which of its inputs were actually checked.
 
 Seven read-only agents sit over one deterministic pipeline, exposed as twelve
 REST endpoints, a deterministic agent router with an explicit intent enum (no
-NLP guessing), and an MCP server over stdio. 133 tests pass on GitHub's
+NLP guessing), and an MCP server over stdio. 143 tests pass on GitHub's
 runners, including a determinism check that calls each scorer twice with fixed
 input and asserts exact equality — the build fails if scoring ever stops being
 reproducible.
@@ -124,36 +131,40 @@ public and MIT licensed.
 ## Requested amount
 
 ```
-$18,000 USD
+$5,000 USDC, plus API credits if the tier includes them
 ```
+
+*(Written for the builder tier. Confirm the real ceiling on the grant page and
+scale up if it allows more — see the note at the top.)*
 
 ---
 
 ## Milestones
 
 ```
-Milestone 1 — Production deployment ($6,000, weeks 1-4)
-Deploy the API to a public endpoint on a dedicated Solana RPC provider, with
-uptime and error monitoring. Public RPC endpoints rate-limit and commonly
-disable the WebSocket log subscriptions the live alert stream depends on.
-Deliverable: a public API serving real wallet analysis, monitored, with the
-ChainGPT explanation endpoint live and exercised against a real key.
-
-Milestone 2 — Explanation layer hardening ($6,000, weeks 5-9)
-Extend the ChainGPT integration beyond single-wallet summaries to the risk and
-alert surfaces, with prompt work to keep every generated sentence traceable to
-a computed value, plus response validation and regression tests that fail if a
-generated summary asserts anything the pipeline did not produce.
+Milestone 1 — ChainGPT explanation coverage ($2,500, weeks 1-5)
+The integration currently explains one surface: a single wallet's summary.
+Extend it to the risk and alert surfaces, with prompt work that keeps every
+generated sentence traceable to a value the deterministic pipeline computed,
+plus regression tests that fail if a generated summary asserts anything the
+pipeline did not produce. API credits, if included, go here — this is the
+milestone that consumes them.
 Deliverable: explanation coverage across the API, with tests enforcing the
-no-fabrication boundary.
+no-fabrication boundary in CI.
 
-Milestone 3 — Verified protocol coverage and documentation ($6,000, weeks 10-14)
-Independently verify program IDs and account layouts for Orca and Magic Eden
-so those adapters can move from candidate to confirmed with real amount
-extraction, and publish a write-up of the AI-explainer architecture so other
-teams can adopt the separation.
-Deliverable: additional protocols at honestly-labelled confidence, and a
-public technical write-up.
+Milestone 2 — Dedicated RPC and hardening ($1,500, weeks 6-9)
+Move the deployed API onto a dedicated Solana RPC provider. The public
+endpoint rate-limits and commonly disables the WebSocket log subscriptions the
+live alert stream needs, which is the main thing holding that feature back.
+Add error tracking and uptime monitoring.
+Deliverable: the live API on dedicated infrastructure, monitored.
+
+Milestone 3 — Publish the pattern ($1,000, weeks 10-12)
+Write up the AI-explainer architecture — compute deterministically, let the
+model restate, never let it originate — with the code and tests as the worked
+example, so other teams putting an LLM near financial data can adopt the same
+separation.
+Deliverable: a public technical write-up and integration examples.
 ```
 
 ---
@@ -165,7 +176,7 @@ Solo founder, full time. Abdullah Al-Anzi, based in Saudi Arabia.
 
 No team and no users yet, and I would rather say that directly than have you
 find it. What I can point to is the code: TypeScript strict mode throughout,
-no `any` types, 133 tests passing on GitHub's own runners, and a determinism
+no `any` types, 143 tests passing on GitHub's own runners, and a determinism
 check wired into CI so the project's central claim is enforced automatically
 rather than asserted in a README.
 ```
@@ -176,7 +187,8 @@ rather than asserted in a README.
 
 ```
 Repository:  https://github.com/fas988840-dev/--x
-CI run:      https://github.com/fas988840-dev/--x/actions/runs/33426707893
+Live API:    https://factledger-api.onrender.com/api/v1/health
+CI:          https://github.com/fas988840-dev/--x/actions
 Contact:     fas988840@gmail.com
 X / Twitter: @aamm123220
 License:     MIT
@@ -192,8 +204,7 @@ Two things.
 The honest gaps. Raydium and Jupiter detection verifies the instruction type
 but not the account layout, so swap amounts stay null and status stays
 "candidate". The live WebSocket alert stream is unit-tested but not yet
-exercised against a real RPC subscription. The API is not deployed to a public
-URL. All three are stated in the repository's own documentation, not only here.
+exercised against a real RPC subscription. All of these are stated in the repository's own documentation, not only here.
 
 Concurrent applications. I have submitted to the Solana Foundation grant
 program (confirmed received, awaiting review) and to the Startup Accelerator

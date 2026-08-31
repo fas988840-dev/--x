@@ -469,6 +469,10 @@ We request **$25,000 USD** across three 6-month milestones:
 - **Live Demo** (public docs page, live now): https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
 - **GitHub Pages** (same content, pending a manual repo-settings toggle): https://fas988840-dev.github.io/PROJECT-x/
 - **Live API** (backend): not yet deployed — Dockerfile is ready; deploying to Railway/Render/Fly.io is Milestone 1's first deliverable
+
+> **Update, Aug 31 2026:** the API has since been deployed and is
+> reachable at https://factledger-api.onrender.com/api/v1/health. This document is left as submitted;
+> the line above describes the state at submission time.
 - **Contributing**: Open to community PRs for additional protocol support
 
 ## Contact

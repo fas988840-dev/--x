@@ -73,10 +73,10 @@ UNKNOWN/0/null whenever the capability is not implemented or the call failed.
 MarketEventAgent returning UNKNOWN in every case is the contract working, not
 a gap to paper over.
 
-Exposed three ways: 12 REST endpoints, a deterministic agent router
+Exposed three ways: 13 REST endpoints, a deterministic agent router
 (explicit intent enum — no NLP guessing), and an MCP server over stdio.
 
-133 tests pass on GitHub's runners, including a determinism check that calls
+143 tests pass on GitHub's runners, including a determinism check that calls
 each scorer twice with fixed input and asserts exact equality, failing the
 build if scoring ever stops being reproducible.
 ```
@@ -99,7 +99,8 @@ pipeline output regardless of what the model returns.
 ## Honest state
 
 ```
-Solo developer, full time. No users yet. Not deployed to a public URL yet.
+Solo developer, full time. No users yet. Deployed, but on a free tier and the
+public Solana RPC — https://factledger-api.onrender.com
 
 Raydium and Jupiter detection verifies the instruction type but not the
 account layout, so amounts stay null and status stays CANDIDATE. The live

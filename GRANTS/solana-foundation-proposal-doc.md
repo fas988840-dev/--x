@@ -112,6 +112,10 @@ Stating these is consistent with how the software itself behaves.
   unit-tested against a mocked RPC client only. Separately, many public RPC endpoints
   restrict log subscriptions, so production use needs a dedicated provider.
 - **No live deployment yet.** The Docker image builds; it has not been deployed to a
+
+> **Update, Aug 31 2026:** the API has since been deployed and is
+> reachable at https://factledger-api.onrender.com/api/v1/health. This document is left as submitted;
+> the line above describes the state at submission time.
   public URL. That is Milestone 1 below and the most immediate use of this grant.
 - **No users yet.** There are no usage numbers, and this proposal claims none.
 

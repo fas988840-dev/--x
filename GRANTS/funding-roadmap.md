@@ -17,11 +17,13 @@ Everything past tier 1 needs one or both of:
 - **A deployed, reachable API.** Not a repository — a URL a reviewer can call.
 - **Users.** Even a handful of real ones.
 
-Neither exists yet. That is not six independent options waiting; it is one
-door with six rooms behind it.
+The API is now deployed; users are not. That is not six independent options
+waiting — it is one door with six rooms behind it, and the door is half open.
 
 **Current state:** repository public and MIT, CI green (143 tests), the API
-undeployed, no users.
+deployed at https://factledger-api.onrender.com, no users yet.
+
+That clears the first half of the gate. **Users are what remain.**
 
 ---
 
@@ -32,7 +34,7 @@ undeployed, no users.
 | Amount | ~$500 – $10,000, USDC |
 | Speed | Decision in ~48 hours; application takes ~15 minutes |
 | Dilution | None — a grant, not investment |
-| Needs | Open source ✅ · working prototype ✅ · **deployment** ❌ |
+| Needs | Open source ✅ · working prototype ✅ · deployment ✅ |
 
 **Fastest money available, and the only tier reachable in days.**
 
@@ -42,7 +44,8 @@ Arabia is not named. Ask the relevant Superteam chapter before spending time
 on the application; a rejection on geography costs nothing but finding out
 after writing it does.
 
-⚠️ Their wording also ties support to deploying on Mainnet. Deploy first.
+Their wording ties support to deploying on Mainnet — now satisfied. Submission
+text is ready in `instagrants-submission-fields.md`.
 
 ---
 
@@ -179,9 +182,9 @@ no-secrets invariant, which is itself a stated security feature.
 ## The order that actually works
 
 ```
-now        deploy the API                    ~10 min, browser, Railway
-then       Superteam Instagrants             ~15 min · decision in 48h
-then       ChainGPT Web3 AI grant            text ready · chaingpt.org/web3-ai-grant
+done       deploy the API                    https://factledger-api.onrender.com
+now        Superteam Instagrants             text ready · decision in 48h
+now        ChainGPT Web3 AI grant            text ready · verify the tier ceiling first
 2 weeks    Pyth integration                  needs a working npm install
 then       Pyth grant                        with the integration as evidence
 4 weeks    Colosseum sprint                  starts strong if already deployed
@@ -191,5 +194,6 @@ waiting    Webacy / DD.xyz                   submitted, no stated timeline
 
 **Awarded to date: $0.** Two applications confirmed submitted, none decided.
 
-Deployment is the first line for a reason: it is the only remaining item that
-unblocks four others, and it is ten minutes of browser work.
+Deployment was the gate and it is cleared. Instagrants is now the fastest
+remaining move — a decision in about 48 hours, on text that is already
+written. Users are what the rest of the ladder still waits on.
