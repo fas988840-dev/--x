@@ -17,7 +17,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # No `cache: 'npm'` here on purpose: that option hashes
+          # package-lock.json for the cache key, and this repo has no
+          # committed lockfile (npm install has only ever been runnable
+          # from the sandboxes that wrote this code, which had the npm
+          # registry blocked - see CLAUDE.md/README.md's verification-
+          # status notes throughout). Without a lockfile, setup-node@v4
+          # fails outright before `npm install` even runs, which is why
+          # every prior run on this branch shows failure/startup_failure
+          # with every later step skipped. `npm install` below still
+          # works fine without a cache; it's just not cached across runs.
 
       - run: npm install
 
