@@ -510,6 +510,10 @@ GET /api/v1/agents/:intent
 **Live Demo** (public docs page, live now): https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be  
 **Live API** (backend): not yet deployed — this grant's Week 1 deliverable  
 
+> **Update, Aug 31 2026:** the API has since been deployed and is
+> reachable at https://factledger-api.onrender.com/api/v1/health. This document is left as submitted;
+> the line above describes the state at submission time.
+
 ---
 
 **FactLedger: Deterministic Solana Wallet Intelligence**

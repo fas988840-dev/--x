@@ -12,7 +12,7 @@ anything. If a field on the real form doesn't match anything here, screenshot
 it and ask rather than improvising.
 
 **Which tier to pick:** *Builder* (early-stage). FactLedger is built and
-tested but not deployed and has no users — that is what builder-stage means.
+tested and now deployed, but has no users yet — that is what builder-stage means.
 Claiming *growth* invites questions about traction you don't have yet.
 
 **⚠️ VERIFY THE CEILING BEFORE SENDING.** Two figures are in circulation and
@@ -76,7 +76,7 @@ it is never confidently wrong about which of its inputs were actually checked.
 
 Seven read-only agents sit over one deterministic pipeline, exposed as twelve
 REST endpoints, a deterministic agent router with an explicit intent enum (no
-NLP guessing), and an MCP server over stdio. 133 tests pass on GitHub's
+NLP guessing), and an MCP server over stdio. 143 tests pass on GitHub's
 runners, including a determinism check that calls each scorer twice with fixed
 input and asserts exact equality — the build fails if scoring ever stops being
 reproducible.
@@ -176,7 +176,7 @@ Solo founder, full time. Abdullah Al-Anzi, based in Saudi Arabia.
 
 No team and no users yet, and I would rather say that directly than have you
 find it. What I can point to is the code: TypeScript strict mode throughout,
-no `any` types, 133 tests passing on GitHub's own runners, and a determinism
+no `any` types, 143 tests passing on GitHub's own runners, and a determinism
 check wired into CI so the project's central claim is enforced automatically
 rather than asserted in a README.
 ```

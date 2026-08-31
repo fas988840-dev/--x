@@ -53,11 +53,11 @@ transactions it read. A reviewer can pull those transactions from any public
 RPC and recompute the score by hand. Trust is not the mechanism —
 verification is.
 
-Built today: twelve REST endpoints, an MCP server for AI clients, a Next.js
-dashboard, and a read-only architecture that never requests or stores a
-private key. 133 tests pass on GitHub's runners, including a determinism
-check that runs on every push and fails the build if scoring ever stops being
-reproducible.
+Built and deployed today at https://factledger-api.onrender.com: thirteen REST
+endpoints, an MCP server for AI clients, a Next.js dashboard, and a read-only
+architecture that never requests or stores a private key. 143 tests pass on
+GitHub's runners, including a determinism check that runs on every push and
+fails the build if scoring ever stops being reproducible.
 ```
 
 ---
@@ -70,7 +70,7 @@ Arabia.
 
 I have no team and no users yet, and I would rather say that directly than
 have you find it out. What I can point to is the code: TypeScript strict mode
-throughout, no `any` types, 133 tests passing on GitHub's own runners, and a
+throughout, no `any` types, 143 tests passing on GitHub's own runners, and a
 determinism check wired into CI so the project's central claim is enforced
 automatically rather than asserted in a README.
 
@@ -124,7 +124,8 @@ First, the honest gaps. Raydium and Jupiter detection verifies the
 instruction type but not the account layout, so swap amounts stay null and
 the status stays "candidate" rather than "confirmed". The live WebSocket
 alert stream is unit-tested but has not been exercised against a real RPC
-subscription. The API is not yet deployed to a public URL. All three are
+subscription. Prices come from CoinGecko's free API and return null often.
+The API is deployed at https://factledger-api.onrender.com. These are
 stated in the repository's own documentation, not just here.
 
 Second, why the constraint is the business rather than a limitation. A
@@ -150,10 +151,10 @@ conceal this.
 ```
 Three things, in order.
 
-Production infrastructure: deploy the API to a public endpoint on a dedicated
-Solana RPC provider, with monitoring and error tracking. Public RPC endpoints
-rate-limit and often disable the WebSocket log subscriptions the live alert
-stream depends on.
+Production infrastructure: the API is deployed, but on a free tier and the
+public Solana RPC. Move it onto a dedicated RPC provider with monitoring and
+error tracking — public endpoints rate-limit and commonly disable the
+WebSocket log subscriptions the live alert stream depends on.
 
 Verified protocol coverage: independently verify the program IDs and account
 layouts for Orca, Magic Eden, and Phantom Swap, so those adapters can be
