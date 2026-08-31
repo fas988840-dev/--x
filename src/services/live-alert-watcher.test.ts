@@ -51,10 +51,15 @@ describe('LiveAlertWatcher', () => {
     const onAlert = vi.fn();
 
     watcher.watch(VALID_ADDRESS, onAlert);
-    await Promise.resolve(); // let the immediate, un-awaited evaluate() microtask run
-    await Promise.resolve();
-
-    expect(onAlert).toHaveBeenCalledTimes(1);
+    // Wait for the immediate, un-awaited evaluate() to run, rather than
+    // guessing a fixed number of microtask ticks: a hardcoded
+    // `await Promise.resolve()` twice looked sufficient by inspection but
+    // wasn't in practice (confirmed by actually running this suite) -
+    // vi.waitFor polls the assertion instead of assuming a specific
+    // number of internal await hops in evaluate()'s implementation.
+    await vi.waitFor(() => {
+      expect(onAlert).toHaveBeenCalledTimes(1);
+    });
     expect(onAlert).toHaveBeenCalledWith(expect.objectContaining({ type: 'high_failure_rate' }));
   });
 

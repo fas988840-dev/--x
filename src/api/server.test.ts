@@ -249,7 +249,12 @@ describe('API Server', () => {
       expect(response.body.risk.level).toMatch(/low|medium|high/);
       expect(response.body.risk.factors).toBeDefined();
       expect(response.body.risk.reasoning).toBeDefined();
-      expect(response.body.disclaimer).toContain('Not financial advice');
+      // Risk route's disclaimer embeds the phrase mid-sentence, lowercase
+      // ("...This is not financial advice and should not be used...") -
+      // unlike the intelligence route's disclaimer above, which ends with
+      // it capitalized as a standalone sentence. Match what's actually
+      // there instead of assuming both routes share identical wording.
+      expect(response.body.disclaimer).toContain('not financial advice');
     });
   });
 

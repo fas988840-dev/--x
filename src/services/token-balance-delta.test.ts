@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { TokenBalanceDeltaCalculator, normalizeAmount, TokenBalance } from '../services/token-balance-delta';
 import { Token, validateTokenMint } from '../types/domain';
 
@@ -116,7 +116,7 @@ describe('TokenBalanceDeltaCalculator', () => {
       };
 
       const token: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',
@@ -139,7 +139,7 @@ describe('TokenBalanceDeltaCalculator', () => {
       };
 
       const token: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',

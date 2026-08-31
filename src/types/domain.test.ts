@@ -15,7 +15,7 @@ describe('Domain Validation', () => {
     });
 
     it('should accept valid Solana address (44 chars)', () => {
-      const validAddr = 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ';
+      const validAddr = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
       expect(() => validateWalletAddress(validAddr)).not.toThrow();
     });
 
@@ -50,8 +50,13 @@ describe('Domain Validation', () => {
     });
 
     it('should reject signature that is too long', () => {
+      // Each leading '1' in base58 decodes to one leading zero byte, so
+      // 100 '1' characters decode to exactly 100 zero bytes here - not
+      // some other count. Assert on the invariant that actually matters
+      // (not 64 bytes -> rejected), not a specific byte count guessed
+      // without running the decoder.
       const tooLong = '1'.repeat(100);
-      expect(() => validateTransactionSignature(tooLong)).toThrow('decoded to 50 bytes');
+      expect(() => validateTransactionSignature(tooLong)).toThrow('expected 64');
     });
 
     it('should reject empty string', () => {
@@ -61,7 +66,7 @@ describe('Domain Validation', () => {
 
   describe('validateTokenMint', () => {
     it('should accept valid USDC mint address', () => {
-      const validMint = 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ';
+      const validMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
       expect(() => validateTokenMint(validMint)).not.toThrow();
     });
 
@@ -72,7 +77,7 @@ describe('Domain Validation', () => {
 
   describe('validateProgramId', () => {
     it('should accept valid TokenkegQfezyi program ID', () => {
-      const tokenProgram = 'TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU';
+      const tokenProgram = 'TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU9';
       expect(() => validateProgramId(tokenProgram)).not.toThrow();
     });
 
@@ -101,7 +106,7 @@ describe('Domain Validation', () => {
 
     it('should correctly represent USDC decimals as 6', () => {
       const usdcToken: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',
