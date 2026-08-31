@@ -33,8 +33,9 @@ FactLedger
 ## One-line description
 
 ```
-A read-only Solana wallet intelligence API whose scores can be independently
-reproduced, using ChainGPT to explain already-computed facts in plain language.
+The evidence layer for Solana AI agents: deterministic facts, explicit
+unknowns, never a guess — with ChainGPT restating computed facts in plain
+language without ever originating one.
 ```
 
 ---
@@ -42,28 +43,36 @@ reproduced, using ChainGPT to explain already-computed facts in plain language.
 ## Project description
 
 ```
-Wallet risk scores increasingly gate real decisions on Solana: protocol
-access, counterparty trust, compliance review. Today those scores come from
-proprietary commercial models that cannot be audited, or from heuristic tools
-that pattern-match program IDs and present the guess as a fact. Neither tells
-you what it does not know.
+AI agents are starting to act on Solana — trading, routing, gating access.
+They act on whatever their data layer hands them, and today that layer cannot
+tell them what it does not know.
 
-FactLedger is a read-only Solana wallet intelligence API built on two rules
-enforced in code rather than promised in documentation. It never fabricates:
-any value it cannot verify — a price, a fee, a decoded swap amount — is
-returned as null, never as a plausible estimate. And it never overstates
-confidence: every DEX instruction is classified confirmed, candidate, or
-unknown, and those three states are never collapsed to make output look more
-complete than it is.
+A price lookup that quietly failed returns a plausible number. A swap that was
+never verified is labelled a swap. An unverified program is reported as a
+known protocol. The agent has no way to distinguish any of that from something
+genuinely checked on-chain, so it acts with equal confidence on both. The
+failure is not that the model hallucinates — it is that the data layer gives
+it nothing to be uncertain about.
 
-Every score ships with the named factors that produced it and the specific
-transactions it read, so a reviewer can pull those from any public RPC and
-recompute the score by hand.
+FactLedger is a read-only Solana data layer that never returns a fact it
+cannot support, and labels the confidence of everything it does return. Every
+DEX instruction carries VERIFIED, CANDIDATE or UNKNOWN, and those states are
+never collapsed to make output look more complete. Every unavailable value
+comes back null, never as an estimate. Every score ships with the named
+factors that produced it and the transactions it read, so it can be recomputed
+by hand from any public RPC.
 
-Built today: twelve REST endpoints, an MCP server for AI clients, a Next.js
-dashboard, and a read-only architecture that never requests or stores a
-private key. 133 tests pass on GitHub's runners, including a determinism
-check that fails the build if scoring ever stops being reproducible.
+For an agent, that turns an unknown into a signal it can branch on: a
+CANDIDATE swap or a null amount is an explicit instruction not to proceed as
+if the value were known. The agent decides what to do; our job is to make sure
+it is never confidently wrong about which of its inputs were actually checked.
+
+Seven read-only agents sit over one deterministic pipeline, exposed as twelve
+REST endpoints, a deterministic agent router with an explicit intent enum (no
+NLP guessing), and an MCP server over stdio. 133 tests pass on GitHub's
+runners, including a determinism check that calls each scorer twice with fixed
+input and asserts exact equality — the build fails if scoring ever stops being
+reproducible.
 ```
 
 ---
@@ -91,10 +100,15 @@ a consumer can always tell which produced it. If no API key is configured or
 the call fails, it falls back to a deterministic sentence built from the same
 facts — never to silence, and never to a guess.
 
-I think this is a pattern worth funding beyond my own project: it lets an LLM
-carry the explanatory load in a domain where a fabricated number is a real
-financial harm, without ever putting the model in a position to invent one.
-Any project handling on-chain data could adopt the same separation.
+I think this is a pattern worth funding beyond my own project. The industry
+response to hallucination is usually to make the model better. This is the
+other half: make the data layer honest enough that the model is never in a
+position to invent a number, because every field it receives is already
+labelled with whether anyone checked it.
+
+Compute deterministically, let the model restate, never let it originate. Any
+project putting an LLM near financial data can adopt that separation, and
+ChainGPT is what makes the restating half work here.
 
 Verification status, stated plainly: the client is written against ChainGPT's
 documented REST contract — POST /chat/stream, Authorization: Bearer, body
