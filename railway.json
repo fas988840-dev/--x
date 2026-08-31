@@ -1,33 +1,28 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "nixpacks"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "node dist/main.js",
-    "restartPolicyType": "on_failure",
+    "healthcheckPath": "/api/v1/health",
+    "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   },
-  "plugins": [
-    "nodejs"
-  ],
   "variables": {
     "SOLANA_RPC_URL": {
-      "description": "Solana RPC endpoint",
+      "description": "Solana RPC endpoint. The public endpoint rate-limits and commonly disables the WebSocket log subscriptions /alerts/stream needs; use a dedicated provider in production.",
       "value": "https://api.mainnet-beta.solana.com"
-    },
-    "PORT": {
-      "description": "Server port",
-      "value": "3000"
-    },
-    "CORS_ORIGIN": {
-      "description": "CORS allowed origins (comma-separated)",
-      "value": "*"
     },
     "NODE_ENV": {
       "description": "Node environment",
       "value": "production"
     }
+  },
+  "_notes": {
+    "PORT": "Not set here. Railway injects PORT and src/main.ts reads it (process.env.PORT || '3000'), so hardcoding it fights the platform.",
+    "CORS_ORIGIN": "Deliberately unset. src/api/server.ts treats this as a comma-separated list of EXACT origins, not a wildcard — '*' matches no origin and silently blocks every browser. Set it in the Railway dashboard to your real dashboard origin(s) once one exists.",
+    "API_KEYS": "Set this in the Railway dashboard before exposing the service publicly. src/main.ts warns on startup when NODE_ENV=production and it is unset; without it every route except /api/v1/health is open to anyone."
   }
 }
