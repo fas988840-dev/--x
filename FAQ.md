@@ -68,7 +68,22 @@ I continue building FactLedger as an open-source hobby project. Development slow
 
 ### Q8: Are you applying to multiple grants?
 
-Yes — I've applied to Solana Foundation ($25,000), ChainGPT Research ($10,000), Colosseum Eternal ($15,000), and Superteam Earn ($5,000). Total requested: $55,000. Each grant supports different milestones or aspects (ChainGPT specifically funds the LLM integration).
+⚠️ **Fill this in from your own records before quoting it.** Grant bodies
+routinely ask about concurrent applications, and an inaccurate answer here
+is a false statement to a funder. State only applications you can confirm
+you actually filed, and the amount each one was actually filed for.
+
+As of this writing the confirmed record is:
+
+- **Startup Accelerator Grant** (Webacy / DD.xyz, listed on Superteam Earn) —
+  submitted Aug 31, 2026. The listing states an award of up to $10,000.
+- **Solana Foundation** — believed submitted, not independently confirmed.
+  Check your email before naming it.
+- **Colosseum Eternal** — not submitted.
+- **ChainGPT Research** — not submitted.
+
+Nothing has been awarded yet. See `GRANTS_COMPLETION_REPORT.md` for the
+evidence behind each line.
 
 ---
 

@@ -41,7 +41,15 @@ FactLedger is a read-only Solana wallet intelligence API. It turns raw on-chain 
 https://github.com/fas988840-dev/PROJECT-x
 
 [11] رابط العرض الحي:
+⚠️ تحقق قبل ما ترسله. هذا رابط artifact على claude.ai، والـ artifacts
+خاصة افتراضياً. اختبار حاسم بـ 10 ثواني: افتحه في نافذة تصفح خفي
+(incognito). إذا طلب تسجيل دخول، فالمراجع بيشوف جدار ولا شي — ولا ترسله
+موصوفاً بأنه "عرض حي" أو "صفحة عامة تعمل الآن".
 https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+
+بديل مضمون العمومية: فعّل GitHub Pages على docs/ (README ← "Public Docs
+Page")، أو انشر الـ API فعلياً واستخدم رابطه. لين يصير كذا، الرابط الوحيد
+اللي نتأكد إنه عام هو رابط المستودع نفسه.
 
 [12] رابط CI (الاختبارات):
 https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720

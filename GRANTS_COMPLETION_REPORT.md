@@ -104,6 +104,32 @@ somewhere with npm registry access.
 
 ---
 
+## Open issue: the "live demo" link
+
+About 20 places across `GRANTS/`, `docs/grant-answers.html`, and
+`COPY_PASTE_ANSWERS.txt` present this URL as a **"Live demo (public docs
+page, live now)"**:
+
+```
+https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+```
+
+Artifacts on claude.ai are **private by default**. If this one was never
+shared publicly, every reviewer who clicked it hit an auth wall — including
+on proposals already submitted.
+
+**This was not verified** (claude.ai is unreachable from the environment
+that wrote this note). **Test it yourself in a private/incognito window.**
+If it asks for login, stop describing it as a live public demo, and replace
+it with one of:
+
+- GitHub Pages on `docs/` (see README's "Public Docs Page") — needs
+  Settings → Pages → branch `main`, folder `/docs`
+- A real deployed API URL (see `DEPLOYMENT.md`)
+- The repository URL alone, which is the only link confirmed public
+
+---
+
 ## What to do next
 
 1. **Unarchive the repository** — Settings → Danger Zone → Unarchive.
