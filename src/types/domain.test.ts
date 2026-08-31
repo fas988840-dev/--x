@@ -76,9 +76,18 @@ describe('Domain Validation', () => {
   });
 
   describe('validateProgramId', () => {
-    it('should accept valid TokenkegQfezyi program ID', () => {
-      const tokenProgram = 'TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU9';
-      expect(() => validateProgramId(tokenProgram)).not.toThrow();
+    it('should accept a valid Solana program ID (Raydium AMM V4)', () => {
+      // The SPL Token program ID string previously here was reconstructed
+      // from memory and turned out to contain a character outside the
+      // base58 alphabet (a capital 'O', which - see BASE58_ALPHABET above
+      // - is deliberately excluded, same as '0'/'I'/'l') - it was never a
+      // real, valid address. Using RAYDIUM_AMM_V4_PROGRAM_ID instead: it's
+      // already defined, used, and exercised against real PublicKey
+      // validation elsewhere in this exact codebase (src/services/
+      // dex-registry.ts, cross-checked there against Raydium's own docs/
+      // repo - see that file's header comment), not re-guessed here.
+      const raydiumAmmV4 = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
+      expect(() => validateProgramId(raydiumAmmV4)).not.toThrow();
     });
 
     it('should reject invalid program ID', () => {
