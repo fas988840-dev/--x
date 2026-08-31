@@ -1,12 +1,20 @@
-# 🚀 Quick Start - Complete Everything Now
+# 🚀 Quick Start
 
-**Everything is ready. Here's exactly what to do next:**
+> ⚠️ **This file is out of date.** It was written when the repository was
+> private and no grant had been filed. Since then the repository was made
+> public and then **archived** (read-only), and one grant application was
+> submitted. Its step 1 below (make the repo public) is already done; what
+> is actually needed now is the opposite — **unarchiving** it.
+>
+> For the current state and next steps, read `GRANTS_COMPLETION_REPORT.md`.
+> The "3 grants = $40,000+" figure below is a plan, not a record of
+> applications filed — see that report for what was actually submitted.
 
 ---
 
 ## ⚡ Ultra-Quick Version (Copy & Paste)
 
-### Step 1: Make Repository Public
+### Step 1: Make Repository Public — ALREADY DONE (now archived instead)
 
 Go to your browser and:
 ```

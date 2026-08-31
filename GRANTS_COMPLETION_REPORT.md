@@ -96,10 +96,12 @@ somewhere with npm registry access.
 ## Repository
 
 - Owner/name as seen on GitHub: `fas988840-dev/--x`
-- Older documents in this repo link to `fas988840-dev/PROJECT-x`. If that
-  redirects, both work; if it does not, those links are broken and need
-  updating. **Not verified.**
-- Repository was **archived** on Aug 31, 2026 (read-only). It must be
+- Older documents link to `fas988840-dev/PROJECT-x`. **Verified working**:
+  that URL returns `HTTP 301` redirecting to `/--x`, so those ~108 links
+  resolve correctly and do not need rewriting. (Caveat: GitHub's rename
+  redirect stops working if a new repo named `PROJECT-x` is later created
+  under this account.)
+- Repository was **archived** on Aug 31, 2026 and is read-only. It must be
   unarchived before anything can be pushed.
 
 ---
