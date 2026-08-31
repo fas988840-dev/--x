@@ -47,7 +47,7 @@ If you want to apply: https://colosseum.org — answers are prepared in
 
 ### 4. ChainGPT Research — NOT SUBMITTED
 
-`chaingpt.org/grants` returned 404 when checked. No application filed.
+`www.chaingpt.org/web3-ai-grant` returned 404 when checked. No application filed.
 
 ---
 

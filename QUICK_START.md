@@ -50,7 +50,7 @@ bash scripts/complete-setup.sh
 ### Step 3: Submit 3 Grants (Using Copy-Paste Answers)
 
 After deployment, you'll see links to:
-- 🚀 ChainGPT: https://chaingpt.org/grants
+- 🚀 ChainGPT: https://www.chaingpt.org/web3-ai-grant
 - 🚀 Colosseum: https://colosseum.org
 - 🚀 Superteam: https://earn.superteam.fun
 
@@ -111,7 +111,7 @@ TOTAL:              56 minutes
 https://github.com/fas988840-dev/PROJECT-x/settings
 
 **Grant Platforms:**
-- ChainGPT: https://chaingpt.org/grants
+- ChainGPT: https://www.chaingpt.org/web3-ai-grant
 - Colosseum: https://colosseum.org
 - Superteam: https://earn.superteam.fun
 
@@ -163,7 +163,7 @@ bash scripts/complete-setup.sh
 
 # 2. Follow the interactive prompts
 # 3. When done, submit grants using:
-#    - ChainGPT: https://chaingpt.org/grants
+#    - ChainGPT: https://www.chaingpt.org/web3-ai-grant
 #    - Colosseum: https://colosseum.org
 #    - Superteam: https://earn.superteam.fun
 

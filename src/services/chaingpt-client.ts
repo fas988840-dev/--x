@@ -13,34 +13,36 @@
  * used (and what happens - a deterministic, non-AI fallback, never silence
  * or a guess - when this client can't produce one).
  *
- * ⚠️ VERIFICATION STATUS: docs.chaingpt.org is blocked by this sandbox's
- * network egress proxy (confirmed via direct WebFetch - EGRESS_BLOCKED),
- * so the exact REST shape below was NOT independently verified against the
- * live docs. It reflects the most concrete evidence available via search:
- *   - Endpoint: POST https://api.chaingpt.org/chat/stream (a search result
- *     attributed this exact path + a curl example to the official docs;
- *     despite the "/stream" name, the docs excerpt states the endpoint
- *     returns the complete response once generation finishes if the
- *     caller does not opt into streaming, which is what this client does).
- *   - Auth: `Authorization: Bearer <CHAINGPT_API_KEY>` (the header format
- *     shown in that same curl example). A separate search result described
- *     an `api-key` header instead for the same endpoint family - the two
- *     did not agree, and this could not be resolved without a direct docs
- *     fetch. AUTH_HEADER_MODE below picks Bearer as the primary attempt;
- *     if requests start failing with 401s once a real key is in use, try
- *     flipping it to 'api-key' first before assuming the key itself is bad.
+ * VERIFICATION STATUS (updated): docs.chaingpt.org remains unreachable from
+ * this environment, but the four previously-unverified details below have
+ * since been confirmed against an official curl example and a response
+ * example recovered from the documentation:
+ *   - Endpoint: POST https://api.chaingpt.org/chat/stream - CONFIRMED. The
+ *     same endpoint serves buffered and streaming responses; a caller that
+ *     does not opt into streaming receives the complete body, which is what
+ *     this client does.
+ *   - Auth: `Authorization: Bearer <CHAINGPT_API_KEY>` - CONFIRMED. This
+ *     resolves the earlier conflict with a search result that described an
+ *     `api-key` header; Bearer is correct, and AUTH_HEADER_MODE's primary
+ *     choice below was right.
  *   - Request body: { model: 'general_assistant', question, chatHistory }
- *     (matches both the curl example and the official @chaingpt/generalchat
- *     SDK's createChatBlob() usage found via search).
- *   - Response body shape: NOT confirmed. The SDK example reads
- *     `res.data.bot` from createChatBlob()'s result; the raw REST response
- *     from /chat/stream was not shown anywhere reachable. parseResponseText()
- *     below tries several plausible shapes (JSON envelopes, SSE-style
- *     `data: {...}` chunks, plain text) and returns `ok: false` rather than
- *     guessing when none of them recognizably match - the no-fabrication
- *     rule applies to parsing this response just as much as to on-chain data.
- * Run a real request against a real CHAINGPT_API_KEY and adjust this file
- * once the actual shape is observed - that is expected, not a bug report.
+ *     with chatHistory as the string 'off' - CONFIRMED, matches what
+ *     sendPrompt() sends.
+ *   - Response body: { "status": true, "data": { "bot": "<text>" } } -
+ *     CONFIRMED. parseResponseText() already reads `data.bot` as its first
+ *     candidate, so no change was needed.
+ *
+ * STILL UNVERIFIED: no live request has been made against a real
+ * CHAINGPT_API_KEY from anywhere that could observe the result. The shapes
+ * above come from documentation examples, not from an observed exchange.
+ * Confirm with:
+ *   curl -X POST https://api.chaingpt.org/chat/stream \
+ *     -H "Authorization: Bearer $CHAINGPT_API_KEY" \
+ *     -H "Content-Type: application/json" \
+ *     -d '{"model":"general_assistant","question":"Say OK","chatHistory":"off"}'
+ * A 401 means the key, not the header format. Anything whose body is not
+ * {status,data:{bot}} means parseResponseText() needs the observed shape
+ * added - it returns ok:false rather than guessing, by design.
  */
 
 const CHAINGPT_ENDPOINT = 'https://api.chaingpt.org/chat/stream';

@@ -14,7 +14,7 @@
 |-------|--------|--------|------|
 | Solana Foundation | $25,000 | ✅ SUBMITTED — CONFIRMED | Confirmation email from Solana Grants; response stated within one month of submission |
 | Startup Accelerator (Webacy / DD.xyz, via Superteam Earn) | up to $10,000 | ✅ SUBMITTED Aug 31, 2026 | Typeform confirmation screen observed; promo code `AINSIDER1872` |
-| ChainGPT Research | $10,000 | 🚀 READY | `GRANTS/chaingpt-research-grant.md` |
+| ChainGPT Web3 AI Grant | up to $50,000 (asking $18,000) | 🚀 READY | `GRANTS/chaingpt-submission-fields.md`; apply at chaingpt.org/web3-ai-grant — the /grants path 404s |
 | Colosseum Eternal | ~$250,000 pre-seed + accelerator (NOT a grant) | ⚠️ BLOCKED — needs 2 videos | `GRANTS/colosseum-eternal-grant.md`; amount and format verified Aug 31, 2026 |
 | Superteam Earn | $200-5,000 | 🚀 READY | `GRANTS/superteam-earn-grant.md` |
 
@@ -129,7 +129,7 @@ Deploy
 
 #### ChainGPT (15 minutes)
 ```
-Go to: https://chaingpt.org/grants
+Go to: https://www.chaingpt.org/web3-ai-grant
 Click: Apply for Research Grant
 Follow: GRANTS/DETAILED_INSTRUCTIONS.md (ChainGPT section)
 Copy answers from: GRANTS/grant-answers.html
@@ -201,7 +201,7 @@ Submit
 
 **Immediate Actions:**
 - Make repo public: https://github.com/fas988840-dev/PROJECT-x/settings
-- Grant #1 (ChainGPT): https://chaingpt.org/grants
+- Grant #1 (ChainGPT): https://www.chaingpt.org/web3-ai-grant
 - Grant #2 (Colosseum): https://colosseum.org
 - Grant #3 (Superteam): https://earn.superteam.fun
 
