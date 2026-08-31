@@ -402,3 +402,38 @@ and run `npm test` yourself.
 **FactLedger: Verifiable, transparent wallet intelligence for Solana**
 
 *Built for developers. By the Solana ecosystem.*
+
+---
+
+## ⚠️ Program terms — verified Aug 31, 2026
+
+This document was drafted before the program's actual terms were checked.
+What Colosseum Eternal actually is:
+
+| | |
+|---|---|
+| **What it offers** | ~$250,000 pre-seed funding **plus accelerator admission** — an investment, not a grant |
+| **When** | Open year-round; reviewed first come, first served |
+| **Required** | Product name, short description, team background, GitHub repo, **a pitch video (≤3 min)**, **a technical walkthrough video (≤3 min)** |
+| **After review** | They may schedule an interview call |
+
+**Three things this changes:**
+
+1. **There is no $15,000 to request.** Any milestone-and-amount block
+   (`$5,000, Months 1-2` style) is grant language aimed at the wrong kind of
+   program, and signals the application was not read.
+
+2. **Pre-seed funding normally involves equity or token allocation.** That is
+   materially different from the Solana Foundation grant, where the project
+   stays wholly owned. Read their terms before applying.
+
+3. **The two videos are the real blocker.** No text answer sheet can supply
+   them, so this application cannot be submitted by copy-paste.
+
+**Honest positioning note:** an accelerator writing a pre-seed cheque is
+underwriting a company that will grow — team, users, traction. FactLedger is
+currently a solo project with no users, which the proposals here state
+plainly. That is not disqualifying, but the bar differs from a grant, and the
+pitch should be built for it rather than reusing grant text.
+
+Confirm current terms at https://www.colosseum.com before applying.
