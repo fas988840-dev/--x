@@ -655,14 +655,18 @@ This platform provides data analysis only. It is not financial advice, investmen
 
 ✅ **PUBLIC REPOSITORY** - https://github.com/fas988840-dev/PROJECT-x
 
-### Grants Submitted
+### Grants
 
-- ✅ **Superteam Earn**: $5,000 (Confirmed - Aug 31, 2026)
-- ✅ **Colosseum Eternal**: $15,000 (Confirmed - Aug 31, 2026)
-- ✅ **Solana Foundation**: $25,000 (Submitted)
-- ⏳ **ChainGPT Research**: $10,000 (Platform unavailable)
+- **Startup Accelerator Grant** (Webacy / DD.xyz, listed on Superteam Earn) —
+  submitted Aug 31, 2026; listing states an award of up to $10,000.
+  Confirmation screen observed.
+- **Solana Foundation** — reported submitted in an earlier session; not
+  independently confirmed. Verify against the confirmation email.
+- **Colosseum Eternal** — not submitted.
+- **ChainGPT Research** — not submitted (`chaingpt.org/grants` returned 404).
 
-**Total Funding**: $45,000+ submitted
+**Awarded to date: $0.** No application has been approved yet. See
+`GRANTS_COMPLETION_REPORT.md` for the evidence behind each line.
 
 ### Deployment
 

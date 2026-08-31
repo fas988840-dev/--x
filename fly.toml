@@ -1,33 +1,46 @@
-# Fly.io configuration for FactLedger API
+# Fly.io configuration for the FactLedger API (src/ -> dist/main.js).
+#
+# Port 3000 matches the Dockerfile's EXPOSE and src/main.ts's default
+# (`process.env.PORT || '3000'`), so no PORT override is needed.
+#
+# NOT set here, on purpose:
+#   CORS_ORIGIN  - src/api/server.ts treats this as a comma-separated list of
+#                  EXACT origins, not a wildcard. "*" would match nothing and
+#                  silently block every browser origin. Set it to your real
+#                  dashboard origin(s), e.g.
+#                    fly secrets set CORS_ORIGIN=https://your-dashboard.vercel.app
+#   API_KEYS     - required before a public deploy; main.ts warns on startup if
+#                  NODE_ENV=production and this is unset. Set via:
+#                    fly secrets set API_KEYS=<key1>,<key2>
+#   CHAINGPT_API_KEY - optional; only affects the /explanation summary field.
+#
+# This file has not been exercised against a real `fly deploy`.
+
 app = "factledger-api"
 primary_region = "ams"
 
 [build]
-dockerfile = "Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
-SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
-CORS_ORIGIN = "*"
-PORT = "8080"
-NODE_ENV = "production"
+  NODE_ENV = "production"
+  SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
 
 [http_service]
-internal_port = 8080
-force_https = true
-auto_stop_machines = true
-auto_start_machines = true
-min_machines_running = 1
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
 
-[[services]]
-protocol = "tcp"
-internal_port = 8080
-processes = ["app"]
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
 
-[services.concurrency]
-type = "connections"
-hard_limit = 1000
-soft_limit = 500
-
-[[statics]]
-guest_path = "/docs"
-url_path = "/docs"
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/api/v1/health"
+  timeout = "5s"
