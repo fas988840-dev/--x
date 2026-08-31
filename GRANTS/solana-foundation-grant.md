@@ -6,6 +6,15 @@
 **Contact:** fas988840@gmail.com  
 **Category:** Developer Tools & Infrastructure
 
+> ✅ **Verified as of August 31, 2026:** CI is fully green on GitHub's own
+> runners — `npm audit`, `lint`, `type-check`, `test` (133 tests, including
+> the automated determinism check), and `build` all pass end-to-end.
+> Run: https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720
+> (commit `21e8fea`). This is a dated, verifiable snapshot, not a claim
+> that goes stale — check the live CI badge in
+> [README.md](https://github.com/fas988840-dev/PROJECT-x/blob/main/README.md)
+> for the current state at any later date.
+
 ## Executive Summary
 
 FactLedger is a **deterministic, read-only Solana wallet analysis platform** that bridges a critical gap in the Solana ecosystem: transparent, explainable wallet intelligence without fabrication, secret key exposure, or opaque ML models.
