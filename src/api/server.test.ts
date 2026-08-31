@@ -1,21 +1,25 @@
 import request from 'supertest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { Express } from 'express';
 import { APIServer } from '../api/server';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
+import { TransactionRetriever } from '../services/transaction-retriever';
 import { EvidenceEngine } from '../agents/evidence-engine';
 import { ResearchAgent, EvidenceStatus } from '../agents/core_agents';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
+type MockFn = ReturnType<typeof vi.fn>;
+
 describe('API Server', () => {
-  let app: any;
+  let app: Express;
   let server: APIServer;
-  let mockTransactionRetriever: any;
-  let mockEvidenceEngine: any;
-  let mockResearchAgent: any;
+  let mockTransactionRetriever: { getWalletTransactionsMeta: MockFn; getTransaction: MockFn };
+  let mockEvidenceEngine: { buildWalletEvidence: MockFn };
+  let mockResearchAgent: { generateReport: MockFn };
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -50,7 +54,7 @@ describe('API Server', () => {
     // Create server with mocked services
     server = new APIServer(
       3000,
-      mockTransactionRetriever,
+      mockTransactionRetriever as unknown as TransactionRetriever,
       new BehaviorAnalyzer(),
       new IntelligenceScorer(),
       new RiskAssessor(),

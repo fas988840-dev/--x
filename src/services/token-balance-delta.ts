@@ -4,7 +4,7 @@
  * CRITICAL: Never fabricates amounts. Returns null when data unavailable.
  */
 
-import { TokenBalanceDelta, Token, TokenMint, validateTokenMint } from '../types/domain';
+import { TokenBalanceDelta, Token } from '../types/domain';
 
 /**
  * Pre/post balance for a token account
@@ -31,7 +31,7 @@ export interface BalanceChange {
 /**
  * Calculates if a normalized amount can be safely represented
  */
-function canSafelyNormalize(rawAmount: string, decimals: number): boolean {
+function canSafelyNormalize(rawAmount: string, _decimals: number): boolean {
   // If raw amount is larger than Number.MAX_SAFE_INTEGER, cannot safely normalize
   const maxSafeAmount = Math.pow(10, 15); // Roughly MAX_SAFE_INTEGER / 1000
   try {
@@ -72,7 +72,7 @@ export class TokenBalanceDeltaCalculator {
   calculateDeltas(
     preBalances: TokenBalance[],
     postBalances: TokenBalance[],
-    tokenMetadata: Map<string, Token>
+    _tokenMetadata: Map<string, Token>
   ): BalanceChange[] {
     const deltas: BalanceChange[] = [];
 

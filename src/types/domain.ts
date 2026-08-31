@@ -7,6 +7,7 @@
  */
 
 import { PublicKey } from '@solana/web3.js';
+import { ValidationError } from './errors';
 
 /**
  * Base58 alphabet for decoding validation
@@ -68,7 +69,7 @@ export function validateWalletAddress(addr: string): WalletAddress {
     new PublicKey(addr);
     return addr as WalletAddress;
   } catch (_error) {
-    throw new Error(`Invalid wallet address: ${addr}`);
+    throw new ValidationError(`Invalid wallet address: ${addr}`);
   }
 }
 
@@ -85,12 +86,13 @@ export function validateTransactionSignature(sig: string): TransactionSignature 
 
     // Solana signatures must decode to exactly 64 bytes
     if (decoded.length !== 64) {
-      throw new Error(`Signature decoded to ${decoded.length} bytes, expected 64`);
+      throw new ValidationError(`Signature decoded to ${decoded.length} bytes, expected 64`);
     }
 
     return sig as TransactionSignature;
   } catch (error) {
-    throw new Error(
+    if (error instanceof ValidationError) throw error;
+    throw new ValidationError(
       `Invalid transaction signature: ${sig}. ${error instanceof Error ? error.message : ''}`
     );
   }
@@ -106,7 +108,7 @@ export function validateTokenMint(mint: string): TokenMint {
     new PublicKey(mint);
     return mint as TokenMint;
   } catch (_error) {
-    throw new Error(`Invalid token mint: ${mint}`);
+    throw new ValidationError(`Invalid token mint: ${mint}`);
   }
 }
 
@@ -120,7 +122,7 @@ export function validateProgramId(id: string): ProgramId {
     new PublicKey(id);
     return id as ProgramId;
   } catch (_error) {
-    throw new Error(`Invalid program ID: ${id}`);
+    throw new ValidationError(`Invalid program ID: ${id}`);
   }
 }
 

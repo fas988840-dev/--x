@@ -15,7 +15,7 @@ describe('Domain Validation', () => {
     });
 
     it('should accept valid Solana address (44 chars)', () => {
-      const validAddr = 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ';
+      const validAddr = 'So11111111111111111111111111111111111111112';
       expect(() => validateWalletAddress(validAddr)).not.toThrow();
     });
 
@@ -51,7 +51,7 @@ describe('Domain Validation', () => {
 
     it('should reject signature that is too long', () => {
       const tooLong = '1'.repeat(100);
-      expect(() => validateTransactionSignature(tooLong)).toThrow('decoded to 50 bytes');
+      expect(() => validateTransactionSignature(tooLong)).toThrow('decoded to 100 bytes');
     });
 
     it('should reject empty string', () => {
@@ -61,7 +61,7 @@ describe('Domain Validation', () => {
 
   describe('validateTokenMint', () => {
     it('should accept valid USDC mint address', () => {
-      const validMint = 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ';
+      const validMint = 'So11111111111111111111111111111111111111112';
       expect(() => validateTokenMint(validMint)).not.toThrow();
     });
 
@@ -72,7 +72,7 @@ describe('Domain Validation', () => {
 
   describe('validateProgramId', () => {
     it('should accept valid TokenkegQfezyi program ID', () => {
-      const tokenProgram = 'TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU';
+      const tokenProgram = 'So11111111111111111111111111111111111111112';
       expect(() => validateProgramId(tokenProgram)).not.toThrow();
     });
 
@@ -101,7 +101,7 @@ describe('Domain Validation', () => {
 
     it('should correctly represent USDC decimals as 6', () => {
       const usdcToken: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('So11111111111111111111111111111111111111112'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',

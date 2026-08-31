@@ -145,7 +145,7 @@ export class IntelligenceScorer {
    */
   private generateFactors(
     behavior: BehaviorMetrics,
-    components: {
+    _components: {
       activityScore: number;
       sophisticationScore: number;
       consistencyScore: number;

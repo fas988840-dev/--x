@@ -74,54 +74,60 @@ export function buildMcpServer(): McpServer {
     version: '0.1.0',
   });
 
-  server.registerTool(
+  // Cast to avoid TS2589 ("Type instantiation is excessively deep") from the
+  // MCP SDK's complex generic inference on registerTool.
+  type AnyToolCb = (args: Record<string, unknown>) => Promise<{ content: Array<{ type: 'text'; text: string }> }>;
+  type SimpleServer = { registerTool: (name: string, config: { description: string; inputSchema: Record<string, unknown> }, cb: AnyToolCb) => void };
+  const s = server as unknown as SimpleServer;
+
+  s.registerTool(
     'wallet_intelligence',
     {
       description:
         'Read-only facts about a Solana wallet: transaction counts, SOL balance, token balances. Returns evidenceStatus UNKNOWN with data: null when the address is invalid or the RPC read fails - never a guessed value.',
       inputSchema: { address: addressParam, limit: limitParam },
     },
-    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await walletAgent.analyzeWallet(address, limit))
+    async (args) => jsonResult(await walletAgent.analyzeWallet(args['address'] as string, args['limit'] as number | undefined))
   );
 
-  server.registerTool(
+  s.registerTool(
     'transaction_lookup',
     {
       description:
         'Look up one Solana transaction by signature: status, fee, block time, and each instruction\'s honest confirmed/candidate/unknown classification (never collapsed into a single "verified" flag).',
       inputSchema: { signature: z.string().describe('Base58 transaction signature') },
     },
-    async ({ signature }: { signature: string }) => jsonResult(await txAgent.parseTx(signature))
+    async (args) => jsonResult(await txAgent.parseTx(args['signature'] as string))
   );
 
-  server.registerTool(
+  s.registerTool(
     'wallet_risk',
     {
       description:
         'Deterministic risk score (0-100) for a Solana wallet, with named factors (failure rate, concentration, volatility, ...) and human-readable reasoning. Not financial advice.',
       inputSchema: { address: addressParam, limit: limitParam },
     },
-    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await riskAgent.evaluateRisk(address, limit))
+    async (args) => jsonResult(await riskAgent.evaluateRisk(args['address'] as string, args['limit'] as number | undefined))
   );
 
-  server.registerTool(
+  s.registerTool(
     'wallet_research_report',
     {
       description:
         'Synthesized wallet + risk summary for a Solana address, built only from the wallet_intelligence and wallet_risk tool outputs - propagates UNKNOWN rather than writing a report around a data gap.',
       inputSchema: { address: addressParam, limit: limitParam },
     },
-    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await researchAgent.generateReport(address, limit))
+    async (args) => jsonResult(await researchAgent.generateReport(args['address'] as string, args['limit'] as number | undefined))
   );
 
-  server.registerTool(
+  s.registerTool(
     'market_events',
     {
       description:
         'Live market/event tracking for a topic. Currently ALWAYS returns evidenceStatus UNKNOWN: this codebase has no live event pipeline (no Geyser plugin, no WebSocket feed) implemented yet - this tool exists so that gap is explicit to callers, not hidden.',
       inputSchema: { topic: z.string() },
     },
-    async ({ topic }: { topic: string }) => jsonResult(await marketAgent.trackEvents(topic))
+    async (args) => jsonResult(await marketAgent.trackEvents(args['topic'] as string))
   );
 
   return server;

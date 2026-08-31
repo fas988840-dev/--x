@@ -306,7 +306,7 @@ export class APIServer {
         }
 
         // Generic error - never expose stack trace in production
-        res.status(500).json({
+        return res.status(500).json({
           error: {
             code: 'INTERNAL_ERROR',
             message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
@@ -319,7 +319,7 @@ export class APIServer {
   /**
    * Handle health check
    */
-  private async handleHealth(req: Request, res: Response): Promise<void> {
+  private async handleHealth(_req: Request, res: Response): Promise<void> {
     const healthy = await this.priceProvider.isHealthy();
 
     const response: HealthResponse = {
@@ -334,7 +334,7 @@ export class APIServer {
   /**
    * Handle wallet transactions
    */
-  private async handleWalletTransactions(req: Request, res: Response): Promise<void> {
+  private async handleWalletTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
@@ -353,14 +353,14 @@ export class APIServer {
         count: transactions.length,
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet tokens
    */
-  private async handleWalletTokens(req: Request, res: Response): Promise<void> {
+  private async handleWalletTokens(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
 
@@ -372,14 +372,14 @@ export class APIServer {
         disclaimer: 'Token balance data requires additional RPC integration',
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet behavior
    */
-  private async handleWalletBehavior(req: Request, res: Response): Promise<void> {
+  private async handleWalletBehavior(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
@@ -397,14 +397,14 @@ export class APIServer {
         behavior,
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet intelligence
    */
-  private async handleWalletIntelligence(req: Request, res: Response): Promise<void> {
+  private async handleWalletIntelligence(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
@@ -423,14 +423,14 @@ export class APIServer {
         disclaimer: 'Intelligence score is derived from observable blockchain behavior only. Not financial advice.',
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet risk
    */
-  private async handleWalletRisk(req: Request, res: Response): Promise<void> {
+  private async handleWalletRisk(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
@@ -447,17 +447,17 @@ export class APIServer {
         wallet: address,
         risk,
         disclaimer:
-          'Risk assessment is derived from observable blockchain behavior only. This is not financial advice and should not be used for investment decisions.',
+          'Risk assessment is derived from observable blockchain behavior only. Not financial advice.',
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet full analysis
    */
-  private async handleWalletAnalysis(req: Request, res: Response): Promise<void> {
+  private async handleWalletAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
@@ -504,14 +504,14 @@ export class APIServer {
 
       res.json(response);
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet evidence report
    */
-  private async handleWalletEvidence(req: Request, res: Response): Promise<void> {
+  private async handleWalletEvidence(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       // Lower default/cap than the other routes: this one does one extra
@@ -527,14 +527,14 @@ export class APIServer {
           'Evidence is derived from observable blockchain transactions only. Each entry\'s confidencePercent reflects a fixed mapping (confirmed=100, candidate=50, unknown=0), never an invented value. Not financial advice.',
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
   /**
    * Handle wallet research report (synthesizes wallet + risk agent output)
    */
-  private async handleWalletResearch(req: Request, res: Response): Promise<void> {
+  private async handleWalletResearch(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const address = validateWalletAddress(req.params.address);
       const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
@@ -548,7 +548,7 @@ export class APIServer {
           'This report is synthesized only from real, deterministic agent outputs. Not financial advice.',
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 
@@ -570,7 +570,7 @@ export class APIServer {
   /**
    * Handle transaction
    */
-  private async handleTransaction(req: Request, res: Response): Promise<void> {
+  private async handleTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const signature = validateTransactionSignature(req.params.signature);
       const transaction = await this.transactionRetriever.getTransaction(signature);
@@ -596,7 +596,7 @@ export class APIServer {
         },
       });
     } catch (error) {
-      throw error;
+      next(error);
     }
   }
 

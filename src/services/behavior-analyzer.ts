@@ -60,7 +60,7 @@ export class BehaviorAnalyzer {
       firstActiveSlot: firstSlot,
       lastActiveSlot: lastSlot,
       averageTransactionIntervalSeconds: avgIntervalSeconds,
-      peakActivityHour,
+      peakActivityHour: peakHour,
     };
   }
 
