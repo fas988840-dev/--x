@@ -4,7 +4,7 @@
  * CRITICAL: Never invents blockchain data. Preserves nulls and unknowns.
  */
 
-import { ParsedTransactionWithMeta, PublicKey } from '@solana/web3.js';
+import { ParsedTransactionWithMeta } from '@solana/web3.js';
 import { SolanaRpcClient } from './solana-rpc-client';
 import {
   TransactionMeta,
@@ -13,7 +13,6 @@ import {
   validateTransactionSignature,
   validateWalletAddress,
   Instruction,
-  ProgramId,
   validateProgramId,
 } from '../types/domain';
 import { RpcError, ValidationError } from '../types/errors';

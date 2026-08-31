@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TokenBalanceDeltaCalculator, normalizeAmount } from '../services/token-balance-delta';
+import { TokenBalanceDeltaCalculator, normalizeAmount, TokenBalance } from '../services/token-balance-delta';
 import { Token, validateTokenMint } from '../types/domain';
 
 describe('TokenBalanceDeltaCalculator', () => {
@@ -65,7 +65,7 @@ describe('TokenBalanceDeltaCalculator', () => {
     });
 
     it('should detect new token accounts', () => {
-      const preBalances: any[] = [];
+      const preBalances: TokenBalance[] = [];
 
       const postBalances = [
         {
@@ -95,7 +95,7 @@ describe('TokenBalanceDeltaCalculator', () => {
         },
       ];
 
-      const postBalances: any[] = [];
+      const postBalances: TokenBalance[] = [];
 
       const deltas = calculator.calculateDeltas(preBalances, postBalances, new Map());
 

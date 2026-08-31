@@ -4,7 +4,7 @@
  * CRITICAL: Never fabricates amounts. Returns null when data unavailable.
  */
 
-import { TokenBalanceDelta, Token, TokenMint, validateTokenMint } from '../types/domain';
+import { TokenBalanceDelta, Token } from '../types/domain';
 
 /**
  * Pre/post balance for a token account
@@ -31,7 +31,10 @@ export interface BalanceChange {
 /**
  * Calculates if a normalized amount can be safely represented
  */
-function canSafelyNormalize(rawAmount: string, decimals: number): boolean {
+function canSafelyNormalize(rawAmount: string, _decimals: number): boolean {
+  // _decimals: kept in the signature (every call site has it available)
+  // for a future decimals-aware precision check; the current check is
+  // decimals-independent (raw integer magnitude only) - not yet wired up.
   // If raw amount is larger than Number.MAX_SAFE_INTEGER, cannot safely normalize
   const maxSafeAmount = Math.pow(10, 15); // Roughly MAX_SAFE_INTEGER / 1000
   try {
@@ -72,7 +75,10 @@ export class TokenBalanceDeltaCalculator {
   calculateDeltas(
     preBalances: TokenBalance[],
     postBalances: TokenBalance[],
-    tokenMetadata: Map<string, Token>
+    // Not read yet - reserved for when this method starts attaching
+    // metadata (symbol/name) to BalanceChange, same as toTokenBalanceDelta
+    // already accepts a Token below.
+    _tokenMetadata: Map<string, Token>
   ): BalanceChange[] {
     const deltas: BalanceChange[] = [];
 
@@ -110,7 +116,7 @@ export class TokenBalanceDeltaCalculator {
     }
 
     // Check for new token accounts (pre-balance not present)
-    for (const [_key, postBalance] of postMap) {
+    for (const postBalance of postMap.values()) {
       deltas.push({
         mint: postBalance.mint,
         owner: postBalance.owner,

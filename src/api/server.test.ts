@@ -13,6 +13,11 @@ import { AgentRouter } from '../agents/agent-router';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 describe('API Server', () => {
+  // Duck-typed partial mocks of the real agent/service classes below -
+  // `any` here is deliberate (this suite exercises HTTP wiring only; each
+  // real collaborator is unit-tested on its own in src/agents/*.test.ts
+  // and src/services/*.test.ts), not a stand-in for a missing real type.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   let app: any;
   let server: APIServer;
   let mockTransactionRetriever: any;
@@ -23,6 +28,7 @@ describe('API Server', () => {
   let mockAlertAgent: any;
   let mockExplanationAgent: any;
   let mockLiveAlertWatcher: any;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   beforeEach(() => {
     // Mock transaction retriever

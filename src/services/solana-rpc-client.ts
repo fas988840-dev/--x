@@ -3,10 +3,10 @@
  * NEVER signs transactions, NEVER requests credentials
  */
 
-import { Connection, PublicKey, Transaction, ParsedTransactionWithMeta, Logs } from '@solana/web3.js';
+import { Connection, PublicKey, ParsedTransactionWithMeta, Logs } from '@solana/web3.js';
 import { SolanaConfig } from '../types/config';
 import { RpcError, ValidationError } from '../types/errors';
-import { TransactionSignature, WalletAddress, validateTransactionSignature, validateWalletAddress } from '../types/domain';
+import { WalletAddress, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 export class SolanaRpcClient {
   private connection: Connection;
