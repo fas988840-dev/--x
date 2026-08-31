@@ -660,10 +660,9 @@ This platform provides data analysis only. It is not financial advice, investmen
 
 ## Repository Status
 
-**Public**, and **archived (read-only) since Aug 31, 2026** — no pushes, PRs,
-or issues until it is unarchived (Settings → Danger Zone → Unarchive).
-Because it is archived, GitHub Actions does not run, so the CI badge above
-reflects the last run before archiving rather than current state.
+**Public and active.** The repository was briefly archived on Aug 31, 2026
+and unarchived the same day; GitHub Actions runs normally again, so the CI
+badge above reflects the current state of `main`.
 
 - Canonical URL: https://github.com/fas988840-dev/--x
 - https://github.com/fas988840-dev/PROJECT-x also works (HTTP 301 redirect
