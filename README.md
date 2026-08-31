@@ -232,6 +232,39 @@ call fails, never silence). ⚠️ See `src/services/chaingpt-client.ts`'s
 header comment for the verification-status note on ChainGPT's exact REST
 shape (`docs.chaingpt.org` was unreachable when this was written).
 
+### Token Security
+
+```
+GET /api/v1/token/:mint/security
+```
+
+Reports what a token's mint account actually states on-chain — the two
+properties that answer "can the issuer rug me?" directly:
+
+- **`mintAuthority`** — if still held, that account can mint unlimited new
+  supply at will, diluting every holder.
+- **`freezeAuthority`** — if still held, that account can freeze any holder's
+  token account, making their balance unsellable.
+
+Also reports `supply`, `decimals`, whether the mint is initialised, and the
+owning program — Token-2022 is flagged separately (`NON_CLASSIC_TOKEN_PROGRAM`)
+because its extensions can add transfer fees or hooks that these fields do not
+describe.
+
+**It never answers "safe", by design.** Renounced authorities do not rule out
+a rug: the deployer may hold most of the supply, liquidity may be unlocked, a
+transfer hook may block selling. The cleanest result is
+`NO_FINDINGS_IN_CHECKED_SET`, which means exactly what it says — nothing was
+found among the checks in `checked`, and everything in `notChecked` (liquidity
+lock status, holder concentration, Token-2022 extensions, and more) remains
+unknown. `notChecked` is never empty, including on a clean report, so a short
+`findings` array cannot be misread as an all-clear. A caller that wants to
+treat it as safe has to make that leap in its own code, in the open.
+
+Unreadable mint (no account, or not a mint) returns `assessment: "UNKNOWN"`
+with every field `null` rather than an assumption. See
+`src/services/token-security-verifier.ts`.
+
 ### Protocols
 
 ```

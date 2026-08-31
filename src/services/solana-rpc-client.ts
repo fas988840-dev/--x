@@ -6,7 +6,13 @@
 import { Connection, PublicKey, ParsedTransactionWithMeta, Logs } from '@solana/web3.js';
 import { SolanaConfig } from '../types/config';
 import { RpcError, ValidationError } from '../types/errors';
-import { WalletAddress, validateTransactionSignature, validateWalletAddress } from '../types/domain';
+import {
+  TokenMint,
+  WalletAddress,
+  validateTokenMint,
+  validateTransactionSignature,
+  validateWalletAddress,
+} from '../types/domain';
 
 export class SolanaRpcClient {
   private connection: Connection;
@@ -83,6 +89,64 @@ export class SolanaRpcClient {
       if (error instanceof ValidationError) throw error;
       throw new RpcError(
         `Failed to fetch token balances: ${error instanceof Error ? error.message : String(error)}`,
+        500
+      );
+    }
+  }
+
+  /**
+   * Read an SPL token mint account - read-only.
+   *
+   * Returns the parsed mint fields the RPC actually gives us, plus the
+   * program that owns the account, and `null` when the address holds no
+   * account at all or the account is not a parseable mint (e.g. it is a
+   * wallet, or a token *account* rather than the mint). The caller decides
+   * what an absent mint means; this method never substitutes a default.
+   *
+   * `owningProgramId` matters: the classic SPL Token program and Token-2022
+   * are different programs, and Token-2022 mints can carry extensions
+   * (transfer fees, transfer hooks) that change a token's behaviour in ways
+   * the fields below do not capture. TokenSecurityVerifier reports that
+   * distinction rather than flattening it.
+   */
+  async getMintInfo(mint: TokenMint): Promise<{
+    mintAuthority: string | null;
+    freezeAuthority: string | null;
+    supply: string;
+    decimals: number;
+    isInitialized: boolean;
+    owningProgramId: string;
+  } | null> {
+    try {
+      validateTokenMint(mint);
+
+      const pubkey = new PublicKey(mint);
+      const response = await this.connection.getParsedAccountInfo(pubkey);
+      const account = response.value;
+
+      if (!account) return null;
+
+      const data = account.data;
+      // A non-parsed account comes back as a Buffer; only the parsed shape
+      // carries the mint fields, and only when the RPC recognised it as one.
+      if (!('parsed' in data)) return null;
+      if (data.parsed?.type !== 'mint') return null;
+
+      const info = data.parsed.info;
+      if (!info) return null;
+
+      return {
+        mintAuthority: info.mintAuthority ?? null,
+        freezeAuthority: info.freezeAuthority ?? null,
+        supply: String(info.supply),
+        decimals: Number(info.decimals),
+        isInitialized: Boolean(info.isInitialized),
+        owningProgramId: account.owner.toBase58(),
+      };
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      throw new RpcError(
+        `Failed to fetch mint info: ${error instanceof Error ? error.message : String(error)}`,
         500
       );
     }

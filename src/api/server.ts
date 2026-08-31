@@ -2,7 +2,12 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { validateWalletAddress, validateTransactionSignature, WalletAddress } from '../types/domain';
+import {
+  validateWalletAddress,
+  validateTransactionSignature,
+  validateTokenMint,
+  WalletAddress,
+} from '../types/domain';
 import { ValidationError, RpcError } from '../types/errors';
 import { TransactionRetriever } from '../services/transaction-retriever';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
@@ -13,6 +18,7 @@ import { DexRegistry } from '../services/dex-registry';
 import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent } from '../agents/core_agents';
 import { EvidenceEngine } from '../agents/evidence-engine';
 import { LiveAlertWatcher } from '../services/live-alert-watcher';
+import { TokenSecurityVerifier } from '../services/token-security-verifier';
 import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
 
 /**
@@ -97,6 +103,7 @@ export class APIServer {
   private alertAgent: AlertAgent;
   private explanationAgent: ExplanationAgent;
   private liveAlertWatcher: LiveAlertWatcher;
+  private tokenSecurityVerifier: TokenSecurityVerifier;
 
   constructor(
     port: number,
@@ -112,7 +119,8 @@ export class APIServer {
     agentRouter: AgentRouter,
     alertAgent: AlertAgent,
     explanationAgent: ExplanationAgent,
-    liveAlertWatcher: LiveAlertWatcher
+    liveAlertWatcher: LiveAlertWatcher,
+    tokenSecurityVerifier: TokenSecurityVerifier
   ) {
     this.port = port;
     this.app = express();
@@ -127,6 +135,7 @@ export class APIServer {
     this.alertAgent = alertAgent;
     this.explanationAgent = explanationAgent;
     this.liveAlertWatcher = liveAlertWatcher;
+    this.tokenSecurityVerifier = tokenSecurityVerifier;
     this.walletAgent = walletAgent;
     this.agentRouter = agentRouter;
 
@@ -303,6 +312,8 @@ export class APIServer {
     // none - see CLAUDE.md's "DEX/program identification is honest about
     // confidence" invariant. Returns an empty array rather than a
     // hardcoded protocol list.)
+    this.app.get('/api/v1/token/:mint/security', this.heavyLimiter, this.asyncHandler(this.handleTokenSecurity.bind(this)));
+
     this.app.get('/api/v1/protocols', this.handleProtocols.bind(this));
 
     // Agent Router - single entry point for MCP-style clients that don't
@@ -653,6 +664,21 @@ export class APIServer {
   /**
    * Handle protocols list
    */
+  /**
+   * Token mint security check - reports what the mint account states on-chain.
+   *
+   * Deliberately never answers "safe". Renounced authorities do not rule out a
+   * rug: the deployer may hold most of the supply, liquidity may be unlocked, a
+   * Token-2022 hook may block selling. The report names what it checked and
+   * what it did not, and a caller wanting to read that as safe has to make that
+   * leap in its own code. See token-security-verifier.ts.
+   */
+  private async handleTokenSecurity(req: Request, res: Response): Promise<void> {
+    const mint = validateTokenMint(req.params.mint);
+    const report = await this.tokenSecurityVerifier.inspectToken(mint);
+    res.json(report);
+  }
+
   private handleProtocols(_req: Request, res: Response): void {
     const programIds = this.dexRegistry.getKnownProgramIds();
 
