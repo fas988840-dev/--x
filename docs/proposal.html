@@ -1,0 +1,455 @@
+<title>FactLedger Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f5f2;
+    --raised: #ffffff;
+    --ink: #14181c;
+    --ink-soft: #4b5259;
+    --line: #d7dad4;
+    --line-strong: #b7bcb4;
+    --seal: #1f3a5f;
+    --ok: #2f6f4e;
+    --ok-bg: #e6efe8;
+    --warn: #8a5a17;
+    --warn-bg: #f3e9d8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14171a;
+      --raised: #1b1f23;
+      --ink: #e8e9e5;
+      --ink-soft: #a3aaad;
+      --line: #2b3036;
+      --line-strong: #3a4148;
+      --seal: #7fa8d9;
+      --ok: #6fbf94;
+      --ok-bg: #17261d;
+      --warn: #d9a441;
+      --warn-bg: #2a2010;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #14171a;
+    --raised: #1b1f23;
+    --ink: #e8e9e5;
+    --ink-soft: #a3aaad;
+    --line: #2b3036;
+    --line-strong: #3a4148;
+    --seal: #7fa8d9;
+    --ok: #6fbf94;
+    --ok-bg: #17261d;
+    --warn: #d9a441;
+    --warn-bg: #2a2010;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+    line-height: 1.68;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .doc { max-width: 720px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+  header {
+    padding: 3rem 0 1.75rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(2rem, 6vw, 2.9rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin: 0 0 1.1rem;
+    text-wrap: balance;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.35rem 1rem;
+    font-size: 0.87rem;
+    margin: 0;
+  }
+
+  .meta dt { color: var(--ink-soft); }
+  .meta dd { margin: 0; font-family: "IBM Plex Mono", monospace; font-size: 0.82rem; word-break: break-word; }
+  .meta a { color: var(--seal); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+
+  section { padding: 2.25rem 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+
+  h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 1.45rem;
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+  }
+
+  h2 .num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+
+  h3 {
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin: 1.6rem 0 0.4rem;
+  }
+
+  p { margin: 0 0 1rem; color: var(--ink-soft); }
+  p.lead { color: var(--ink); font-size: 1.03rem; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  ol.rules { margin: 0 0 1rem; padding-left: 1.2rem; }
+  ol.rules li { color: var(--ink-soft); margin-bottom: 0.6rem; }
+
+  pre.pipeline {
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.76rem;
+    line-height: 1.7;
+    color: var(--ink);
+    margin: 0 0 1.25rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin: 0 0 1rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  td { color: var(--ink-soft); }
+  td.state { white-space: nowrap; }
+
+  .pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    color: var(--ok);
+    background: var(--ok-bg);
+    white-space: nowrap;
+  }
+
+  .verify {
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
+    border-left: 3px solid var(--ok);
+    border-radius: 3px;
+    padding: 0.9rem 1rem;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  .verify a { color: var(--seal); word-break: break-all; }
+
+  ul.limits { margin: 0; padding: 0; list-style: none; }
+
+  ul.limits li {
+    border-left: 2px solid var(--warn);
+    background: var(--warn-bg);
+    padding: 0.75rem 0.95rem;
+    margin-bottom: 0.7rem;
+    border-radius: 0 3px 3px 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  ul.limits strong { color: var(--ink); }
+
+  .milestone {
+    border: 1px solid var(--line-strong);
+    background: var(--raised);
+    border-radius: 3px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .milestone-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .milestone-name { font-weight: 600; color: var(--ink); font-size: 0.96rem; }
+
+  .milestone-cost {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+    color: var(--seal);
+    white-space: nowrap;
+  }
+
+  .milestone p { margin: 0 0 0.55rem; font-size: 0.9rem; }
+  .milestone p:last-child { margin-bottom: 0; }
+  .deliverable { font-size: 0.86rem; color: var(--ink); }
+  .deliverable::before { content: "Deliverable — "; color: var(--ink-soft); }
+
+  .total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.75rem 1.1rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    font-size: 0.95rem;
+  }
+
+  .total .amount { font-family: "IBM Plex Mono", monospace; font-weight: 500; color: var(--ink); }
+
+  footer {
+    padding: 2rem 0 3rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  footer a { color: var(--seal); text-decoration: none; border-bottom: 1px solid transparent; }
+  footer a:hover { border-bottom-color: var(--seal); }
+
+  a:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+
+  @media (max-width: 540px) {
+    .meta { grid-template-columns: 1fr; gap: 0.1rem; }
+    .meta dt { margin-top: 0.5rem; }
+  }
+</style>
+
+<div class="doc">
+
+<header>
+  <p class="eyebrow">Solana Foundation Grant · Developer Tools</p>
+  <h1>FactLedger</h1>
+  <p class="lead">A read-only Solana wallet intelligence API where every number
+  returned can be independently re-derived from the chain by the person reading it.</p>
+  <dl class="meta">
+    <dt>Applicant</dt><dd>Abdullah Al-Anzi — solo developer</dd>
+    <dt>Contact</dt><dd>fas988840@gmail.com</dd>
+    <dt>Repository</dt><dd><a href="https://github.com/fas988840-dev/PROJECT-x">github.com/fas988840-dev/PROJECT-x</a></dd>
+    <dt>Requested</dt><dd>$25,000 USD</dd>
+  </dl>
+</header>
+
+<section>
+  <h2><span class="num">01</span> Two rules, enforced in code</h2>
+  <p>FactLedger is defined by two constraints. Neither is a feature description —
+  both are enforced by the codebase and its test suite.</p>
+  <ol class="rules">
+    <li><strong>It never fabricates.</strong> Any value the platform cannot verify —
+    a price, a fee, a decoded swap amount — is returned as <code>null</code> or an
+    explicit <code>unknown</code>, never as a plausible-looking estimate.</li>
+    <li><strong>It never overstates confidence.</strong> Every DEX instruction is
+    classified <code>confirmed</code>, <code>candidate</code>, or <code>unknown</code>
+    against independently verified program IDs. These three states are never collapsed
+    into one to make output look more complete than it is.</li>
+  </ol>
+</section>
+
+<section>
+  <h2><span class="num">02</span> Problem</h2>
+  <p>Wallet analysis on Solana today splits into two unsatisfying categories.</p>
+  <p><strong>Heuristic tools</strong> detect DEX activity by matching program IDs
+  loosely. Raydium and Jupiter each ship multiple program versions, and unverified
+  programs are routinely mislabelled as swaps. Users act on this data believing it
+  was verified.</p>
+  <p><strong>Commercial analytics</strong> return risk and reputation scores from
+  proprietary models. A user cannot audit the score, cannot reproduce it, and cannot
+  tell which transactions drove it. When such a score gates protocol access or informs
+  a counterparty decision, that opacity carries real cost.</p>
+  <p>Neither category tells the user what it does not know. That is the gap this
+  project addresses.</p>
+</section>
+
+<section>
+  <h2><span class="num">03</span> Architecture</h2>
+  <p>A linear pipeline of single-purpose services. Each stage may only consume what
+  the stage before it actually produced.</p>
+  <pre class="pipeline">SolanaRpcClient          read-only RPC; no signing, no key material
+ └→ TransactionRetriever  normalises txs (legacy + versioned)
+     └→ InstructionParser classifies against DexRegistry
+         └→ DexRegistry   verified program ID → decoder adapter
+     └→ TokenBalanceDelta pre/post diffs; amounts kept as strings
+     └→ PriceProvider     CoinGecko; null on failure, never a fallback
+         └→ BehaviorAnalyzer   frequency, failure rate, diversity, timing
+             └→ IntelligenceScorer  4 weighted components + named factors
+             └→ RiskAssessor        5 weighted factors + written reasoning</pre>
+
+  <h3>Determinism</h3>
+  <p>Both scorers are pure weighted combinations of named factors. Identical input
+  must produce byte-identical output, and this is checked automatically:
+  <code>determinism.test.ts</code> runs each scorer twice on fixed input and asserts
+  exact equality, on every push. A regression in determinism fails the build.</p>
+
+  <h3>Explainability</h3>
+  <p>Every score ships with the <code>factors</code> and <code>reasoning</code> arrays
+  it was built from. A reviewer can take the transaction signatures we cite, query
+  them through any public RPC endpoint, and recompute the score by hand.</p>
+
+  <h3>Precision</h3>
+  <p>On-chain amounts and fees are carried as strings — lamports and raw token units —
+  never JavaScript numbers. <code>normalizeAmount()</code> returns <code>null</code>
+  rather than a lossy value when an amount exceeds safe integer range.</p>
+
+  <h3>Read-only by construction</h3>
+  <p>The RPC client exposes only read methods plus a read-only WebSocket log
+  subscription. The codebase contains no keypair handling, no signing path, and
+  requests no credentials or seed phrases.</p>
+</section>
+
+<section>
+  <h2><span class="num">04</span> What is already built</h2>
+  <table>
+    <thead>
+      <tr><th>Component</th><th>State</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>RPC client, transaction retrieval, instruction parsing</td><td class="state"><span class="pill">Complete</span></td></tr>
+      <tr><td>Raydium AMM V4 + Jupiter V6 detection (instruction type)</td><td class="state"><span class="pill">Complete</span></td></tr>
+      <tr><td>Behaviour analysis, intelligence scoring, risk assessment</td><td class="state"><span class="pill">Complete</span></td></tr>
+      <tr><td>Evidence engine — per-instruction citation, fixed confidence map</td><td class="state"><span class="pill">Complete</span></td></tr>
+      <tr><td>Alert engine (one-shot) and live SSE alert stream</td><td class="state"><span class="pill">Complete</span></td></tr>
+      <tr><td>REST API — Helmet, CORS allowlist, rate limiting, API-key auth</td><td class="state"><span class="pill">Complete</span></td></tr>
+      <tr><td>MCP server, read-only dashboard, Docker image</td><td class="state"><span class="pill">Complete</span></td></tr>
+    </tbody>
+  </table>
+  <p class="verify"><strong>Verified 31 August 2026.</strong> CI passes end to end on
+  GitHub's own runners — dependency audit, ESLint, <code>tsc --noEmit</code>, 133 tests
+  including the determinism check, and a production build.<br>
+  <a href="https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720">github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720</a></p>
+</section>
+
+<section>
+  <h2><span class="num">05</span> Honest limitations</h2>
+  <p>Stating these plainly is consistent with how the software itself behaves.</p>
+  <ul class="limits">
+    <li><strong>Swap amounts are not extracted.</strong> Detection verifies the
+    instruction <em>type</em> — a checked discriminator byte for Raydium, a computed
+    Anchor sighash for Jupiter — but not the account-list layout needed to read
+    input/output mints and amounts. Those fields stay <code>null</code> and the status
+    stays <code>candidate</code>. Guessing them would produce plausible, wrong data;
+    that is worse than an honest gap.</li>
+    <li><strong>The live WebSocket alert stream is unexercised against a real
+    endpoint.</strong> It is unit-tested against a mocked RPC client only. Separately,
+    many public RPC endpoints restrict log subscriptions, so production use needs a
+    dedicated provider.</li>
+    <li><strong>No live deployment yet.</strong> The Docker image builds; it has not
+    been deployed to a public URL. That is Milestone 1 and the most immediate use of
+    this grant.</li>
+    <li><strong>No users yet.</strong> There are no usage numbers, and this proposal
+    claims none.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="num">06</span> Milestones and budget</h2>
+
+  <div class="milestone">
+    <div class="milestone-head">
+      <span class="milestone-name">1 · Production deployment and monitoring</span>
+      <span class="milestone-cost">$8,000 · months 1–2</span>
+    </div>
+    <p>Deploy the existing Docker image to a public URL; move onto a dedicated Solana
+    RPC provider, since free endpoints restrict both request rate and WebSocket
+    subscriptions; add error tracking and uptime monitoring; publish deployment
+    documentation and worked API examples.</p>
+    <p class="deliverable">a public API endpoint serving real wallet analysis, monitored.</p>
+  </div>
+
+  <div class="milestone">
+    <div class="milestone-head">
+      <span class="milestone-name">2 · Extended verified protocol coverage</span>
+      <span class="milestone-cost">$9,000 · months 3–4</span>
+    </div>
+    <p>Independently verify program IDs and instruction layouts for Orca, Magic Eden
+    and Phantom Swap — and, where the account layout can genuinely be verified, promote
+    existing adapters from <code>candidate</code> to <code>confirmed</code> with real
+    amount extraction. Benchmark against production RPC volume, and publish a technical
+    writeup on confidence-tiered protocol detection.</p>
+    <p class="deliverable">more protocols at honestly-labelled confidence, with the verification method documented.</p>
+  </div>
+
+  <div class="milestone">
+    <div class="milestone-head">
+      <span class="milestone-name">3 · Ecosystem integration and sustainability</span>
+      <span class="milestone-cost">$8,000 · months 5–6</span>
+    </div>
+    <p>Support integration into community applications over REST and MCP; harden
+    reliability under real traffic; establish a sustainability model so the service
+    outlives the grant period.</p>
+    <p class="deliverable">documented integrations and a funding path beyond this grant.</p>
+  </div>
+
+  <div class="total">
+    <span>Total requested</span>
+    <span class="amount">$25,000 USD</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">07</span> Why this matters for Solana</h2>
+  <p>Wallet reputation and risk data increasingly gate real decisions — protocol
+  access, counterparty trust, compliance workflows. When that data is a black box,
+  mistakes are invisible and uncorrectable.</p>
+  <p>FactLedger offers the ecosystem a reference implementation of the opposite
+  approach: scores that cite their evidence, confidence that is tiered honestly, and
+  gaps that are stated rather than filled with guesses. It is open source, so any team
+  can audit the method or build on it.</p>
+</section>
+
+<footer>
+  Abdullah Al-Anzi ·
+  <a href="mailto:fas988840@gmail.com">fas988840@gmail.com</a> ·
+  <a href="https://github.com/fas988840-dev/PROJECT-x">GitHub</a>
+</footer>
+
+</div>

@@ -7,15 +7,28 @@ import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { EvidenceEngine } from '../agents/evidence-engine';
-import { ResearchAgent, EvidenceStatus } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent, EvidenceStatus } from '../agents/core_agents';
+import { LiveAlertWatcher } from '../services/live-alert-watcher';
+import { AgentRouter } from '../agents/agent-router';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 describe('API Server', () => {
+  // Duck-typed partial mocks of the real agent/service classes below -
+  // `any` here is deliberate (this suite exercises HTTP wiring only; each
+  // real collaborator is unit-tested on its own in src/agents/*.test.ts
+  // and src/services/*.test.ts), not a stand-in for a missing real type.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   let app: any;
   let server: APIServer;
   let mockTransactionRetriever: any;
   let mockEvidenceEngine: any;
   let mockResearchAgent: any;
+  let mockWalletAgent: any;
+  let mockAgentRouter: any;
+  let mockAlertAgent: any;
+  let mockExplanationAgent: any;
+  let mockLiveAlertWatcher: any;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -46,6 +59,63 @@ describe('API Server', () => {
         justification: 'test',
       }),
     };
+    mockWalletAgent = {
+      analyzeWallet: vi.fn().mockResolvedValue({
+        agentId: 'wallet_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {
+          transactionCount: 0,
+          successfulTransactions: 0,
+          failedTransactions: 0,
+          solBalanceLamports: '0',
+          tokenBalances: [{ mint: 'So1111...', amount: '100', decimals: 6 }],
+          knownProtocolsDetected: [],
+        },
+        justification: 'test',
+      }),
+    };
+    mockAgentRouter = {
+      route: vi.fn().mockResolvedValue({
+        agentId: 'wallet_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {},
+        justification: 'test',
+      }),
+    };
+    mockAlertAgent = {
+      evaluateWallet: vi.fn().mockResolvedValue({
+        agentId: 'alert_agent_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: { alerts: [] },
+        justification: 'test',
+      }),
+    };
+    mockExplanationAgent = {
+      explainWallet: vi.fn().mockResolvedValue({
+        agentId: 'explanation_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {
+          summary: 'test summary',
+          summarySource: 'deterministic',
+          keyActivities: [],
+          riskAssessment: 'Risk score 0/100 (low).',
+          patterns: [],
+          disclaimer: 'test',
+        },
+        justification: 'test',
+      }),
+    };
+    mockLiveAlertWatcher = {
+      watch: vi.fn().mockReturnValue({ stop: vi.fn().mockResolvedValue(undefined) }),
+    };
 
     // Create server with mocked services
     server = new APIServer(
@@ -57,7 +127,12 @@ describe('API Server', () => {
       new StubPriceProvider(),
       new DexRegistry(),
       mockEvidenceEngine as EvidenceEngine,
-      mockResearchAgent as ResearchAgent
+      mockResearchAgent as ResearchAgent,
+      mockWalletAgent as WalletIntelligenceAgent,
+      mockAgentRouter as AgentRouter,
+      mockAlertAgent as AlertAgent,
+      mockExplanationAgent as ExplanationAgent,
+      mockLiveAlertWatcher as LiveAlertWatcher
     );
 
     app = server.getApp();
@@ -174,7 +249,12 @@ describe('API Server', () => {
       expect(response.body.risk.level).toMatch(/low|medium|high/);
       expect(response.body.risk.factors).toBeDefined();
       expect(response.body.risk.reasoning).toBeDefined();
-      expect(response.body.disclaimer).toContain('Not financial advice');
+      // Risk route's disclaimer embeds the phrase mid-sentence, lowercase
+      // ("...This is not financial advice and should not be used...") -
+      // unlike the intelligence route's disclaimer above, which ends with
+      // it capitalized as a standalone sentence. Match what's actually
+      // there instead of assuming both routes share identical wording.
+      expect(response.body.disclaimer).toContain('not financial advice');
     });
   });
 
@@ -251,15 +331,41 @@ describe('API Server', () => {
   });
 
   describe('GET /api/v1/wallet/:address/tokens', () => {
-    it('should return wallet tokens', async () => {
+    it('should return real token balances from WalletIntelligenceAgent, not a placeholder', async () => {
       const address = validateWalletAddress('11111111111111111111111111111112');
 
       const response = await request(app).get(`/api/v1/wallet/${address}/tokens`);
 
       expect(response.status).toBe(200);
       expect(response.body.wallet).toBe(address);
-      expect(response.body.tokens).toBeDefined();
-      expect(response.body.disclaimer).toBeDefined();
+      expect(response.body.tokens).toEqual([{ mint: 'So1111...', amount: '100', decimals: 6 }]);
+      expect(response.body.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
+      expect(mockWalletAgent.analyzeWallet).toHaveBeenCalledWith(address);
+    });
+  });
+
+  describe('GET /api/v1/agents/:intent', () => {
+    it('dispatches a valid intent to the AgentRouter with parsed query params', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/agents/wallet_overview`).query({ address, limit: 5 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.intent).toBe('wallet_overview');
+      expect(mockAgentRouter.route).toHaveBeenCalledWith('wallet_overview', {
+        address,
+        signature: undefined,
+        topic: undefined,
+        limit: 5,
+      });
+    });
+
+    it('rejects an unknown intent with 400 instead of forwarding it to the router', async () => {
+      const response = await request(app).get('/api/v1/agents/not_a_real_intent');
+
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(mockAgentRouter.route).not.toHaveBeenCalled();
     });
   });
 
@@ -287,6 +393,54 @@ describe('API Server', () => {
       expect(response.body.wallet).toBe(address);
       expect(response.body.data.auditTrail).toEqual(['wallet_intel_v1', 'risk_assessment_v1']);
     });
+  });
+
+  describe('GET /api/v1/wallet/:address/alerts', () => {
+    it('should return the alert agent evaluation', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/wallet/${address}/alerts`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.wallet).toBe(address);
+      expect(response.body.data.alerts).toEqual([]);
+      expect(mockAlertAgent.evaluateWallet).toHaveBeenCalledWith(address, 100);
+    });
+  });
+
+  describe('GET /api/v1/wallet/:address/explanation', () => {
+    it('should return the explanation agent output', async () => {
+      const address = validateWalletAddress('11111111111111111111111111111112');
+
+      const response = await request(app).get(`/api/v1/wallet/${address}/explanation`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.wallet).toBe(address);
+      expect(response.body.data.summary).toBe('test summary');
+      expect(response.body.data.summarySource).toBe('deterministic');
+      expect(mockExplanationAgent.explainWallet).toHaveBeenCalledWith(address, 100);
+    });
+  });
+
+  describe('GET /api/v1/wallet/:address/alerts/stream', () => {
+    it('rejects an invalid address with 400 via the centralized error handler (not a hang)', async () => {
+      // Also a regression test for asyncHandler(): before it existed, a
+      // throw inside an async route handler became an unhandled promise
+      // rejection instead of ever reaching this response.
+      const response = await request(app).get('/api/v1/wallet/not-a-real-address/alerts/stream');
+
+      expect(response.status).toBe(400);
+      expect(mockLiveAlertWatcher.watch).not.toHaveBeenCalled();
+    });
+
+    // The happy path (opening the SSE stream, receiving alert events) is
+    // deliberately not covered here via supertest: the stream never ends
+    // on its own, and a full HTTP round-trip test would either hang the
+    // suite or require reaching into supertest/superagent internals in a
+    // way that hasn't been verified to behave correctly in this sandbox
+    // (npm install is blocked - see CLAUDE.md). LiveAlertWatcher's own
+    // subscription/dedupe logic is covered directly in
+    // live-alert-watcher.test.ts instead.
   });
 
   describe('GET /api/v1/protocols', () => {

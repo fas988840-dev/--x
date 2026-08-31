@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: factledger-api
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: SOLANA_RPC_URL
+        value: https://api.mainnet-beta.solana.com
+      - key: PORT
+        value: 3000
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: NODE_ENV
+        value: production

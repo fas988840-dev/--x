@@ -1,0 +1,229 @@
+══════════════════════════════════════════════════════
+  إجابات جاهزة للنسخ - انسخ والصق في النماذج
+══════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 معلومات شخصية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[1] الاسم الكامل:
+Abdullah Al-Anzi
+
+[2] البريد الإلكتروني:
+fas988840@gmail.com
+
+[3] GitHub:
+https://github.com/fas988840-dev
+
+[4] X/Twitter:
+@aamm123220
+
+[5] محفظة Solana:
+EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
+
+[6] البلد:
+Saudi Arabia
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 معلومات المشروع
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[7] اسم المشروع:
+FactLedger
+
+[8] الوصف القصير (سطر واحد):
+Deterministic Solana wallet analysis platform with verified DEX detection and honest confidence tiering.
+
+[9] الوصف المتوسط (50 كلمة):
+FactLedger is a read-only Solana wallet intelligence API. It turns raw on-chain transaction history into behavioral metrics, intelligence scores, and risk assessments — with every number independently verifiable from the blockchain. It never fabricates data and always states confidence honestly (confirmed/candidate/unknown).
+
+[10] رابط المستودع:
+https://github.com/fas988840-dev/PROJECT-x
+
+[11] رابط العرض الحي:
+⚠️ تحقق قبل ما ترسله. هذا رابط artifact على claude.ai، والـ artifacts
+خاصة افتراضياً. اختبار حاسم بـ 10 ثواني: افتحه في نافذة تصفح خفي
+(incognito). إذا طلب تسجيل دخول، فالمراجع بيشوف جدار ولا شي — ولا ترسله
+موصوفاً بأنه "عرض حي" أو "صفحة عامة تعمل الآن".
+https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+
+بديل مضمون العمومية: فعّل GitHub Pages على docs/ (README ← "Public Docs
+Page")، أو انشر الـ API فعلياً واستخدم رابطه. لين يصير كذا، الرابط الوحيد
+اللي نتأكد إنه عام هو رابط المستودع نفسه.
+
+[12] رابط CI (الاختبارات):
+https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720
+
+[13] الفئة/التصنيف:
+Developer Tools / Solana DeFi Infrastructure
+
+[14] الترخيص:
+MIT (Open Source)
+
+[15] حجم الفريق:
+1 person (solo developer)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 بيان المشكلة (Problem Statement)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Wallet analysis on Solana today splits into two unsatisfying categories.
+
+Heuristic tools claim to detect DEX activity by pattern-matching program IDs loosely. Raydium and Jupiter each ship multiple program versions; unverified programs are routinely mislabelled as swaps. Users act on this data believing it was verified.
+
+Commercial analytics return risk and reputation scores from proprietary models. A user cannot audit the score, cannot reproduce it, and cannot tell which transactions drove it. When such a score gates access to a protocol or informs a counterparty decision, that opacity is a real cost.
+
+Neither category tells the user what it does not know. That is the gap FactLedger addresses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 الحل والابتكار (Solution & Innovation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FactLedger is a read-only Solana wallet intelligence API built on two design rules enforced in code rather than promised in documentation:
+
+1. It never fabricates. Any value the platform cannot verify — a price, a fee, a decoded swap amount — is returned as null or an explicit 'unknown', never as a plausible-looking estimate.
+
+2. It never overstates confidence. Every DEX instruction is classified 'confirmed', 'candidate', or 'unknown' against independently verified program IDs. These three states are never collapsed into one to make output look more complete.
+
+Key innovations:
+- Deterministic scoring (verified in CI on every push)
+- Transparent factors and reasoning for every score
+- String-based amount preservation (no float precision loss)
+- Read-only construction (no signing, no key material)
+- 12 REST endpoints + MCP server + Next.js dashboard
+- Docker-ready for one-click deployment
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 المعالم والميزانية (Milestones & Budget)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Milestone 1 — Production Deployment ($8,000 · Months 1-2)
+Deploy Docker image to public URL, migrate to dedicated Solana RPC provider (free endpoints restrict rate/WebSocket subscriptions), add error tracking and uptime monitoring, publish deployment documentation and worked API examples.
+Deliverable: Public API endpoint serving real wallet analysis, monitored.
+
+Milestone 2 — Extended Protocol Coverage ($9,000 · Months 3-4)
+Research and independently verify program IDs and instruction layouts for Orca, Magic Eden, and Phantom Swap. Where the account layout can be verified, promote existing adapters from 'candidate' to 'confirmed' with real amount extraction. Benchmark against production RPC volume.
+Deliverable: Additional protocols supported at honestly-labeled confidence.
+
+Milestone 3 — Ecosystem Integration ($8,000 · Months 5-6)
+Support integration into community applications via REST and MCP. Reliability hardening under real traffic. Establish sustainability model beyond grant period.
+Deliverable: Documented integrations and a funding path beyond this grant.
+
+Total Requested: $25,000 USD
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 لماذا يهم هذا لسولانا (Why It Matters for Solana)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Wallet reputation and risk data increasingly gate real decisions — protocol access, counterparty trust, compliance workflows. When that data is a black box, mistakes are invisible and uncorrectable.
+
+FactLedger offers the ecosystem a reference implementation for the opposite approach:
+- Scores that cite their evidence
+- Confidence that is tiered honestly
+- Gaps that are stated rather than filled with guesses
+
+It is open source, so any team can audit the method or build on it. This makes it valuable for:
+- Developers: Build apps on verifiable wallet data
+- Researchers: Audit and extend the system
+- Compliance teams: Transparent metrics for AML/KYC
+- Users: Honest analysis without black-box models
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 إثبات العمل (Proof of Work)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GitHub Repository:
+https://github.com/fas988840-dev/PROJECT-x
+
+Current Status:
+- 133 tests passing (all green)
+- CI verified on GitHub's own runners
+- TypeScript strict mode, no 'any' types
+- Determinism check runs on every push
+- Production Docker image ready
+- 12 REST API endpoints implemented
+- MCP server implemented
+- Next.js dashboard implemented
+
+Latest CI Run (Aug 31, 2026):
+https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720
+Commit: 21e8fea
+
+Verified Components:
+✓ RPC client, transaction retrieval, instruction parsing
+✓ Raydium AMM V4 + Jupiter V6 detection (candidate status)
+✓ Behavior analysis, intelligence scoring, risk assessment
+✓ Evidence engine with per-instruction citation
+✓ Alert engine (one-shot) and live SSE alert stream
+✓ REST API with security hardening (Helmet, CORS, rate limiting)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 القيود الصادقة (Honest Limitations)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Stating these is consistent with how the software itself behaves:
+
+1. Swap amounts are not extracted. Raydium and Jupiter detection verifies the instruction type but not the account-list layout needed to read input/output mints and amounts. Those fields stay null and status stays 'candidate'.
+
+2. Live WebSocket alert stream is unexercised against real endpoint. It is unit-tested against a mocked RPC client only. Public RPC endpoints often restrict log subscriptions.
+
+3. No live deployment yet. Docker image builds; not deployed to public URL. That is Milestone 1.
+
+4. No users yet. There are no usage numbers, and this proposal claims none.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 لماذا أنا (Why You / Why Me)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I built this because the existing wallet analytics landscape on Solana forced a choice between opaque commercial tools and heuristic guessing that mislabels its outputs as facts. Neither is honest with users.
+
+My approach was to enforce honesty in code rather than in documentation. Determinism is verified automatically in CI. Confidence tiers cannot be collapsed. Prices that fail return null, not a plausible number. Every score cites its evidence. If a reviewer wants to check any output, they can pull the transactions we cite from any public RPC and recompute by hand.
+
+I work full-time on this as a solo developer. The codebase is 133-tests-passing on GitHub's own runners, not sandbox promises. Everything I claim can be independently verified from the CI badge or by cloning the repo and running `npm test`.
+
+Contact: fas988840@gmail.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 الجدول الزمني (Timeline)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Duration: 6 months
+- Months 1-2: Production deployment
+- Months 3-4: Extended protocol support
+- Months 5-6: Ecosystem integration
+
+Start Date: Upon grant approval
+Full-time commitment: Yes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 روابط المنصات (Grant Platform Links)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ChainGPT Research Grant:
+https://chaingpt.org/grants
+أو
+https://pad.chaingpt.org
+
+Colosseum Eternal Grant:
+https://colosseum.org
+
+Superteam Earn:
+https://earn.superteam.fun
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 خطوات النسخ السريعة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+الطريقة الأسرع:
+1. افتح هذا الملف في تطبيق النصوص (Notes/Files)
+2. حدد النص المطلوب (اضغط مطولاً واسحب)
+3. انسخ (Copy)
+4. اذهب للنموذج
+5. الصق (Paste)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+للسؤال والمساعدة:
+fas988840@gmail.com
+
+═══════════════════════════════════════════════════════

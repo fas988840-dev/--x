@@ -5,6 +5,8 @@ import {
   MarketEventAgent,
   RiskAgent,
   ResearchAgent,
+  AlertAgent,
+  ExplanationAgent,
   EvidenceStatus,
 } from './core_agents';
 import { TransactionRetriever } from '../services/transaction-retriever';
@@ -12,6 +14,8 @@ import { SolanaRpcClient } from '../services/solana-rpc-client';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { InstructionParser } from '../services/instruction-parser';
+import { AlertEngine } from '../services/alert-engine';
+import { ChainGptClient } from '../services/chaingpt-client';
 import { TransactionMeta, ParsedInstruction, validateTransactionSignature, validateWalletAddress, validateProgramId } from '../types/domain';
 
 const VALID_ADDRESS = '11111111111111111111111111111112';
@@ -37,26 +41,80 @@ describe('WalletIntelligenceAgent', () => {
       getTokenBalances: vi.fn().mockResolvedValue([{ mint: 'So1111...', amount: '100', decimals: 6 }]),
     } as unknown as SolanaRpcClient;
 
-    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const transactionIntelligenceAgent = {
+      parseTx: vi.fn().mockResolvedValue({
+        agentId: 'tx_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.UNKNOWN,
+        confidenceScore: 0,
+        data: null,
+        justification: 'not found',
+      }),
+    } as unknown as TransactionIntelligenceAgent;
+
+    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, transactionIntelligenceAgent);
     const result = await agent.analyzeWallet(VALID_ADDRESS);
 
     expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
     expect(result.confidenceScore).toBe(1);
     expect(result.data?.transactionCount).toBe(1);
     expect(result.data?.solBalanceLamports).toBe('1000000000');
-    expect(result.data?.knownProtocolsDetected).toEqual([]); // never invented
+    expect(result.data?.knownProtocolsDetected).toEqual([]); // never invented - no instruction actually matched an adapter
+  });
+
+  it('populates knownProtocolsDetected from real per-instruction parsing, honestly labeling candidate matches', async () => {
+    const mockTx: TransactionMeta = {
+      signature: validateTransactionSignature(VALID_SIGNATURE),
+      slot: 1,
+      blockTime: null,
+      status: 'success',
+      fee: '5000',
+      logMessages: [],
+    };
+    const transactionRetriever = {
+      getWalletTransactionsMeta: vi.fn().mockResolvedValue([mockTx]),
+    } as unknown as TransactionRetriever;
+    const rpcClient = {
+      getSolBalance: vi.fn().mockResolvedValue(0),
+      getTokenBalances: vi.fn().mockResolvedValue([]),
+    } as unknown as SolanaRpcClient;
+    const transactionIntelligenceAgent = {
+      parseTx: vi.fn().mockResolvedValue({
+        agentId: 'tx_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: {
+          status: 'success',
+          fee: '5000',
+          blockTime: null,
+          instructions: [
+            { programId: 'RaydiumProgramId', programName: 'Raydium AMM V4', status: 'candidate' },
+            { programId: 'UnknownProgramId', programName: 'Unknown Program', status: 'unknown' },
+          ],
+        },
+        justification: 'ok',
+      }),
+    } as unknown as TransactionIntelligenceAgent;
+
+    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, transactionIntelligenceAgent);
+    const result = await agent.analyzeWallet(VALID_ADDRESS);
+
+    expect(result.data?.knownProtocolsDetected).toEqual(['Raydium AMM V4 (candidate)']);
   });
 
   it('returns UNKNOWN for an invalid address instead of throwing', async () => {
     const transactionRetriever = {} as unknown as TransactionRetriever;
     const rpcClient = {} as unknown as SolanaRpcClient;
+    const transactionIntelligenceAgent = { parseTx: vi.fn() } as unknown as TransactionIntelligenceAgent;
 
-    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const agent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, transactionIntelligenceAgent);
     const result = await agent.analyzeWallet('not-a-real-address');
 
     expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
     expect(result.data).toBeNull();
     expect(result.confidenceScore).toBe(0);
+    expect(transactionIntelligenceAgent.parseTx).not.toHaveBeenCalled();
   });
 });
 
@@ -138,6 +196,28 @@ describe('RiskAgent', () => {
   });
 });
 
+describe('AlertAgent', () => {
+  it('evaluates real behavior/risk data via AlertEngine and returns VERIFIED', async () => {
+    const transactionRetriever = {
+      getWalletTransactionsMeta: vi.fn().mockResolvedValue([]),
+    } as unknown as TransactionRetriever;
+
+    const agent = new AlertAgent(transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor(), new AlertEngine());
+    const result = await agent.evaluateWallet(VALID_ADDRESS);
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
+    expect(result.data?.alerts).toEqual([]); // no transactions -> nothing to trigger on
+  });
+
+  it('returns UNKNOWN for an invalid address instead of throwing', async () => {
+    const agent = new AlertAgent({} as TransactionRetriever, new BehaviorAnalyzer(), new RiskAssessor(), new AlertEngine());
+    const result = await agent.evaluateWallet('not-a-real-address');
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
+    expect(result.data).toBeNull();
+  });
+});
+
 describe('ResearchAgent', () => {
   it('propagates UNKNOWN instead of synthesizing a report around a gap', async () => {
     const walletAgent = {
@@ -177,7 +257,7 @@ describe('ResearchAgent', () => {
       getTokenBalances: vi.fn().mockResolvedValue([]),
     } as unknown as SolanaRpcClient;
 
-    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient);
+    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, { parseTx: vi.fn() } as unknown as TransactionIntelligenceAgent);
     const riskAgent = new RiskAgent(transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor());
     const research = new ResearchAgent(walletAgent, riskAgent);
 
@@ -186,6 +266,118 @@ describe('ResearchAgent', () => {
     expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
     expect(result.data?.auditTrail).toEqual(['wallet_intel_v1', 'risk_assessment_v1']);
     expect(result.data?.summary).not.toContain('tx_1'); // no leftover placeholder text
+  });
+});
+
+describe('ExplanationAgent', () => {
+  function buildAgents() {
+    const transactionRetriever = {
+      getWalletTransactionsMeta: vi.fn().mockResolvedValue([]),
+    } as unknown as TransactionRetriever;
+    const rpcClient = {
+      getSolBalance: vi.fn().mockResolvedValue(0),
+      getTokenBalances: vi.fn().mockResolvedValue([]),
+    } as unknown as SolanaRpcClient;
+
+    const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, { parseTx: vi.fn() } as unknown as TransactionIntelligenceAgent);
+    const riskAgent = new RiskAgent(transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor());
+    return { walletAgent, riskAgent };
+  }
+
+  it('propagates UNKNOWN instead of building an explanation around a gap', async () => {
+    const walletAgent = {
+      analyzeWallet: vi.fn().mockResolvedValue({
+        agentId: 'wallet_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.UNKNOWN,
+        confidenceScore: 0,
+        data: null,
+        justification: 'RPC unavailable',
+      }),
+    } as unknown as WalletIntelligenceAgent;
+    const riskAgent = {
+      evaluateRisk: vi.fn().mockResolvedValue({
+        agentId: 'risk_assessment_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.VERIFIED,
+        confidenceScore: 1,
+        data: { score: 10, level: 'low', factors: {}, reasoning: [] },
+        justification: 'ok',
+      }),
+    } as unknown as RiskAgent;
+    const chainGptClient = { generateExplanation: vi.fn() } as unknown as ChainGptClient;
+
+    const agent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
+    const result = await agent.explainWallet(VALID_ADDRESS);
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
+    expect(result.data).toBeNull();
+    expect(chainGptClient.generateExplanation).not.toHaveBeenCalled();
+  });
+
+  it('uses the ChainGPT summary and reports summarySource: chaingpt on success', async () => {
+    const { walletAgent, riskAgent } = buildAgents();
+    const chainGptClient = {
+      generateExplanation: vi.fn().mockResolvedValue({ ok: true, text: 'This wallet has no activity yet.' }),
+    } as unknown as ChainGptClient;
+
+    const agent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
+    const result = await agent.explainWallet(VALID_ADDRESS);
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED);
+    expect(result.data?.summary).toBe('This wallet has no activity yet.');
+    expect(result.data?.summarySource).toBe('chaingpt');
+    // keyActivities/riskAssessment/patterns stay real regardless of the AI call
+    expect(result.data?.riskAssessment).toContain('Risk score');
+  });
+
+  it('falls back to a deterministic summary (never silence) when ChainGPT is unavailable', async () => {
+    const { walletAgent, riskAgent } = buildAgents();
+    const chainGptClient = {
+      generateExplanation: vi.fn().mockResolvedValue({ ok: false, reason: 'CHAINGPT_API_KEY is not configured.' }),
+    } as unknown as ChainGptClient;
+
+    const agent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
+    const result = await agent.explainWallet(VALID_ADDRESS);
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.VERIFIED); // underlying data is still real
+    expect(result.data?.summarySource).toBe('deterministic');
+    expect(result.data?.summary.length).toBeGreaterThan(0);
+    expect(result.justification).toContain('ChainGPT was unavailable');
+  });
+
+  it('returns UNKNOWN for an invalid address instead of throwing', async () => {
+    const chainGptClient = { generateExplanation: vi.fn() } as unknown as ChainGptClient;
+
+    // WalletIntelligenceAgent/RiskAgent themselves handle invalid-address
+    // validation and return UNKNOWN - mirror that contract here via mocks.
+    const walletAgent = {
+      analyzeWallet: vi.fn().mockResolvedValue({
+        agentId: 'wallet_intel_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.UNKNOWN,
+        confidenceScore: 0,
+        data: null,
+        justification: 'Invalid wallet address',
+      }),
+    } as unknown as WalletIntelligenceAgent;
+    const riskAgent = {
+      evaluateRisk: vi.fn().mockResolvedValue({
+        agentId: 'risk_assessment_v1',
+        timestamp: Date.now(),
+        evidenceStatus: EvidenceStatus.UNKNOWN,
+        confidenceScore: 0,
+        data: null,
+        justification: 'Invalid wallet address',
+      }),
+    } as unknown as RiskAgent;
+
+    const agent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
+    const result = await agent.explainWallet('not-a-real-address');
+
+    expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
+    expect(result.data).toBeNull();
+    expect(chainGptClient.generateExplanation).not.toHaveBeenCalled();
   });
 });
 

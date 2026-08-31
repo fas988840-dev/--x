@@ -1,0 +1,4 @@
+# Only index.html and proposal.html are the public project pages.
+# Working documents live in GRANTS/ and are not served here.
+User-agent: *
+Allow: /

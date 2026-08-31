@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FactLedger</title>
+<meta name="description" content="A read-only Solana wallet intelligence platform. Every score cites the real transactions it's based on, and says 'unknown' instead of guessing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f5f2;
+    --paper-raised: #ffffff;
+    --ink: #14181c;
+    --ink-soft: #4b5259;
+    --line: #d7dad4;
+    --line-strong: #b7bcb4;
+    --seal: #1f3a5f;
+    --seal-ink: #16324f;
+    --verified: #2f6f4e;
+    --verified-bg: #e6efe8;
+    --candidate: #8a5a17;
+    --candidate-bg: #f3e9d8;
+    --unknown: #5b6470;
+    --unknown-bg: #e7e8e6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14171a;
+      --paper-raised: #1b1f23;
+      --ink: #e8e9e5;
+      --ink-soft: #a3aaad;
+      --line: #2b3036;
+      --line-strong: #3a4148;
+      --seal: #7fa8d9;
+      --seal-ink: #a9c6e8;
+      --verified: #6fbf94;
+      --verified-bg: #17261d;
+      --candidate: #d9a441;
+      --candidate-bg: #2a2010;
+      --unknown: #9aa1a8;
+      --unknown-bg: #23262a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #14171a;
+    --paper-raised: #1b1f23;
+    --ink: #e8e9e5;
+    --ink-soft: #a3aaad;
+    --line: #2b3036;
+    --line-strong: #3a4148;
+    --seal: #7fa8d9;
+    --seal-ink: #a9c6e8;
+    --verified: #6fbf94;
+    --verified-bg: #17261d;
+    --candidate: #d9a441;
+    --candidate-bg: #2a2010;
+    --unknown: #9aa1a8;
+    --unknown-bg: #23262a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .doc {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line-strong);
+    padding: 3.5rem 0 2rem;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--seal);
+    display: inline-block;
+  }
+
+  h1.title {
+    font-family: "Fraunces", Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 1.1rem;
+    text-wrap: balance;
+  }
+
+  .lede {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  .lede strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  main {
+    padding-bottom: 4rem;
+  }
+
+  section {
+    padding: 2.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  section:last-of-type {
+    border-bottom: none;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h2.section-title {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .section-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+
+  p { color: var(--ink-soft); }
+  p.lead-p { color: var(--ink); font-size: 1.02rem; max-width: 62ch; }
+
+  /* Pipeline flow */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--paper-raised);
+    overflow: hidden;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 2.75rem 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stage:last-child { border-bottom: none; }
+
+  .stage-index {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--paper);
+    background: var(--seal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage-body {
+    padding: 0.85rem 1.1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .stage-name {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    font-size: 0.92rem;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .stage-desc {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  /* Evidence ledger table */
+  .ledger {
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--paper-raised);
+    overflow: hidden;
+  }
+
+  .ledger-row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    align-items: start;
+  }
+
+  .ledger-row:last-child { border-bottom: none; }
+
+  .status {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+    display: inline-block;
+    white-space: nowrap;
+    justify-self: start;
+  }
+
+  .status-verified { color: var(--verified); background: var(--verified-bg); }
+  .status-candidate { color: var(--candidate); background: var(--candidate-bg); }
+
+  .ledger-row h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .ledger-row p { margin: 0; font-size: 0.9rem; }
+
+  .ledger-row code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85em;
+    background: var(--unknown-bg);
+    color: var(--ink);
+    padding: 0.05rem 0.35rem;
+    border-radius: 2px;
+  }
+
+  /* Interfaces list */
+  .interfaces {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .interface-row {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 1rem;
+    align-items: baseline;
+  }
+
+  .interface-name {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+    color: var(--seal);
+    font-weight: 500;
+  }
+
+  .interface-desc { font-size: 0.92rem; color: var(--ink-soft); margin: 0; }
+
+  /* Notice / disclaimer */
+  .notice {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--line-strong);
+    padding-left: 1rem;
+  }
+
+  .notice a, .lede a {
+    color: var(--seal);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .notice a:hover, .lede a:hover { border-bottom-color: var(--seal); }
+
+  footer {
+    padding: 2.5rem 0 3.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  footer a { color: var(--seal); text-decoration: none; border-bottom: 1px solid transparent; }
+  footer a:hover { border-bottom-color: var(--seal); }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+    align-items: baseline;
+  }
+
+  .wallet {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+  }
+
+  .wallet-label {
+    color: var(--ink-soft);
+  }
+
+  a:focus-visible, .stage:focus-visible {
+    outline: 2px solid var(--seal);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    section, header.masthead { scroll-margin-top: 1rem; }
+  }
+
+  @media (max-width: 560px) {
+    .ledger-row, .interface-row { grid-template-columns: 1fr; }
+    .status { justify-self: start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+<header class="masthead">
+  <p class="eyebrow">Solana · Read-Only · Evidence-Backed</p>
+  <h1 class="title">Nothing here is guessed.</h1>
+  <p class="lede">FactLedger turns raw Solana wallet activity into <strong>deterministic
+  scores that cite their own evidence</strong> — every transaction, program, and
+  factor a score is built from is named. Where the platform can't verify
+  something, it says <strong>unknown</strong>, not a plausible-sounding number.</p>
+</header>
+
+<main>
+
+<section id="pipeline">
+  <div class="section-head">
+    <h2 class="section-title">How a wallet becomes a score</h2>
+    <span class="section-num">01</span>
+  </div>
+  <p class="lead-p">One linear pipeline, five stages, no step that invents a value the one before it didn't actually produce.</p>
+  <div class="pipeline">
+    <div class="stage">
+      <div class="stage-index">1</div>
+      <div class="stage-body">
+        <span class="stage-name">rpc.read</span>
+        <span class="stage-desc">Signatures, transactions, and instructions, read directly from Solana RPC.</span>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stage-index">2</div>
+      <div class="stage-body">
+        <span class="stage-name">program.identify</span>
+        <span class="stage-desc">Each instruction's program is classified confirmed / candidate / unknown — never collapsed into one.</span>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stage-index">3</div>
+      <div class="stage-body">
+        <span class="stage-name">behavior.analyze</span>
+        <span class="stage-desc">Frequency, failure rate, token/program diversity, timing — computed, not estimated.</span>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stage-index">4</div>
+      <div class="stage-body">
+        <span class="stage-name">score.compute</span>
+        <span class="stage-desc">Intelligence and risk scores, each a weighted sum of named factors you can see.</span>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stage-index">5</div>
+      <div class="stage-body">
+        <span class="stage-name">evidence.cite</span>
+        <span class="stage-desc">Every score ships with the transactions and factors it came from.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ledger">
+  <div class="section-head">
+    <h2 class="section-title">What's actually verified</h2>
+    <span class="section-num">02</span>
+  </div>
+  <p class="lead-p">A running account, not a features list. Two states only — nothing is marked done until it is.</p>
+  <div class="ledger">
+    <div class="ledger-row">
+      <span class="status status-verified">Verified</span>
+      <div>
+        <h3>Deterministic scoring</h3>
+        <p>The same input into the scoring functions is asserted, in CI, to produce byte-identical output — checked on every push, not asserted in a doc.</p>
+      </div>
+    </div>
+    <div class="ledger-row">
+      <span class="status status-verified">Verified</span>
+      <div>
+        <h3>Evidence Engine</h3>
+        <p>Every cited result traces to a real instruction — signature, slot, program — with a confidence value from a fixed, published mapping.</p>
+      </div>
+    </div>
+    <div class="ledger-row">
+      <span class="status status-candidate">Candidate</span>
+      <div>
+        <h3>Raydium / Jupiter detection</h3>
+        <p>Program IDs and instruction-type discriminators are verified for both. Amount and mint extraction is not — so it's left <code>null</code>, not guessed.</p>
+      </div>
+    </div>
+    <div class="ledger-row">
+      <span class="status status-verified">Verified</span>
+      <div>
+        <h3>Real price data</h3>
+        <p>Token prices come from CoinGecko's public API. Any failure returns <code>null</code>, never a stale or hardcoded fallback.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="interfaces">
+  <div class="section-head">
+    <h2 class="section-title">Ways in</h2>
+    <span class="section-num">03</span>
+  </div>
+  <div class="interfaces">
+    <div class="interface-row">
+      <span class="interface-name">REST API</span>
+      <p class="interface-desc">Wallet analysis, risk, evidence, research, and a deterministic agent router — no NLP guessing which endpoint you meant.</p>
+    </div>
+    <div class="interface-row">
+      <span class="interface-name">MCP server</span>
+      <p class="interface-desc">The same capabilities as callable tools for any MCP-compatible AI client.</p>
+    </div>
+    <div class="interface-row">
+      <span class="interface-name">Dashboard</span>
+      <p class="interface-desc">A web UI over the same API — nothing it shows isn't also in the API response.</p>
+    </div>
+  </div>
+</section>
+
+<section id="status">
+  <div class="section-head">
+    <h2 class="section-title">Status</h2>
+    <span class="section-num">04</span>
+  </div>
+  <p class="notice">Pre-launch, proof-of-concept stage. No external users or usage
+  numbers yet — this page won't claim any until they're real. Intelligence
+  and risk scores describe observable on-chain behavior only; they are not
+  financial advice or a recommendation. Source is open — see the
+  <a href="https://github.com/fas988840-dev/PROJECT-x">GitHub repository</a>.</p>
+</section>
+
+</main>
+
+<footer>
+  <span>FactLedger — Abdullah Al-Anzi</span>
+  <div class="footer-links">
+    <a href="mailto:fas988840@gmail.com">fas988840@gmail.com</a>
+    <a href="https://github.com/fas988840-dev/PROJECT-x">GitHub</a>
+    <span class="wallet"><span class="wallet-label">SOL</span> EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM</span>
+  </div>
+</footer>
+
+</div>
+
+</body>
+</html>

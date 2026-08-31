@@ -1,0 +1,33 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "node dist/main.js",
+    "restartPolicyType": "on_failure",
+    "restartPolicyMaxRetries": 5
+  },
+  "plugins": [
+    "nodejs"
+  ],
+  "variables": {
+    "SOLANA_RPC_URL": {
+      "description": "Solana RPC endpoint",
+      "value": "https://api.mainnet-beta.solana.com"
+    },
+    "PORT": {
+      "description": "Server port",
+      "value": "3000"
+    },
+    "CORS_ORIGIN": {
+      "description": "CORS allowed origins (comma-separated)",
+      "value": "*"
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    }
+  }
+}

@@ -4,7 +4,7 @@
  * CRITICAL: Never invents blockchain data. Preserves nulls and unknowns.
  */
 
-import { ParsedTransactionWithMeta, PublicKey } from '@solana/web3.js';
+import { ParsedTransactionWithMeta } from '@solana/web3.js';
 import { SolanaRpcClient } from './solana-rpc-client';
 import {
   TransactionMeta,
@@ -13,7 +13,6 @@ import {
   validateTransactionSignature,
   validateWalletAddress,
   Instruction,
-  ProgramId,
   validateProgramId,
 } from '../types/domain';
 import { RpcError, ValidationError } from '../types/errors';
@@ -91,12 +90,26 @@ export class TransactionRetriever {
 
     for (const ix of tx.transaction.message.instructions) {
       try {
+        // getParsedTransaction returns each instruction as either a fully
+        // parsed ParsedInstruction (RPC recognized the program and
+        // decoded it - no raw `accounts`/`data` fields) or a
+        // PartiallyDecodedInstruction (unrecognized program - raw
+        // `accounts: PublicKey[]` / `data: string` are what's available).
+        // This method only extracts the raw shape (consistent with the
+        // rest of this codebase never trusting RPC-side parsing for
+        // program identification - see DexRegistry/InstructionParser) -
+        // an already-parsed instruction is skipped, not guessed at.
+        if (!('data' in ix) || !('accounts' in ix)) {
+          throw new Error(`Instruction for program ${ix.programId.toString()} was pre-parsed by RPC, not raw - skipping`);
+        }
+
         // Validate instruction accounts exist within accountKeys
-        const instructionAccounts = (ix.accounts || []).map((accountIndex) => {
-          if (accountIndex >= accountKeys.length) {
-            throw new Error(`Account index ${accountIndex} out of range`);
+        const instructionAccounts = ix.accounts.map((account, accountIndex) => {
+          const resolvedIndex = accountKeys.findIndex((key) => key.toString() === account.toString());
+          if (resolvedIndex === -1) {
+            throw new Error(`Account ${account.toString()} (instruction account #${accountIndex}) not found in accountKeys`);
           }
-          const accountKey = accountKeys[accountIndex];
+          const accountKey = accountKeys[resolvedIndex];
           return {
             pubkey: accountKey.toString(),
             isSigner: accountKey.signer ?? false,
@@ -144,7 +157,13 @@ export class TransactionRetriever {
    * CRITICAL: Never fabricates data. Preserves nulls for unavailable fields.
    */
   private parseTransactionMeta(signature: TransactionSignature, tx: ParsedTransactionWithMeta): TransactionMeta {
-    const meta = tx.transaction.meta;
+    // Bug fix: `meta` lives at the top level of ParsedTransactionWithMeta
+    // (tx.meta), not nested under tx.transaction (which only has
+    // {message, signatures}). The old `tx.transaction.meta` was silently
+    // `undefined` on every real call, so `status` was always 'unknown'
+    // and `fee` was always 'unknown' regardless of the transaction's
+    // actual outcome - only caught now that type-check has ever run.
+    const meta = tx.meta;
 
     // Determine status
     let status: 'success' | 'failed' | 'unknown' = 'unknown';

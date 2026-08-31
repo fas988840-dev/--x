@@ -2,7 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { validateWalletAddress, validateTransactionSignature } from '../types/domain';
+import { validateWalletAddress, validateTransactionSignature, WalletAddress } from '../types/domain';
 import { ValidationError, RpcError } from '../types/errors';
 import { TransactionRetriever } from '../services/transaction-retriever';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
@@ -10,8 +10,10 @@ import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { PriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
-import { ResearchAgent } from '../agents/core_agents';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent } from '../agents/core_agents';
 import { EvidenceEngine } from '../agents/evidence-engine';
+import { LiveAlertWatcher } from '../services/live-alert-watcher';
+import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
 
 /**
  * API Error Response
@@ -90,6 +92,11 @@ export class APIServer {
   private dexRegistry: DexRegistry;
   private evidenceEngine: EvidenceEngine;
   private researchAgent: ResearchAgent;
+  private walletAgent: WalletIntelligenceAgent;
+  private agentRouter: AgentRouter;
+  private alertAgent: AlertAgent;
+  private explanationAgent: ExplanationAgent;
+  private liveAlertWatcher: LiveAlertWatcher;
 
   constructor(
     port: number,
@@ -100,7 +107,12 @@ export class APIServer {
     priceProvider: PriceProvider,
     dexRegistry: DexRegistry,
     evidenceEngine: EvidenceEngine,
-    researchAgent: ResearchAgent
+    researchAgent: ResearchAgent,
+    walletAgent: WalletIntelligenceAgent,
+    agentRouter: AgentRouter,
+    alertAgent: AlertAgent,
+    explanationAgent: ExplanationAgent,
+    liveAlertWatcher: LiveAlertWatcher
   ) {
     this.port = port;
     this.app = express();
@@ -112,6 +124,11 @@ export class APIServer {
     this.dexRegistry = dexRegistry;
     this.evidenceEngine = evidenceEngine;
     this.researchAgent = researchAgent;
+    this.alertAgent = alertAgent;
+    this.explanationAgent = explanationAgent;
+    this.liveAlertWatcher = liveAlertWatcher;
+    this.walletAgent = walletAgent;
+    this.agentRouter = agentRouter;
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -237,31 +254,61 @@ export class APIServer {
   });
 
   /**
+   * Wraps an async route handler so a rejected promise reaches
+   * setupErrorHandling() via next(error) instead of becoming an unhandled
+   * promise rejection. Express 4 (this project's version) does NOT do
+   * this automatically for async handlers - without this wrapper, every
+   * `throw` inside a handler below (including validateWalletAddress()
+   * rejecting bad input, on essentially every route) would silently hang
+   * the request and crash the process on Node's default
+   * unhandled-rejection behavior instead of returning a 400/500. This was
+   * a real, pre-existing gap - every async handler is wrapped below.
+   */
+  private asyncHandler(handler: (req: Request, res: Response) => Promise<void>) {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      handler(req, res).catch(next);
+    };
+  }
+
+  /**
    * Setup routes
    */
   private setupRoutes(): void {
     // Health check
-    this.app.get('/api/v1/health', this.handleHealth.bind(this));
+    this.app.get('/api/v1/health', this.asyncHandler(this.handleHealth.bind(this)));
 
     // Wallet endpoints - RPC-heavy ones carry an extra, stricter rate limit
-    this.app.get('/api/v1/wallet/:address/transactions', this.heavyLimiter, this.handleWalletTransactions.bind(this));
-    this.app.get('/api/v1/wallet/:address/tokens', this.handleWalletTokens.bind(this));
-    this.app.get('/api/v1/wallet/:address/behavior', this.heavyLimiter, this.handleWalletBehavior.bind(this));
-    this.app.get('/api/v1/wallet/:address/intelligence', this.heavyLimiter, this.handleWalletIntelligence.bind(this));
-    this.app.get('/api/v1/wallet/:address/risk', this.heavyLimiter, this.handleWalletRisk.bind(this));
-    this.app.get('/api/v1/wallet/:address/analysis', this.heavyLimiter, this.handleWalletAnalysis.bind(this));
+    this.app.get('/api/v1/wallet/:address/transactions', this.heavyLimiter, this.asyncHandler(this.handleWalletTransactions.bind(this)));
+    this.app.get('/api/v1/wallet/:address/tokens', this.asyncHandler(this.handleWalletTokens.bind(this)));
+    this.app.get('/api/v1/wallet/:address/behavior', this.heavyLimiter, this.asyncHandler(this.handleWalletBehavior.bind(this)));
+    this.app.get('/api/v1/wallet/:address/intelligence', this.heavyLimiter, this.asyncHandler(this.handleWalletIntelligence.bind(this)));
+    this.app.get('/api/v1/wallet/:address/risk', this.heavyLimiter, this.asyncHandler(this.handleWalletRisk.bind(this)));
+    this.app.get('/api/v1/wallet/:address/analysis', this.heavyLimiter, this.asyncHandler(this.handleWalletAnalysis.bind(this)));
     // Evidence does one extra RPC round-trip per transaction (see EvidenceEngine) - heaviest route in the API.
-    this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.handleWalletEvidence.bind(this));
-    this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.handleWalletResearch.bind(this));
+    this.app.get('/api/v1/wallet/:address/evidence', this.heavyLimiter, this.asyncHandler(this.handleWalletEvidence.bind(this)));
+    this.app.get('/api/v1/wallet/:address/research', this.heavyLimiter, this.asyncHandler(this.handleWalletResearch.bind(this)));
+    this.app.get('/api/v1/wallet/:address/alerts', this.heavyLimiter, this.asyncHandler(this.handleWalletAlerts.bind(this)));
+    // Calls the ChainGPT API on top of the usual RPC reads - the heaviest
+    // per-request cost in the API alongside evidence, so it rides heavyLimiter too.
+    this.app.get('/api/v1/wallet/:address/explanation', this.heavyLimiter, this.asyncHandler(this.handleWalletExplanation.bind(this)));
+    // Live/streaming counterpart to /alerts - a long-lived Server-Sent
+    // Events connection, not a single request/response. Still rides
+    // heavyLimiter since opening it starts a standing RPC subscription.
+    this.app.get('/api/v1/wallet/:address/alerts/stream', this.heavyLimiter, this.asyncHandler(this.handleWalletAlertsStream.bind(this)));
 
     // Transaction endpoint
-    this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.handleTransaction.bind(this));
+    this.app.get('/api/v1/transaction/:signature', this.heavyLimiter, this.asyncHandler(this.handleTransaction.bind(this)));
 
     // Protocols - lists the DexRegistry's registered adapters (currently
     // none - see CLAUDE.md's "DEX/program identification is honest about
     // confidence" invariant. Returns an empty array rather than a
     // hardcoded protocol list.)
     this.app.get('/api/v1/protocols', this.handleProtocols.bind(this));
+
+    // Agent Router - single entry point for MCP-style clients that don't
+    // want to hardcode 5 different endpoints. Deterministic dispatch only
+    // (no NLP/intent guessing) - see src/agents/agent-router.ts.
+    this.app.get('/api/v1/agents/:intent', this.heavyLimiter, this.asyncHandler(this.handleAgentRouter.bind(this)));
 
     // 404 handler
     this.app.use((_req: Request, res: Response) => {
@@ -306,7 +353,7 @@ export class APIServer {
         }
 
         // Generic error - never expose stack trace in production
-        res.status(500).json({
+        return res.status(500).json({
           error: {
             code: 'INTERNAL_ERROR',
             message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
@@ -319,7 +366,7 @@ export class APIServer {
   /**
    * Handle health check
    */
-  private async handleHealth(req: Request, res: Response): Promise<void> {
+  private async handleHealth(_req: Request, res: Response): Promise<void> {
     const healthy = await this.priceProvider.isHealthy();
 
     const response: HealthResponse = {
@@ -335,220 +382,271 @@ export class APIServer {
    * Handle wallet transactions
    */
   private async handleWalletTransactions(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+    // No try/catch here: any throw (validateWalletAddress on bad input, or
+    // an RPC failure) propagates to asyncHandler's .catch(next), which
+    // routes it to the centralized error handler - same for every handler
+    // below that used to wrap itself in a try/catch that only rethrew.
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
 
-      const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
+    const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
 
-      res.json({
-        wallet: address,
-        transactions: transactions.map((tx) => ({
-          signature: tx.signature,
-          slot: tx.slot,
-          blockTime: tx.blockTime,
-          status: tx.status,
-          fee: tx.fee,
-        })),
-        count: transactions.length,
-      });
-    } catch (error) {
-      throw error;
-    }
+    res.json({
+      wallet: address,
+      transactions: transactions.map((tx) => ({
+        signature: tx.signature,
+        slot: tx.slot,
+        blockTime: tx.blockTime,
+        status: tx.status,
+        fee: tx.fee,
+      })),
+      count: transactions.length,
+    });
   }
 
   /**
-   * Handle wallet tokens
+   * Handle wallet tokens - real token balances via WalletIntelligenceAgent
+   * (which reads SolanaRpcClient.getTokenBalances()), not a placeholder.
    */
   private async handleWalletTokens(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
+    const address = validateWalletAddress(req.params.address);
 
-      // This would require token balance retrieval from RPC
-      // For now, return placeholder
-      res.json({
-        wallet: address,
-        tokens: [],
-        disclaimer: 'Token balance data requires additional RPC integration',
-      });
-    } catch (error) {
-      throw error;
-    }
+    const result = await this.walletAgent.analyzeWallet(address);
+
+    res.json({
+      wallet: address,
+      tokens: result.data?.tokenBalances ?? [],
+      evidenceStatus: result.evidenceStatus,
+      disclaimer:
+        result.data === null
+          ? `Token balances unavailable: ${result.justification}`
+          : 'Token balances read directly from Solana RPC (SPL token accounts only).',
+    });
   }
 
   /**
    * Handle wallet behavior
    */
   private async handleWalletBehavior(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
 
-      const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
+    const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
 
-      // Extract unique tokens and programs (stub - requires full instruction parsing)
-      const uniqueTokens = new Set<string>();
-      const uniquePrograms = new Set<string>();
+    // Extract unique tokens and programs (stub - requires full instruction parsing)
+    const uniqueTokens = new Set<string>();
+    const uniquePrograms = new Set<string>();
 
-      const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
+    const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
 
-      res.json({
-        wallet: address,
-        behavior,
-      });
-    } catch (error) {
-      throw error;
-    }
+    res.json({
+      wallet: address,
+      behavior,
+    });
   }
 
   /**
    * Handle wallet intelligence
    */
   private async handleWalletIntelligence(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
 
-      const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
+    const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
 
-      const uniqueTokens = new Set<string>();
-      const uniquePrograms = new Set<string>();
+    const uniqueTokens = new Set<string>();
+    const uniquePrograms = new Set<string>();
 
-      const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
-      const intelligence = this.intelligenceScorer.scoreIntelligence(behavior);
+    const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
+    const intelligence = this.intelligenceScorer.scoreIntelligence(behavior);
 
-      res.json({
-        wallet: address,
-        intelligence,
-        disclaimer: 'Intelligence score is derived from observable blockchain behavior only. Not financial advice.',
-      });
-    } catch (error) {
-      throw error;
-    }
+    res.json({
+      wallet: address,
+      intelligence,
+      disclaimer: 'Intelligence score is derived from observable blockchain behavior only. Not financial advice.',
+    });
   }
 
   /**
    * Handle wallet risk
    */
   private async handleWalletRisk(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
 
-      const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
+    const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
 
-      const uniqueTokens = new Set<string>();
-      const uniquePrograms = new Set<string>();
+    const uniqueTokens = new Set<string>();
+    const uniquePrograms = new Set<string>();
 
-      const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
-      const risk = this.riskAssessor.assessRisk(behavior);
+    const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
+    const risk = this.riskAssessor.assessRisk(behavior);
 
-      res.json({
-        wallet: address,
-        risk,
-        disclaimer:
-          'Risk assessment is derived from observable blockchain behavior only. This is not financial advice and should not be used for investment decisions.',
-      });
-    } catch (error) {
-      throw error;
-    }
+    res.json({
+      wallet: address,
+      risk,
+      disclaimer:
+        'Risk assessment is derived from observable blockchain behavior only. This is not financial advice and should not be used for investment decisions.',
+    });
   }
 
   /**
    * Handle wallet full analysis
    */
   private async handleWalletAnalysis(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
 
-      const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
+    const transactions = await this.transactionRetriever.getWalletTransactionsMeta(address, limit);
 
-      const uniqueTokens = new Set<string>();
-      const uniquePrograms = new Set<string>();
+    const uniqueTokens = new Set<string>();
+    const uniquePrograms = new Set<string>();
 
-      const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
-      const intelligence = this.intelligenceScorer.scoreIntelligence(behavior);
-      const risk = this.riskAssessor.assessRisk(behavior);
+    const behavior = this.behaviorAnalyzer.analyzeBehavior(transactions, [], uniqueTokens, uniquePrograms);
+    const intelligence = this.intelligenceScorer.scoreIntelligence(behavior);
+    const risk = this.riskAssessor.assessRisk(behavior);
 
-      const response: WalletAnalysisResponse = {
-        wallet: address,
-        observableData: {
-          transactionCount: behavior.transactionCount,
-          successfulTransactions: behavior.successTransactionCount,
-          failedTransactions: behavior.failedTransactionCount,
-          uniqueTokens: behavior.uniqueTokens,
-          uniquePrograms: behavior.uniqueProgramsInteracted,
-        },
-        behavior: {
-          failureRate: behavior.failureRate,
-          swapCount: behavior.swapCount,
-          averageTransactionInterval: behavior.averageTransactionIntervalSeconds,
-          peakActivityHour: behavior.peakActivityHour,
-          totalVolumeUSD: behavior.totalVolumeUSD,
-        },
-        intelligence: {
-          score: intelligence.score,
-          components: intelligence.components,
-          factors: intelligence.factors,
-        },
-        risk: {
-          score: risk.score,
-          level: risk.level,
-          factors: risk.factors,
-          reasoning: risk.reasoning,
-        },
-        disclaimer:
-          'This analysis is derived from observable blockchain behavior only. Intelligence and risk scores are not financial advice and should not be used for investment decisions.',
-      };
+    const response: WalletAnalysisResponse = {
+      wallet: address,
+      observableData: {
+        transactionCount: behavior.transactionCount,
+        successfulTransactions: behavior.successTransactionCount,
+        failedTransactions: behavior.failedTransactionCount,
+        uniqueTokens: behavior.uniqueTokens,
+        uniquePrograms: behavior.uniqueProgramsInteracted,
+      },
+      behavior: {
+        failureRate: behavior.failureRate,
+        swapCount: behavior.swapCount,
+        averageTransactionInterval: behavior.averageTransactionIntervalSeconds,
+        peakActivityHour: behavior.peakActivityHour,
+        totalVolumeUSD: behavior.totalVolumeUSD,
+      },
+      intelligence: {
+        score: intelligence.score,
+        components: intelligence.components,
+        factors: intelligence.factors,
+      },
+      risk: {
+        score: risk.score,
+        level: risk.level,
+        factors: risk.factors,
+        reasoning: risk.reasoning,
+      },
+      disclaimer:
+        'This analysis is derived from observable blockchain behavior only. Intelligence and risk scores are not financial advice and should not be used for investment decisions.',
+    };
 
-      res.json(response);
-    } catch (error) {
-      throw error;
-    }
+    res.json(response);
   }
 
   /**
    * Handle wallet evidence report
    */
   private async handleWalletEvidence(req: Request, res: Response): Promise<void> {
-    try {
-      const address = validateWalletAddress(req.params.address);
-      // Lower default/cap than the other routes: this one does one extra
-      // RPC round-trip per transaction (see EvidenceEngine).
-      const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+    const address = validateWalletAddress(req.params.address);
+    // Lower default/cap than the other routes: this one does one extra
+    // RPC round-trip per transaction (see EvidenceEngine).
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
 
-      const result = await this.evidenceEngine.buildWalletEvidence(address, limit);
+    const result = await this.evidenceEngine.buildWalletEvidence(address, limit);
 
-      res.json({
-        wallet: address,
-        ...result,
-        disclaimer:
-          'Evidence is derived from observable blockchain transactions only. Each entry\'s confidencePercent reflects a fixed mapping (confirmed=100, candidate=50, unknown=0), never an invented value. Not financial advice.',
-      });
-    } catch (error) {
-      throw error;
-    }
+    res.json({
+      wallet: address,
+      ...result,
+      disclaimer:
+        'Evidence is derived from observable blockchain transactions only. Each entry\'s confidencePercent reflects a fixed mapping (confirmed=100, candidate=50, unknown=0), never an invented value. Not financial advice.',
+    });
   }
 
   /**
    * Handle wallet research report (synthesizes wallet + risk agent output)
    */
   private async handleWalletResearch(req: Request, res: Response): Promise<void> {
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+
+    const result = await this.researchAgent.generateReport(address, limit);
+
+    res.json({
+      wallet: address,
+      ...result,
+      disclaimer:
+        'This report is synthesized only from real, deterministic agent outputs. Not financial advice.',
+    });
+  }
+
+  /**
+   * Handle wallet alerts (deterministic evaluation, not a live watcher - see AlertEngine)
+   */
+  private async handleWalletAlerts(req: Request, res: Response): Promise<void> {
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+
+    const result = await this.alertAgent.evaluateWallet(address, limit);
+
+    res.json({
+      wallet: address,
+      ...result,
+      disclaimer:
+        'Alerts are evaluated once, from the transactions examined in this request - not a live/streaming watch. Each alert cites the real numbers that triggered it. Not financial advice.',
+    });
+  }
+
+  /**
+   * Handle wallet explanation - a ChainGPT-generated plain-language
+   * rephrasing of already-real wallet/risk data (see ExplanationAgent).
+   * keyActivities/riskAssessment/patterns stay real even if ChainGPT is
+   * unreachable; only `summary` (and `summarySource`) reflect that.
+   */
+  private async handleWalletExplanation(req: Request, res: Response): Promise<void> {
+    const address = validateWalletAddress(req.params.address);
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+
+    const result = await this.explanationAgent.explainWallet(address, limit);
+
+    res.json({
+      wallet: address,
+      ...result,
+      disclaimer:
+        'summary may be ChainGPT-generated (see data.summarySource) but is constrained to rephrasing real, deterministic pipeline output - it is never an independent source of facts. Not financial advice.',
+    });
+  }
+
+  /**
+   * Handle live wallet alerts - Server-Sent Events, the live/streaming
+   * counterpart to /alerts (see LiveAlertWatcher). Not a JSON
+   * request/response: once the stream opens, every event written is a
+   * real Alert from AlertEngine (never a guess), sent once immediately
+   * and again on each new on-chain transaction until the client
+   * disconnects.
+   */
+  private async handleWalletAlertsStream(req: Request, res: Response): Promise<void> {
+    // No try/catch: an invalid address throws before any response is
+    // written, and propagates to asyncHandler's .catch(next) same as
+    // every other route - no need to catch and rethrow it here.
+    const address: WalletAddress = validateWalletAddress(req.params.address);
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no', // disable proxy buffering (e.g. nginx) so events flush immediately
+    });
+    res.write(
+      `: connected - live alert stream for ${address}. Evaluated once immediately, then again on each new on-chain transaction. Every event is a real, evidence-cited Alert (see AlertEngine) - never a guess.\n\n`
+    );
+
     try {
-      const address = validateWalletAddress(req.params.address);
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
-
-      const result = await this.researchAgent.generateReport(address, limit);
-
-      res.json({
-        wallet: address,
-        ...result,
-        disclaimer:
-          'This report is synthesized only from real, deterministic agent outputs. Not financial advice.',
+      const subscription = this.liveAlertWatcher.watch(address, (alert) => {
+        res.write(`data: ${JSON.stringify(alert)}\n\n`);
+      });
+      req.on('close', () => {
+        void subscription.stop();
       });
     } catch (error) {
-      throw error;
+      res.write(`event: error\ndata: ${JSON.stringify({ message: error instanceof Error ? error.message : String(error) })}\n\n`);
+      res.end();
     }
   }
 
@@ -568,36 +666,65 @@ export class APIServer {
   }
 
   /**
+   * Handle agent router dispatch - GET /api/v1/agents/:intent
+   * ?address=...&signature=...&topic=...&limit=...
+   * Deterministic dispatch only - see src/agents/agent-router.ts.
+   */
+  private async handleAgentRouter(req: Request, res: Response): Promise<void> {
+    const intentParam = req.params.intent;
+
+    if (!AGENT_INTENTS.includes(intentParam as AgentIntent)) {
+      res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Unknown intent '${intentParam}'. Valid intents: ${AGENT_INTENTS.join(', ')}.`,
+        },
+      } as ErrorResponse);
+      return;
+    }
+
+    const limitRaw = parseInt(req.query.limit as string);
+    const result = await this.agentRouter.route(intentParam as AgentIntent, {
+      address: typeof req.query.address === 'string' ? req.query.address : undefined,
+      signature: typeof req.query.signature === 'string' ? req.query.signature : undefined,
+      topic: typeof req.query.topic === 'string' ? req.query.topic : undefined,
+      limit: Number.isFinite(limitRaw) ? Math.min(limitRaw, 1000) : undefined,
+    });
+
+    res.json({
+      intent: intentParam,
+      ...result,
+      disclaimer: 'Routed deterministically to one agent based on the intent parameter - not a financial advice, and not an AI-guessed interpretation of a free-form question.',
+    });
+  }
+
+  /**
    * Handle transaction
    */
   private async handleTransaction(req: Request, res: Response): Promise<void> {
-    try {
-      const signature = validateTransactionSignature(req.params.signature);
-      const transaction = await this.transactionRetriever.getTransaction(signature);
+    const signature = validateTransactionSignature(req.params.signature);
+    const transaction = await this.transactionRetriever.getTransaction(signature);
 
-      if (!transaction) {
-        res.status(404).json({
-          error: {
-            code: 'NOT_FOUND',
-            message: 'Transaction not found',
-          },
-        } as ErrorResponse);
-        return;
-      }
-
-      res.json({
-        signature,
-        transaction: {
-          slot: transaction.slot,
-          blockTime: transaction.blockTime,
-          status: transaction.status,
-          fee: transaction.fee,
-          logMessages: transaction.logMessages,
+    if (!transaction) {
+      res.status(404).json({
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Transaction not found',
         },
-      });
-    } catch (error) {
-      throw error;
+      } as ErrorResponse);
+      return;
     }
+
+    res.json({
+      signature,
+      transaction: {
+        slot: transaction.slot,
+        blockTime: transaction.blockTime,
+        status: transaction.status,
+        fee: transaction.fee,
+        logMessages: transaction.logMessages,
+      },
+    });
   }
 
   /**

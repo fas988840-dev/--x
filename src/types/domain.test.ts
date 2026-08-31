@@ -15,7 +15,7 @@ describe('Domain Validation', () => {
     });
 
     it('should accept valid Solana address (44 chars)', () => {
-      const validAddr = 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ';
+      const validAddr = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
       expect(() => validateWalletAddress(validAddr)).not.toThrow();
     });
 
@@ -50,8 +50,13 @@ describe('Domain Validation', () => {
     });
 
     it('should reject signature that is too long', () => {
+      // Each leading '1' in base58 decodes to one leading zero byte, so
+      // 100 '1' characters decode to exactly 100 zero bytes here - not
+      // some other count. Assert on the invariant that actually matters
+      // (not 64 bytes -> rejected), not a specific byte count guessed
+      // without running the decoder.
       const tooLong = '1'.repeat(100);
-      expect(() => validateTransactionSignature(tooLong)).toThrow('decoded to 50 bytes');
+      expect(() => validateTransactionSignature(tooLong)).toThrow('expected 64');
     });
 
     it('should reject empty string', () => {
@@ -61,7 +66,7 @@ describe('Domain Validation', () => {
 
   describe('validateTokenMint', () => {
     it('should accept valid USDC mint address', () => {
-      const validMint = 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ';
+      const validMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
       expect(() => validateTokenMint(validMint)).not.toThrow();
     });
 
@@ -71,9 +76,18 @@ describe('Domain Validation', () => {
   });
 
   describe('validateProgramId', () => {
-    it('should accept valid TokenkegQfezyi program ID', () => {
-      const tokenProgram = 'TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU';
-      expect(() => validateProgramId(tokenProgram)).not.toThrow();
+    it('should accept a valid Solana program ID (Raydium AMM V4)', () => {
+      // The SPL Token program ID string previously here was reconstructed
+      // from memory and turned out to contain a character outside the
+      // base58 alphabet (a capital 'O', which - see BASE58_ALPHABET above
+      // - is deliberately excluded, same as '0'/'I'/'l') - it was never a
+      // real, valid address. Using RAYDIUM_AMM_V4_PROGRAM_ID instead: it's
+      // already defined, used, and exercised against real PublicKey
+      // validation elsewhere in this exact codebase (src/services/
+      // dex-registry.ts, cross-checked there against Raydium's own docs/
+      // repo - see that file's header comment), not re-guessed here.
+      const raydiumAmmV4 = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
+      expect(() => validateProgramId(raydiumAmmV4)).not.toThrow();
     });
 
     it('should reject invalid program ID', () => {
@@ -101,7 +115,7 @@ describe('Domain Validation', () => {
 
     it('should correctly represent USDC decimals as 6', () => {
       const usdcToken: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',

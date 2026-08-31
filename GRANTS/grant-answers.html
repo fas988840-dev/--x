@@ -1,0 +1,594 @@
+<title>Grant Answer Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f5f2;
+    --raised: #ffffff;
+    --ink: #14181c;
+    --ink-soft: #4b5259;
+    --line: #d7dad4;
+    --line-strong: #b7bcb4;
+    --seal: #1f3a5f;
+    --ok: #2f6f4e;
+    --ok-bg: #e6efe8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14171a;
+      --raised: #1b1f23;
+      --ink: #e8e9e5;
+      --ink-soft: #a3aaad;
+      --line: #2b3036;
+      --line-strong: #3a4148;
+      --seal: #7fa8d9;
+      --ok: #6fbf94;
+      --ok-bg: #17261d;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #14171a;
+    --raised: #1b1f23;
+    --ink: #e8e9e5;
+    --ink-soft: #a3aaad;
+    --line: #2b3036;
+    --line-strong: #3a4148;
+    --seal: #7fa8d9;
+    --ok: #6fbf94;
+    --ok-bg: #17261d;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 1rem 4rem;
+  }
+
+  header {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin: 0 0 0.6rem;
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(1.8rem, 6vw, 2.5rem);
+    line-height: 1.1;
+    margin: 0 0 0.7rem;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    margin: 0;
+    max-width: 52ch;
+  }
+
+  .group-title {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .field {
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+  }
+
+  .field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .field-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .field-note {
+    display: block;
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-top: 0.1rem;
+  }
+
+  button.copy {
+    flex-shrink: 0;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--raised);
+    background: var(--seal);
+    border: none;
+    border-radius: 3px;
+    padding: 0.5rem 0.9rem;
+    min-height: 38px;
+    cursor: pointer;
+  }
+
+  button.copy:active { opacity: 0.75; }
+
+  button.copy.done {
+    background: var(--ok-bg);
+    color: var(--ok);
+  }
+
+  .field-value {
+    margin: 0;
+    padding: 0.8rem 0.85rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink);
+  }
+
+  .tip {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--line-strong);
+    padding: 0.2rem 0 0.2rem 0.9rem;
+    margin: 1.5rem 0 0;
+  }
+
+  footer {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--seal);
+    outline-offset: 2px;
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">FactLedger · Grant Applications</p>
+  <h1>Answer sheet</h1>
+  <p class="lede">Every field you need, ready to copy. Tap <strong>Copy</strong>, then paste
+  straight into the application form. Works for Solana Foundation, Superteam,
+  Colosseum, and ChainGPT applications alike.</p>
+</header>
+
+<p class="group-title">Identity</p>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Full name</span>
+    <button class="copy" data-copy="Abdullah Al-Anzi">Copy</button>
+  </div>
+  <p class="field-value">Abdullah Al-Anzi</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Email</span>
+    <button class="copy" data-copy="fas988840@gmail.com">Copy</button>
+  </div>
+  <p class="field-value">fas988840@gmail.com</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Location</span>
+    <button class="copy" data-copy="Saudi Arabia">Copy</button>
+  </div>
+  <p class="field-value">Saudi Arabia</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">GitHub username</span>
+    <button class="copy" data-copy="fas988840-dev">Copy</button>
+  </div>
+  <p class="field-value">fas988840-dev</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">X (Twitter)<span class="field-note">username, no @</span></span>
+    <button class="copy" data-copy="aamm123220">Copy</button>
+  </div>
+  <p class="field-value">aamm123220</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Solana wallet<span class="field-note">for grant disbursement</span></span>
+    <button class="copy" data-copy="EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM">Copy</button>
+  </div>
+  <p class="field-value">EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM</p>
+</div>
+
+<p class="group-title">Project basics</p>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Project name</span>
+    <button class="copy" data-copy="FactLedger">Copy</button>
+  </div>
+  <p class="field-value">FactLedger</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Name + tagline<span class="field-note">if the field wants both</span></span>
+    <button class="copy" data-copy="FactLedger — Deterministic Solana Wallet Intelligence">Copy</button>
+  </div>
+  <p class="field-value">FactLedger — Deterministic Solana Wallet Intelligence</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">One-line description</span>
+    <button class="copy" data-copy="A read-only Solana wallet intelligence API that scores wallets deterministically and cites the real evidence behind every score — never guesses.">Copy</button>
+  </div>
+  <p class="field-value">A read-only Solana wallet intelligence API that scores wallets deterministically and cites the real evidence behind every score — never guesses.</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Category / type</span>
+    <button class="copy" data-copy="Developer Tools &amp; Infrastructure">Copy</button>
+  </div>
+  <p class="field-value">Developer Tools &amp; Infrastructure</p>
+</div>
+
+<p class="group-title">Links</p>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">GitHub repository</span>
+    <button class="copy" data-copy="https://github.com/fas988840-dev/PROJECT-x">Copy</button>
+  </div>
+  <p class="field-value">https://github.com/fas988840-dev/PROJECT-x</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Live demo page — ⚠️ verify before sending</span>
+    <button class="copy" data-copy="https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be">Copy</button>
+  </div>
+  <p class="field-value">https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be</p>
+  <p class="field-value" style="color:#b45309">
+    Artifacts on claude.ai are private by default. Open this in a
+    private/incognito window first. If it asks you to sign in, a reviewer sees
+    the same wall — do not send it, and do not describe it as a live public
+    demo. Public alternatives: enable GitHub Pages on <code>docs/</code>
+    (Settings → Pages → branch <code>main</code>, folder <code>/docs</code>),
+    deploy the API and use its URL, or send the repository link alone.
+  </p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">CI run<span class="field-note">green: lint, type-check, 133 tests, build</span></span>
+    <button class="copy" data-copy="https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720">Copy</button>
+  </div>
+  <p class="field-value">https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">X profile URL</span>
+    <button class="copy" data-copy="https://x.com/aamm123220">Copy</button>
+  </div>
+  <p class="field-value">https://x.com/aamm123220</p>
+</div>
+
+<p class="group-title">Descriptions</p>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Short description<span class="field-note">2–3 sentences</span></span>
+    <button class="copy" data-copy="FactLedger is a read-only Solana wallet intelligence API. It turns raw on-chain transaction data into deterministic risk and intelligence scores — every score cites the real evidence behind it, and the platform returns &quot;unknown&quot; instead of guessing when data can't be verified.">Copy</button>
+  </div>
+  <p class="field-value">FactLedger is a read-only Solana wallet intelligence API. It turns raw on-chain transaction data into deterministic risk and intelligence scores — every score cites the real evidence behind it, and the platform returns "unknown" instead of guessing when data can't be verified.</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Problem &amp; solution<span class="field-note">full detail field</span></span>
+    <button class="copy" data-copy="Solana wallet analysis tools today either claim to detect DEX activity without verifying program IDs — often wrong — or hide behind opaque ML scores nobody can audit.
+
+FactLedger fixes both. Every DEX protocol detection is checked against verified program IDs and labeled confirmed / candidate / unknown honestly, never inflated to look more certain than it is. Every intelligence and risk score is a deterministic weighted formula built from named, explainable factors, returned alongside the exact transactions and numbers it was derived from.
+
+The full pipeline — RPC read, protocol identification, behavior analysis, scoring, evidence citation — is built and tested: 133 passing tests including an automated determinism check that runs the scorers twice on identical input and asserts byte-identical output. CI is green end to end on GitHub's own runners.
+
+The platform never fabricates data: prices, fees, and blockchain facts are either real or explicitly null — never guessed.">Copy</button>
+  </div>
+  <p class="field-value">Solana wallet analysis tools today either claim to detect DEX activity without verifying program IDs — often wrong — or hide behind opaque ML scores nobody can audit.
+
+FactLedger fixes both. Every DEX protocol detection is checked against verified program IDs and labeled confirmed / candidate / unknown honestly, never inflated to look more certain than it is. Every intelligence and risk score is a deterministic weighted formula built from named, explainable factors, returned alongside the exact transactions and numbers it was derived from.
+
+The full pipeline — RPC read, protocol identification, behavior analysis, scoring, evidence citation — is built and tested: 133 passing tests including an automated determinism check that runs the scorers twice on identical input and asserts byte-identical output. CI is green end to end on GitHub's own runners.
+
+The platform never fabricates data: prices, fees, and blockchain facts are either real or explicitly null — never guessed.</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Proof of work</span>
+    <button class="copy" data-copy="GitHub repository: https://github.com/fas988840-dev/PROJECT-x
+Live demo page: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+CI (green — lint, type-check, 133 tests incl. automated determinism check, build): https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720">Copy</button>
+  </div>
+  <p class="field-value">GitHub repository: https://github.com/fas988840-dev/PROJECT-x
+Live demo page: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+CI (green — lint, type-check, 133 tests incl. automated determinism check, build): https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720</p>
+</div>
+
+<p class="group-title">Plan &amp; funding</p>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Milestones<span class="field-note">short version</span></span>
+    <button class="copy" data-copy="Week 1: Deploy the already-built Docker image to a live production URL (Railway/Render/Fly.io) and verify the API against real Solana RPC.
+Week 2: Add uptime and error monitoring, publish an integration guide for early testers.
+Month 2–4: Extend verified protocol coverage (Orca, Magic Eden, Phantom Swap) with the same confirmed/candidate/unknown honesty.
+Month 5–6: Support ecosystem integrations and publish a technical writeup on deterministic, evidence-cited scoring.">Copy</button>
+  </div>
+  <p class="field-value">Week 1: Deploy the already-built Docker image to a live production URL (Railway/Render/Fly.io) and verify the API against real Solana RPC.
+Week 2: Add uptime and error monitoring, publish an integration guide for early testers.
+Month 2–4: Extend verified protocol coverage (Orca, Magic Eden, Phantom Swap) with the same confirmed/candidate/unknown honesty.
+Month 5–6: Support ecosystem integrations and publish a technical writeup on deterministic, evidence-cited scoring.</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Primary KPI</span>
+    <button class="copy" data-copy="A live, publicly reachable API URL returning real Solana wallet analysis (intelligence score + risk score) with stable uptime throughout the grant period.">Copy</button>
+  </div>
+  <p class="field-value">A live, publicly reachable API URL returning real Solana wallet analysis (intelligence score + risk score) with stable uptime throughout the grant period.</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Amount requested</span>
+    <button class="copy" data-copy="25000">Copy</button>
+  </div>
+  <p class="field-value">$25,000 USD</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Budget breakdown</span>
+    <button class="copy" data-copy="Milestone 1 — Production deployment &amp; monitoring ($8,000): hosting, a dedicated Solana RPC provider, error/uptime monitoring, deployment documentation and API examples.
+Milestone 2 — Extended protocol coverage &amp; testing ($9,000): research and verify additional DEX program IDs (Orca, Magic Eden, Phantom Swap), decoder implementation, performance testing at production RPC volume, technical writeup.
+Milestone 3 — Ecosystem integration &amp; sustainability ($8,000): support integrations into community dapps, reliability hardening, and a sustainability model so the service outlives the grant.">Copy</button>
+  </div>
+  <p class="field-value">Milestone 1 — Production deployment &amp; monitoring ($8,000): hosting, a dedicated Solana RPC provider, error/uptime monitoring, deployment documentation and API examples.
+Milestone 2 — Extended protocol coverage &amp; testing ($9,000): research and verify additional DEX program IDs (Orca, Magic Eden, Phantom Swap), decoder implementation, performance testing at production RPC volume, technical writeup.
+Milestone 3 — Ecosystem integration &amp; sustainability ($8,000): support integrations into community dapps, reliability hardening, and a sustainability model so the service outlives the grant.</p>
+</div>
+
+<p class="group-title">Solana Foundation — long answers</p>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Why you?<span class="field-note">"لماذا أنت؟" field</span></span>
+    <button class="copy">Copy</button>
+  </div>
+  <p class="field-value">I built FactLedger end to end as a solo developer, and the discipline it's built on is the real advantage. Every scoring function is deterministic and guarded by an automated test that runs the scorers twice on identical input and asserts byte-identical output. Every DEX detection is labeled confirmed, candidate, or unknown against independently verified program IDs — never inflated into false certainty. Every value the platform can't verify returns null, not a plausible-looking guess.
+
+That discipline isn't a feature bolted on late; it's the constraint the codebase was designed around, and it is enforced in CI rather than merely claimed in a README. Most tools in this space optimize for output that looks complete. FactLedger optimizes for output a reviewer can independently re-derive from the chain themselves. In an ecosystem where wrong wallet analysis carries real financial consequences, that trade-off is the correct one — and it is far harder to retrofit than to build in from the first commit.</p>
+</div>
+
+<div class="field">
+  <div class="field-head">
+    <span class="field-label">Full proposal<span class="field-note">paste into a Google Doc, then share the link</span></span>
+    <button class="copy">Copy</button>
+  </div>
+  <p class="field-value">FactLedger — Technical Proposal
+Solana Foundation Grant · Developer Tools
+
+Applicant: Abdullah Al-Anzi (solo developer)
+Contact: fas988840@gmail.com
+Repository: https://github.com/fas988840-dev/PROJECT-x
+Live page: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+Amount requested: $25,000 USD
+
+
+1. SUMMARY
+
+FactLedger is a read-only Solana wallet intelligence API. It turns raw on-chain transaction history into behavioural metrics, an intelligence score, and a risk assessment — and every number it returns can be independently re-derived from the chain by the person reading it.
+
+Two design rules define it, and both are enforced in code rather than promised in documentation:
+
+1. It never fabricates. Any value the platform cannot verify — a price, a fee, a decoded swap amount — is returned as null or an explicit "unknown", never as a plausible-looking estimate.
+
+2. It never overstates confidence. Every DEX instruction is classified confirmed, candidate, or unknown against independently verified program IDs. These three states are never collapsed into one to make output look more complete.
+
+
+2. PROBLEM
+
+Wallet analysis on Solana today splits into two unsatisfying categories.
+
+Heuristic tools claim to detect DEX activity by pattern-matching program IDs loosely. Raydium and Jupiter each ship multiple program versions; unverified programs are routinely mislabelled as swaps. Users act on this data believing it was verified.
+
+Commercial analytics return risk and reputation scores from proprietary models. A user cannot audit the score, cannot reproduce it, and cannot tell which transactions drove it. When such a score gates access to a protocol or informs a counterparty decision, that opacity is a real cost.
+
+Neither category tells the user what it does not know. That is the gap FactLedger addresses.
+
+
+3. SOLUTION AND ARCHITECTURE
+
+FactLedger is a linear pipeline of single-purpose services. Each stage may only consume what the previous stage actually produced.
+
+SolanaRpcClient — read-only RPC access; no signing, no key material
+  → TransactionRetriever — normalises signatures/transactions (legacy + versioned)
+    → InstructionParser — classifies each instruction against DexRegistry
+      → DexRegistry — verified program-ID to decoder adapters
+    → TokenBalanceDelta — diffs pre/post token balances, amounts kept as strings
+    → PriceProvider — CoinGecko; returns null on any failure, never a fallback
+      → BehaviorAnalyzer — frequency, failure rate, diversity, timing, volume
+        → IntelligenceScorer — 4 weighted components, each with named factors
+        → RiskAssessor — 5 weighted factors, each with written reasoning
+
+Determinism. IntelligenceScorer and RiskAssessor are pure weighted combinations of named factors. Identical input must produce byte-identical output, and this is verified automatically: determinism.test.ts runs each scorer twice on fixed input and asserts exact equality. It runs on every push. A regression in determinism fails the build.
+
+Explainability. Every score ships with the factors and reasoning arrays it was built from. A reviewer can take the transaction signatures we cite, query them via any public RPC endpoint, and recompute the score by hand.
+
+Precision. All on-chain amounts and fees are carried as strings (lamports / raw token units), never JavaScript numbers. normalizeAmount() returns null rather than a lossy value when an amount exceeds safe integer range.
+
+Read-only by construction. The RPC client exposes only read methods and a read-only WebSocket log subscription. The codebase contains no keypair handling, no signing path, and requests no credentials or seed phrases.
+
+Interfaces. A REST API (12 endpoints), an MCP server exposing the same pipeline as tools to MCP-compatible AI clients, and a read-only Next.js dashboard.
+
+
+4. WHAT IS ALREADY BUILT
+
+The pipeline described above is implemented and running in CI, not planned.
+
+- RPC client, transaction retrieval, instruction parsing — complete
+- Raydium AMM V4 + Jupiter V6 detection (instruction type) — complete, candidate status
+- Behaviour analysis, intelligence scoring, risk assessment — complete, determinism-tested
+- Evidence engine (per-instruction citation, fixed confidence mapping) — complete
+- Alert engine (one-shot) and live SSE alert stream — complete
+- REST API with Helmet, CORS allowlist, rate limiting, API-key auth — complete
+- MCP server, read-only dashboard, Docker image — complete
+
+Verification, as of 31 August 2026: CI passes end to end on GitHub's own runners — dependency audit, ESLint, tsc --noEmit, 133 tests (including the determinism check), and a production build.
+Run: https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720
+
+
+5. HONEST LIMITATIONS
+
+Stating these is consistent with how the software itself behaves.
+
+- Swap amounts are not extracted. Raydium and Jupiter detection verifies the instruction type — a checked discriminator byte for Raydium, a computed Anchor sighash for Jupiter — but not the account-list layout needed to read input/output mints and amounts. Those fields stay null and the status stays candidate. Guessing them would produce plausible, wrong data; that is worse than an honest gap.
+
+- The live WebSocket alert stream is unexercised against a real endpoint. It is unit-tested against a mocked RPC client only. Separately, many public RPC endpoints restrict log subscriptions, so production use needs a dedicated provider.
+
+- No live deployment yet. The Docker image builds; it has not been deployed to a public URL. That is Milestone 1 below and the most immediate use of this grant.
+
+- No users yet. There are no usage numbers, and this proposal claims none.
+
+
+6. MILESTONES AND BUDGET
+
+Milestone 1 — Production deployment and monitoring — $8,000 — Months 1–2
+Deploy the existing Docker image to a public URL; move onto a dedicated Solana RPC provider (the free endpoints restrict both rate and WebSocket subscriptions); add error tracking and uptime monitoring; publish deployment documentation and worked API examples.
+Deliverable: a public API endpoint serving real wallet analysis, monitored.
+
+Milestone 2 — Extended verified protocol coverage — $9,000 — Months 3–4
+Research and independently verify program IDs and instruction layouts for Orca, Magic Eden and Phantom Swap, and — where the account layout can be verified — promote existing adapters from candidate to confirmed with real amount extraction. Benchmark against production RPC volume. Publish a technical writeup on confidence-tiered protocol detection.
+Deliverable: additional protocols supported at honestly-labelled confidence, with the verification method documented.
+
+Milestone 3 — Ecosystem integration and sustainability — $8,000 — Months 5–6
+Support integration into community applications via REST and MCP; reliability hardening under real traffic; establish a sustainability model so the service outlives the grant period.
+Deliverable: documented integrations and a funding path beyond this grant.
+
+
+7. WHY THIS MATTERS FOR SOLANA
+
+Wallet reputation and risk data increasingly gate real decisions — protocol access, counterparty trust, compliance workflows. When that data is a black box, mistakes are invisible and uncorrectable. FactLedger offers the ecosystem a reference implementation for the opposite approach: scores that cite their evidence, confidence that is tiered honestly, and gaps that are stated rather than filled with guesses. It is open source, so any team can audit the method or build on it.
+
+
+8. LINKS
+
+Repository: https://github.com/fas988840-dev/PROJECT-x
+Live project page: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+Passing CI run: https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720
+Contact: fas988840@gmail.com</p>
+</div>
+
+<p class="tip"><strong>Google Doc step:</strong> open Google Docs → new blank document →
+paste the full proposal above → <strong>Share</strong> → change access to
+<em>Anyone with the link</em> → copy the link → paste it into the form's
+"تعليمات أدوات المطور" field.</p>
+
+<p class="tip"><strong>If a form asks for something not listed here:</strong> the four full
+application drafts live in the repo under <code>GRANTS/</code> — one per programme
+(Solana Foundation, Superteam Earn, Colosseum, ChainGPT), each with far more
+detail than any single form will ask for.</p>
+
+<footer>
+  FactLedger — Abdullah Al-Anzi · fas988840@gmail.com
+</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('button.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      // Either an explicit data-copy value, or the field's own displayed text
+      // (used for the long-form entries, so the text lives in one place only).
+      var field = btn.closest('.field');
+      var shown = field ? field.querySelector('.field-value') : null;
+      var text = btn.getAttribute('data-copy') || (shown ? shown.textContent : '');
+      var done = function () {
+        var original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('done');
+        setTimeout(function () {
+          btn.textContent = original;
+          btn.classList.remove('done');
+        }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+      } else {
+        fallback(text, done);
+      }
+    });
+  });
+
+  function fallback(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    try { document.execCommand('copy'); done(); } catch (e) { /* selection left for manual copy */ }
+    document.body.removeChild(ta);
+  }
+</script>

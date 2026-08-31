@@ -145,7 +145,12 @@ export class IntelligenceScorer {
    */
   private generateFactors(
     behavior: BehaviorMetrics,
-    components: {
+    // Not currently read in this function's body - factors below are
+    // derived directly from `behavior`, not the pre-computed component
+    // scores. Kept in the signature (matching the caller) and
+    // underscore-prefixed rather than removed, since a future factor
+    // (e.g. "sophistication driven mainly by X") would naturally want it.
+    _components: {
       activityScore: number;
       sophisticationScore: number;
       consistencyScore: number;

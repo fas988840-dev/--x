@@ -43,7 +43,7 @@ export class BehaviorAnalyzer {
     }
 
     // Peak activity hour (from blockTime)
-    const peakHour = this.calculatePeakActivityHour(transactions);
+    const peakActivityHour = this.calculatePeakActivityHour(transactions);
 
     // Volume calculation - will be null if prices unavailable
     const totalVolumeUSD = this.calculateVolume(swaps);
