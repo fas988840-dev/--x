@@ -18,6 +18,7 @@ import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, Resea
 import { EvidenceEngine } from './agents/evidence-engine';
 import { AlertEngine } from './services/alert-engine';
 import { LiveAlertWatcher } from './services/live-alert-watcher';
+import { TokenSecurityVerifier } from './services/token-security-verifier';
 import { ChainGptClient } from './services/chaingpt-client';
 import { AgentRouter } from './agents/agent-router';
 
@@ -77,6 +78,7 @@ async function main(): Promise<void> {
   // CHAINGPT_API_KEY from the environment only; never logged, never
   // required (ExplanationAgent falls back to a deterministic summary when
   // this key is unset or the API call fails).
+  const tokenSecurityVerifier = new TokenSecurityVerifier(rpcClient);
   const chainGptClient = new ChainGptClient(process.env.CHAINGPT_API_KEY);
   const explanationAgent = new ExplanationAgent(walletAgent, riskAgent, chainGptClient);
   const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, alertAgent, explanationAgent, researchAgent, marketAgent);
@@ -106,7 +108,8 @@ async function main(): Promise<void> {
     agentRouter,
     alertAgent,
     explanationAgent,
-    liveAlertWatcher
+    liveAlertWatcher,
+    tokenSecurityVerifier
   );
 
   server.start();
