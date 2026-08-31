@@ -4,6 +4,7 @@
 **Date Submitted:** August 31, 2026  
 **Organization:** Independent Developer  
 **Contact:** fas988840@gmail.com  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
 **Category:** Developer Tools & Infrastructure
 
 > ✅ **Verified as of August 31, 2026:** CI is fully green on GitHub's own
@@ -465,14 +466,16 @@ We request **$25,000 USD** across three 6-month milestones:
 ## Code & Resources
 
 - **Repository**: https://github.com/fas988840-dev/PROJECT-x
-- **Public docs**: https://fas988840-dev.github.io/PROJECT-x/ (via GitHub Pages)
-- **Live API** (when deployed): https://factledger-abc123.railway.app/api/v1/health
+- **Live Demo** (public docs page, live now): https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+- **GitHub Pages** (same content, pending a manual repo-settings toggle): https://fas988840-dev.github.io/PROJECT-x/
+- **Live API** (backend): not yet deployed — Dockerfile is ready; deploying to Railway/Render/Fly.io is Milestone 1's first deliverable
 - **Contributing**: Open to community PRs for additional protocol support
 
 ## Contact
 
 **Developer:** fas988840@gmail.com  
-**GitHub:** https://github.com/fas988840-dev
+**GitHub:** https://github.com/fas988840-dev  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`
 
 ---
 

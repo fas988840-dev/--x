@@ -298,6 +298,13 @@
     padding-left: 1rem;
   }
 
+  .notice a, .lede a {
+    color: var(--seal);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .notice a:hover, .lede a:hover { border-bottom-color: var(--seal); }
+
   footer {
     padding: 2.5rem 0 3.5rem;
     display: flex;
@@ -311,6 +318,22 @@
 
   footer a { color: var(--seal); text-decoration: none; border-bottom: 1px solid transparent; }
   footer a:hover { border-bottom-color: var(--seal); }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+    align-items: baseline;
+  }
+
+  .wallet {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+  }
+
+  .wallet-label {
+    color: var(--ink-soft);
+  }
 
   a:focus-visible, .stage:focus-visible {
     outline: 2px solid var(--seal);
@@ -454,15 +477,19 @@
   <p class="notice">Pre-launch, proof-of-concept stage. No external users or usage
   numbers yet — this page won't claim any until they're real. Intelligence
   and risk scores describe observable on-chain behavior only; they are not
-  financial advice or a recommendation. Source is proprietary — reach out
-  for access.</p>
+  financial advice or a recommendation. Source is open — see the
+  <a href="https://github.com/fas988840-dev/PROJECT-x">GitHub repository</a>.</p>
 </section>
 
 </main>
 
 <footer>
   <span>FactLedger — Abdullah Al-Anzi</span>
-  <a href="mailto:fas988840@gmail.com">fas988840@gmail.com</a>
+  <div class="footer-links">
+    <a href="mailto:fas988840@gmail.com">fas988840@gmail.com</a>
+    <a href="https://github.com/fas988840-dev/PROJECT-x">GitHub</a>
+    <span class="wallet"><span class="wallet-label">SOL</span> EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM</span>
+  </div>
 </footer>
 
 </div>

@@ -4,6 +4,7 @@
 **Applicant:** fas988840@gmail.com  
 **Application Date:** August 31, 2026  
 **GitHub:** https://github.com/fas988840-dev/PROJECT-x  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
 **Project Type:** Infrastructure & Developer Tools
 
 > ✅ **Verified as of August 31, 2026:** CI is fully green on GitHub's own
@@ -505,7 +506,9 @@ GET /api/v1/agents/:intent
 
 **Email:** fas988840@gmail.com  
 **GitHub:** https://github.com/fas988840-dev/PROJECT-x  
-**Demo** (when deployed): https://factledger-abc123.railway.app/api/v1/health  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
+**Live Demo** (public docs page, live now): https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be  
+**Live API** (backend): not yet deployed — this grant's Week 1 deliverable  
 
 ---
 

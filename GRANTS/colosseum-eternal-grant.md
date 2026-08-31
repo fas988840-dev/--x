@@ -4,6 +4,7 @@
 **Submission Date:** August 31, 2026  
 **Developer:** fas988840@gmail.com  
 **GitHub:** https://github.com/fas988840-dev/PROJECT-x  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
 **Category:** Solana DeFi Infrastructure
 
 > ✅ **Verified as of August 31, 2026:** CI is fully green on GitHub's own
@@ -392,6 +393,8 @@ and run `npm test` yourself.
 
 **Email:** fas988840@gmail.com  
 **GitHub:** https://github.com/fas988840-dev/PROJECT-x  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
+**Live Demo:** https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be  
 **Documentation:** https://github.com/fas988840-dev/PROJECT-x/blob/main/README.md  
 
 ---

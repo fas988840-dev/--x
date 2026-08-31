@@ -3,7 +3,8 @@
 **Project:** FactLedger - Solana Wallet Intelligence Platform  
 **Date Submitted:** August 31, 2026  
 **Organization:** Independent Developer  
-**Contact:** fas988840@gmail.com
+**Contact:** fas988840@gmail.com  
+**Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`
 
 > ✅ **Verified as of August 31, 2026:** CI is fully green on GitHub's own
 > runners — `npm audit`, `lint`, `type-check`, `test` (133 tests, including
@@ -299,7 +300,9 @@ This fund enables:
 ## Contact & Demo
 
 **Repository**: https://github.com/fas988840-dev/PROJECT-x  
-**Live Demo** (when deployed): https://factledger-abc123.railway.app/api/v1/health  
+**Live Demo** (public docs page, live now): https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be  
+**Live API** (backend): not yet deployed — Dockerfile is ready; deploying to Railway/Render/Fly.io is the immediate next step this grant funds (see "Funding Request" above)  
+**Solana Wallet**: `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
 **Email**: fas988840@gmail.com
 
 ---
