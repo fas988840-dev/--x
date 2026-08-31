@@ -90,7 +90,16 @@ export function buildMcpServer(): McpServer {
         'Read-only facts about a Solana wallet: transaction counts, SOL balance, token balances. Returns evidenceStatus UNKNOWN with data: null when the address is invalid or the RPC read fails - never a guessed value.',
       inputSchema: { address: addressParam, limit: limitParam },
     },
-    async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await walletAgent.analyzeWallet(address, limit))
+    // No explicit parameter type annotation here (unlike the other tools
+    // below) - McpServer.registerTool's own generic inference from
+    // `inputSchema` was hitting TS2589 ("Type instantiation is excessively
+    // deep and possibly infinite") the one time this file was actually
+    // type-checked, specifically when paired with an explicit duplicate
+    // annotation on the first tool registered. Letting TS infer the
+    // callback's parameter type from inputSchema avoids the conflict;
+    // the shape is identical to the explicit one (address: string,
+    // limit?: number).
+    async ({ address, limit }) => jsonResult(await walletAgent.analyzeWallet(address, limit))
   );
 
   server.registerTool(

@@ -353,7 +353,7 @@ export class APIServer {
         }
 
         // Generic error - never expose stack trace in production
-        res.status(500).json({
+        return res.status(500).json({
           error: {
             code: 'INTERNAL_ERROR',
             message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
@@ -366,7 +366,7 @@ export class APIServer {
   /**
    * Handle health check
    */
-  private async handleHealth(req: Request, res: Response): Promise<void> {
+  private async handleHealth(_req: Request, res: Response): Promise<void> {
     const healthy = await this.priceProvider.isHealthy();
 
     const response: HealthResponse = {
