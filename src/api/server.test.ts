@@ -28,9 +28,19 @@ describe('API Server', () => {
   let mockAlertAgent: any;
   let mockExplanationAgent: any;
   let mockLiveAlertWatcher: any;
+  let mockPriceProvider: any;
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
   beforeEach(() => {
+    // Wraps StubPriceProvider so isHealthy can be overridden per test - the
+    // health route's handling of a failing dependency is part of what this
+    // suite checks.
+    const stub = new StubPriceProvider();
+    mockPriceProvider = {
+      getPrice: stub.getPrice.bind(stub),
+      isHealthy: vi.fn().mockResolvedValue(true),
+    };
+
     // Mock transaction retriever
     mockTransactionRetriever = {
       getWalletTransactionsMeta: vi.fn(),
@@ -124,7 +134,7 @@ describe('API Server', () => {
       new BehaviorAnalyzer(),
       new IntelligenceScorer(),
       new RiskAssessor(),
-      new StubPriceProvider(),
+      mockPriceProvider as StubPriceProvider,
       new DexRegistry(),
       mockEvidenceEngine as EvidenceEngine,
       mockResearchAgent as ResearchAgent,
@@ -138,6 +148,27 @@ describe('API Server', () => {
     app = server.getApp();
   });
 
+  describe('GET /', () => {
+    it('should serve a service index rather than 404', async () => {
+      const response = await request(app).get('/');
+
+      expect(response.status).toBe(200);
+      expect(response.body.service).toBe('FactLedger');
+      expect(response.body.health).toBe('/api/v1/health');
+      expect(response.body.endpoints.token).toContain('/api/v1/token/:mint/security');
+    });
+
+    it('should be reachable without an API key', async () => {
+      process.env.API_KEYS = 'secret-key-for-this-test';
+      try {
+        const response = await request(app).get('/');
+        expect(response.status).toBe(200);
+      } finally {
+        delete process.env.API_KEYS;
+      }
+    });
+  });
+
   describe('GET /api/v1/health', () => {
     it('should return health status', async () => {
       const response = await request(app).get('/api/v1/health');
@@ -146,6 +177,28 @@ describe('API Server', () => {
       expect(response.body.status).toBe('ok');
       expect(response.body.service).toBe('FactLedger');
       expect(response.body.version).toBe('0.1.0');
+    });
+
+    // Regression: this used to await an outbound CoinGecko call and answer 503
+    // when it failed, so a platform health check pointed here would tear the
+    // service down because a third party was rate-limiting us.
+    it('should stay 200 when the price provider is unhealthy', async () => {
+      mockPriceProvider.isHealthy = vi.fn().mockResolvedValue(false);
+
+      const response = await request(app).get('/api/v1/health');
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('ok');
+      expect(response.body.dependencies.priceProvider).toBe('degraded');
+    });
+
+    it('should stay 200 when the price provider check rejects', async () => {
+      mockPriceProvider.isHealthy = vi.fn().mockRejectedValue(new Error('network down'));
+
+      const response = await request(app).get('/api/v1/health');
+
+      expect(response.status).toBe(200);
+      expect(response.body.dependencies.priceProvider).toBe('degraded');
     });
   });
 

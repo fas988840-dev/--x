@@ -215,7 +215,7 @@ export class APIServer {
    * No-ops (open access) when API_KEYS is not configured.
    */
   private apiKeyAuth = (req: Request, res: Response, next: NextFunction): void => {
-    if (req.path === '/api/v1/health') {
+    if (req.path === '/' || req.path === '/api/v1/health') {
       next();
       return;
     }
@@ -284,6 +284,7 @@ export class APIServer {
    */
   private setupRoutes(): void {
     // Health check
+    this.app.get('/', this.handleIndex.bind(this));
     this.app.get('/api/v1/health', this.asyncHandler(this.handleHealth.bind(this)));
 
     // Wallet endpoints - RPC-heavy ones carry an extra, stricter rate limit
@@ -377,16 +378,90 @@ export class APIServer {
   /**
    * Handle health check
    */
+  /**
+   * Liveness check. Answers one question: is this process serving?
+   *
+   * It used to await priceProvider.isHealthy(), an outbound call to
+   * CoinGecko, and return 503 when that failed. A platform health check
+   * pointed here (render.yaml, fly.toml) would then mark the service
+   * unhealthy because a third party was rate-limiting us, and stop routing
+   * traffic to a server that was working perfectly well. A liveness probe
+   * must not depend on someone else's uptime.
+   *
+   * The price provider's state is still reported, as a field rather than as
+   * the verdict, so a caller can see a degraded dependency without the
+   * platform tearing the service down over it. It is also given a short
+   * timeout so a hanging dependency cannot hang the probe.
+   */
   private async handleHealth(_req: Request, res: Response): Promise<void> {
-    const healthy = await this.priceProvider.isHealthy();
+    let priceProviderHealthy: boolean | null = null;
+    try {
+      priceProviderHealthy = await Promise.race([
+        this.priceProvider.isHealthy(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
+    } catch {
+      priceProviderHealthy = false;
+    }
 
-    const response: HealthResponse = {
-      status: healthy ? 'ok' : 'degraded',
+    const response: HealthResponse & { dependencies: Record<string, string> } = {
+      status: 'ok',
       service: 'FactLedger',
       version: '0.1.0',
+      dependencies: {
+        priceProvider:
+          priceProviderHealthy === null
+            ? 'unknown'
+            : priceProviderHealthy
+              ? 'ok'
+              : 'degraded',
+      },
     };
 
-    res.status(healthy ? 200 : 503).json(response);
+    res.status(200).json(response);
+  }
+
+  /**
+   * Service index at the root.
+   *
+   * Without this, GET / fell through to the 404 handler, so anyone pasting
+   * the bare deployment URL — which is what a reviewer given a link actually
+   * does — saw "not found" and reasonably concluded the service was broken.
+   * Public, like /api/v1/health, since there is nothing to protect here.
+   */
+  private handleIndex(_req: Request, res: Response): void {
+    res.json({
+      service: 'FactLedger',
+      version: '0.1.0',
+      description:
+        'Read-only Solana wallet intelligence. Every value is either verified ' +
+        'on-chain or returned as null — never estimated.',
+      repository: 'https://github.com/fas988840-dev/--x',
+      documentation: 'https://github.com/fas988840-dev/--x#api-endpoints',
+      health: '/api/v1/health',
+      authentication:
+        'Routes other than / and /api/v1/health require an X-API-Key header ' +
+        'when the server is started with API_KEYS set.',
+      endpoints: {
+        wallet: [
+          '/api/v1/wallet/:address/transactions',
+          '/api/v1/wallet/:address/tokens',
+          '/api/v1/wallet/:address/behavior',
+          '/api/v1/wallet/:address/intelligence',
+          '/api/v1/wallet/:address/risk',
+          '/api/v1/wallet/:address/analysis',
+          '/api/v1/wallet/:address/evidence',
+          '/api/v1/wallet/:address/research',
+          '/api/v1/wallet/:address/alerts',
+          '/api/v1/wallet/:address/alerts/stream',
+          '/api/v1/wallet/:address/explanation',
+        ],
+        token: ['/api/v1/token/:mint/security'],
+        transaction: ['/api/v1/transaction/:signature'],
+        other: ['/api/v1/protocols', '/api/v1/agents/:intent'],
+      },
+      disclaimer: 'Not financial advice.',
+    });
   }
 
   /**
