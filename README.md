@@ -653,7 +653,34 @@ This platform provides data analysis only. It is not financial advice, investmen
 
 ## Repository Status
 
-**PRIVATE REPOSITORY** - This repository must remain private. Do not make public.
+✅ **PUBLIC REPOSITORY** - https://github.com/fas988840-dev/PROJECT-x
+
+### Grants Submitted
+
+- ✅ **Superteam Earn**: $5,000 (Confirmed - Aug 31, 2026)
+- ✅ **Colosseum Eternal**: $15,000 (Confirmed - Aug 31, 2026)
+- ✅ **Solana Foundation**: $25,000 (Submitted)
+- ⏳ **ChainGPT Research**: $10,000 (Platform unavailable)
+
+**Total Funding**: $45,000+ submitted
+
+### Deployment
+
+API deployment ready via:
+- **Fly.io** (recommended): `flyctl launch && flyctl deploy`
+- **Railway**: Connect GitHub repo directly
+- **Render**: Connect GitHub repo directly
+
+See `DEPLOYMENT_STATUS.md` and `API_DOCUMENTATION.md` for complete guides.
+
+**Live Demo**: https://factledger-api.fly.dev (post-deployment)
+
+### Documentation
+
+- `DEPLOYMENT_STATUS.md` — Full deployment checklist and milestones
+- `API_DOCUMENTATION.md` — Complete API reference with examples
+- `QUICK_START.md` — 56-minute setup guide
+- `CLAUDE.md` — Architecture and design principles
 
 ## License
 
