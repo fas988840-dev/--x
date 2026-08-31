@@ -12,7 +12,8 @@
 
 | Grant | Amount | Status | File |
 |-------|--------|--------|------|
-| Solana Foundation | $25,000 | ✅ SUBMITTED | Confirmation email received |
+| Solana Foundation | $25,000 | ⚠️ REPORTED SUBMITTED | Applicant reported a confirmation email; not independently verified — check the inbox and update this row |
+| Startup Accelerator (Webacy / DD.xyz, via Superteam Earn) | up to $10,000 | ✅ SUBMITTED Aug 31, 2026 | Typeform confirmation screen observed; promo code `AINSIDER1872` |
 | ChainGPT Research | $10,000 | 🚀 READY | `GRANTS/chaingpt-research-grant.md` |
 | Colosseum Eternal | $5,000-20,000 | 🚀 READY | `GRANTS/colosseum-eternal-grant.md` |
 | Superteam Earn | $200-5,000 | 🚀 READY | `GRANTS/superteam-earn-grant.md` |
