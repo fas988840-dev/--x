@@ -17,11 +17,11 @@ Before submitting any grant, ensure:
 
 ## 1️⃣ ChainGPT Research Grant ($10,000)
 
-### Platform: https://chaingpt.org/grants
+### Platform: https://www.chaingpt.org/web3-ai-grant
 
 **Step 1: Open the application page**
 ```
-Go to: https://chaingpt.org/grants
+Go to: https://www.chaingpt.org/web3-ai-grant
 Click: "Apply Now" or "Research Grant Program"
 ```
 

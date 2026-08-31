@@ -676,7 +676,7 @@ badge above reflects the current state of `main`.
 - **Solana Foundation** — submitted, confirmed by email from Solana Grants.
   Requesting $25,000. They state a response within one month of submission.
 - **Colosseum Eternal** — not submitted.
-- **ChainGPT Research** — not submitted (`chaingpt.org/grants` returned 404).
+- **ChainGPT Research** — not submitted (`www.chaingpt.org/web3-ai-grant` returned 404).
 
 **Awarded to date: $0.** No application has been approved yet. See
 `GRANTS_COMPLETION_REPORT.md` for the evidence behind each line.

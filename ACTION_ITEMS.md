@@ -86,7 +86,7 @@ flyctl deploy
 **File:** `GRANTS/SUBMISSION_GUIDE.md` (step-by-step for each)
 
 1. **ChainGPT Research Grant**
-   - Platform: https://chaingpt.org/grants
+   - Platform: https://www.chaingpt.org/web3-ai-grant
    - Copy content from `GRANTS/chaingpt-research-grant.md`
    - Estimated: 15 minutes
 

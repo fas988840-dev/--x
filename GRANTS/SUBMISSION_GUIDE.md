@@ -11,7 +11,7 @@
 
 ### 1️⃣ ChainGPT Research Grant
 
-**Platform:** https://chaingpt.org/grants  
+**Platform:** https://www.chaingpt.org/web3-ai-grant  
 **Submission Type:** Research Grant Application  
 **Funding Requested:** $10,000 USD
 
@@ -20,7 +20,7 @@
 - `grant-answers.html` → Copy "ChainGPT Research Grant" section
 
 **Steps:**
-1. Go to https://chaingpt.org/grants
+1. Go to https://www.chaingpt.org/web3-ai-grant
 2. Click "Apply for Research Grant"
 3. Fill out form fields (use answers from `grant-answers.html`):
    - **Project Name:** FactLedger - Solana Wallet Intelligence Platform
