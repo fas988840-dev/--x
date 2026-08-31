@@ -4,7 +4,7 @@
  * CRITICAL: Never invents blockchain data. Preserves nulls and unknowns.
  */
 
-import { ParsedTransactionWithMeta, PublicKey } from '@solana/web3.js';
+import { ParsedTransactionWithMeta, PartiallyDecodedInstruction } from '@solana/web3.js';
 import { SolanaRpcClient } from './solana-rpc-client';
 import {
   TransactionMeta,
@@ -13,7 +13,6 @@ import {
   validateTransactionSignature,
   validateWalletAddress,
   Instruction,
-  ProgramId,
   validateProgramId,
 } from '../types/domain';
 import { RpcError, ValidationError } from '../types/errors';
@@ -84,29 +83,33 @@ export class TransactionRetriever {
     const instructions: Instruction[] = [];
 
     if (!tx.transaction.message.instructions) return instructions;
-
-    // Get account keys - handles both legacy and versioned transactions
-    const accountKeys = this.getAccountKeys(tx);
-    if (accountKeys.length === 0) return instructions;
+    const accountMetaByPubkey = new Map(
+      tx.transaction.message.accountKeys.map((account) => [
+        account.pubkey.toString(),
+        { isSigner: account.signer, isWritable: account.writable },
+      ])
+    );
 
     for (const ix of tx.transaction.message.instructions) {
+      if (!this.isPartiallyDecodedInstruction(ix)) {
+        continue;
+      }
+
       try {
-        // Validate instruction accounts exist within accountKeys
-        const instructionAccounts = (ix.accounts || []).map((accountIndex) => {
-          if (accountIndex >= accountKeys.length) {
-            throw new Error(`Account index ${accountIndex} out of range`);
-          }
-          const accountKey = accountKeys[accountIndex];
+        const instructionAccounts = ix.accounts.map((account) => {
+          const pubkey = account.toString();
+          const accountMeta = accountMetaByPubkey.get(pubkey);
+
           return {
-            pubkey: accountKey.toString(),
-            isSigner: accountKey.signer ?? false,
-            isWritable: accountKey.writable ?? false,
+            pubkey,
+            isSigner: accountMeta?.isSigner ?? false,
+            isWritable: accountMeta?.isWritable ?? false,
           };
         });
 
         const instruction: Instruction = {
           programId: validateProgramId(ix.programId.toString()),
-          data: Buffer.from(ix.data || '', 'base64'),
+          data: Buffer.from(ix.data),
           accounts: instructionAccounts,
         };
         instructions.push(instruction);
@@ -118,25 +121,10 @@ export class TransactionRetriever {
     return instructions;
   }
 
-  /**
-   * Get account keys from transaction (handles legacy and versioned)
-   */
-  private getAccountKeys(
-    tx: ParsedTransactionWithMeta
-  ): Array<{ toString(): string; signer?: boolean; writable?: boolean }> {
-    const message = tx.transaction.message;
-
-    // For versioned transactions, staticAccountKeys is used
-    if ('staticAccountKeys' in message && message.staticAccountKeys) {
-      return message.staticAccountKeys as Array<{ toString(): string; signer?: boolean; writable?: boolean }>;
-    }
-
-    // Fallback for legacy transactions - accountKeys
-    if ('accountKeys' in message && message.accountKeys) {
-      return message.accountKeys as Array<{ toString(): string; signer?: boolean; writable?: boolean }>;
-    }
-
-    return [];
+  private isPartiallyDecodedInstruction(
+    instruction: ParsedTransactionWithMeta['transaction']['message']['instructions'][number]
+  ): instruction is PartiallyDecodedInstruction {
+    return 'accounts' in instruction && 'data' in instruction;
   }
 
   /**
@@ -144,7 +132,7 @@ export class TransactionRetriever {
    * CRITICAL: Never fabricates data. Preserves nulls for unavailable fields.
    */
   private parseTransactionMeta(signature: TransactionSignature, tx: ParsedTransactionWithMeta): TransactionMeta {
-    const meta = tx.transaction.meta;
+    const meta = tx.meta;
 
     // Determine status
     let status: 'success' | 'failed' | 'unknown' = 'unknown';

@@ -1,56 +1,67 @@
+import type { Express } from 'express';
 import request from 'supertest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { APIServer } from '../api/server';
+import type { AgentResponse, ResearchReportData } from '../agents/core_agents';
 import { BehaviorAnalyzer } from '../services/behavior-analyzer';
 import { IntelligenceScorer } from '../services/intelligence-scorer';
 import { RiskAssessor } from '../services/risk-assessor';
 import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
-import { EvidenceEngine } from '../agents/evidence-engine';
+import { EvidenceEngine, type WalletEvidenceReport } from '../agents/evidence-engine';
 import { ResearchAgent, EvidenceStatus } from '../agents/core_agents';
+import { TransactionRetriever } from '../services/transaction-retriever';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
+type MockTransactionRetriever = Pick<TransactionRetriever, 'getWalletTransactionsMeta' | 'getTransaction'>;
+type MockEvidenceEngine = Pick<EvidenceEngine, 'buildWalletEvidence'>;
+type MockResearchAgent = Pick<ResearchAgent, 'generateReport'>;
+
 describe('API Server', () => {
-  let app: any;
+  let app: Express;
   let server: APIServer;
-  let mockTransactionRetriever: any;
-  let mockEvidenceEngine: any;
-  let mockResearchAgent: any;
+  let mockTransactionRetriever: MockTransactionRetriever;
+  let mockEvidenceEngine: MockEvidenceEngine;
+  let mockResearchAgent: MockResearchAgent;
 
   beforeEach(() => {
     // Mock transaction retriever
     mockTransactionRetriever = {
-      getWalletTransactionsMeta: vi.fn(),
-      getTransaction: vi.fn(),
+      getWalletTransactionsMeta: vi.fn<TransactionRetriever['getWalletTransactionsMeta']>(),
+      getTransaction: vi.fn<TransactionRetriever['getTransaction']>(),
     };
 
     // Mock the agent-based collaborators (unit-tested on their own in
     // src/agents/*.test.ts) so this suite stays focused on HTTP wiring.
     mockEvidenceEngine = {
-      buildWalletEvidence: vi.fn().mockResolvedValue({
+      buildWalletEvidence: vi
+        .fn<EvidenceEngine['buildWalletEvidence']>()
+        .mockResolvedValue({
         agentId: 'evidence_engine_v1',
         timestamp: Date.now(),
         evidenceStatus: EvidenceStatus.VERIFIED,
         confidenceScore: 1,
         data: { wallet: '', transactionsExamined: 0, transactionsSkipped: 0, evidence: [] },
         justification: 'test',
-      }),
+        } satisfies AgentResponse<WalletEvidenceReport>),
     };
     mockResearchAgent = {
-      generateReport: vi.fn().mockResolvedValue({
+      generateReport: vi
+        .fn<ResearchAgent['generateReport']>()
+        .mockResolvedValue({
         agentId: 'research_synth_v1',
         timestamp: Date.now(),
         evidenceStatus: EvidenceStatus.VERIFIED,
         confidenceScore: 1,
         data: { summary: 'test summary', auditTrail: ['wallet_intel_v1', 'risk_assessment_v1'] },
         justification: 'test',
-      }),
+        } satisfies AgentResponse<ResearchReportData>),
     };
 
     // Create server with mocked services
     server = new APIServer(
       3000,
-      mockTransactionRetriever,
+      mockTransactionRetriever as TransactionRetriever,
       new BehaviorAnalyzer(),
       new IntelligenceScorer(),
       new RiskAssessor(),

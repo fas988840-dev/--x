@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { InstructionParser } from '../services/instruction-parser';
 import { DexRegistry } from '../services/dex-registry';
 import { Instruction, validateProgramId } from '../types/domain';

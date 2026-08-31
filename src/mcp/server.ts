@@ -73,8 +73,9 @@ export function buildMcpServer(): McpServer {
     name: 'factledger',
     version: '0.1.0',
   });
+  const registerTool = server.registerTool.bind(server) as (...args: unknown[]) => unknown;
 
-  server.registerTool(
+  registerTool(
     'wallet_intelligence',
     {
       description:
@@ -84,7 +85,7 @@ export function buildMcpServer(): McpServer {
     async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await walletAgent.analyzeWallet(address, limit))
   );
 
-  server.registerTool(
+  registerTool(
     'transaction_lookup',
     {
       description:
@@ -94,7 +95,7 @@ export function buildMcpServer(): McpServer {
     async ({ signature }: { signature: string }) => jsonResult(await txAgent.parseTx(signature))
   );
 
-  server.registerTool(
+  registerTool(
     'wallet_risk',
     {
       description:
@@ -104,7 +105,7 @@ export function buildMcpServer(): McpServer {
     async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await riskAgent.evaluateRisk(address, limit))
   );
 
-  server.registerTool(
+  registerTool(
     'wallet_research_report',
     {
       description:
@@ -114,7 +115,7 @@ export function buildMcpServer(): McpServer {
     async ({ address, limit }: { address: string; limit?: number }) => jsonResult(await researchAgent.generateReport(address, limit))
   );
 
-  server.registerTool(
+  registerTool(
     'market_events',
     {
       description:

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { TokenBalanceDeltaCalculator, normalizeAmount } from '../services/token-balance-delta';
+import { beforeEach, describe, it, expect } from 'vitest';
+import { TokenBalanceDeltaCalculator, normalizeAmount, type TokenBalance } from '../services/token-balance-delta';
 import { Token, validateTokenMint } from '../types/domain';
 
 describe('TokenBalanceDeltaCalculator', () => {
@@ -40,7 +40,7 @@ describe('TokenBalanceDeltaCalculator', () => {
       const preBalances = [
         {
           owner: 'wallet1',
-          mint: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ', // USDC
+          mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
           amount: '1000000',
           decimals: 6,
           uiAmount: null,
@@ -50,7 +50,7 @@ describe('TokenBalanceDeltaCalculator', () => {
       const postBalances = [
         {
           owner: 'wallet1',
-          mint: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ',
+          mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
           amount: '2000000',
           decimals: 6,
           uiAmount: null,
@@ -65,12 +65,12 @@ describe('TokenBalanceDeltaCalculator', () => {
     });
 
     it('should detect new token accounts', () => {
-      const preBalances: any[] = [];
+      const preBalances: TokenBalance[] = [];
 
       const postBalances = [
         {
           owner: 'wallet1',
-          mint: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ',
+          mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
           amount: '1000000',
           decimals: 6,
           uiAmount: null,
@@ -88,14 +88,14 @@ describe('TokenBalanceDeltaCalculator', () => {
       const preBalances = [
         {
           owner: 'wallet1',
-          mint: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ',
+          mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
           amount: '1000000',
           decimals: 6,
           uiAmount: null,
         },
       ];
 
-      const postBalances: any[] = [];
+      const postBalances: TokenBalance[] = [];
 
       const deltas = calculator.calculateDeltas(preBalances, postBalances, new Map());
 
@@ -108,7 +108,7 @@ describe('TokenBalanceDeltaCalculator', () => {
   describe('TokenBalanceDelta Conversion', () => {
     it('should convert balance delta with correct direction', () => {
       const delta = {
-        mint: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ',
+        mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
         owner: 'wallet1',
         beforeAmount: '1000000',
         afterAmount: '2000000',
@@ -116,7 +116,7 @@ describe('TokenBalanceDeltaCalculator', () => {
       };
 
       const token: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',
@@ -131,7 +131,7 @@ describe('TokenBalanceDeltaCalculator', () => {
 
     it('should handle outflow correctly', () => {
       const delta = {
-        mint: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ',
+        mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
         owner: 'wallet1',
         beforeAmount: '2000000',
         afterAmount: '1000000',
@@ -139,7 +139,7 @@ describe('TokenBalanceDeltaCalculator', () => {
       };
 
       const token: Token = {
-        mint: validateTokenMint('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ'),
+        mint: validateTokenMint('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
         symbol: 'USDC',
         decimals: 6,
         name: 'USD Coin',
