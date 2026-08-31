@@ -5,6 +5,7 @@ on:
     branches: ['**']
   pull_request:
     branches: ['**']
+  workflow_dispatch: {}
 
 jobs:
   test:
@@ -16,9 +17,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # No `cache: 'npm'` — that option hashes package-lock.json for
+          # the cache key, but this repo commits its lockfile so the cache
+          # is populated on first install and reused thereafter.
 
-      - run: npm install
+      - run: npm ci
+
+      - name: Audit dependencies (high/critical only)
+        run: npm audit --audit-level=high
 
       - name: Lint
         run: npm run lint
