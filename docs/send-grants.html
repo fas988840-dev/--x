@@ -1,0 +1,343 @@
+<title>Send Grant Applications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --success: #3fb950;
+    --warning: #f0883e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+    padding: 20px;
+    line-height: 1.6;
+    direction: rtl;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .grant-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .grant-amount {
+    color: var(--success);
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .grant-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .step {
+    background: rgba(88, 166, 255, 0.1);
+    border-right: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  .link-list {
+    list-style: none;
+    padding: 0;
+  }
+  .link-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .link-list a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+    word-break: break-all;
+  }
+  .warning {
+    background: rgba(240, 136, 62, 0.1);
+    border: 1px solid var(--warning);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .success {
+    background: rgba(63, 185, 80, 0.1);
+    border: 1px solid var(--success);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  code {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: monospace;
+  }
+</style>
+
+<div class="wrap">
+  <h1>🚀 إرسال طلبات المنح</h1>
+  <p class="subtitle">اضغط على "افتح النموذج" لكل منحة</p>
+
+  <div class="warning">
+    <strong>⚠️ ملاحظة مهمة:</strong><br>
+    معظم منصات المنح تتطلب ملء نموذج ويب. الأزرار أدناه ستفتح النماذج مباشرة على جوالك. استخدم زر "نسخ الإجابات" لنسخ كل الإجابات المطلوبة.
+  </div>
+
+  <!-- ChainGPT -->
+  <div class="card">
+    <div class="grant-title">1. ChainGPT Research Grant</div>
+    <div class="grant-amount">💰 حتى $10,000 USD</div>
+    <div class="grant-desc">
+      منحة أبحاث للمشاريع المدمجة مع ChainGPT AI. مشروع FactLedger يستخدم ChainGPT لشرح البيانات.
+    </div>
+
+    <a href="https://chaingpt.org/grants" target="_blank" class="btn">
+      📝 افتح النموذج
+    </a>
+
+    <button onclick="copyChainGPT()" class="btn btn-copy">
+      📋 نسخ كل الإجابات لـ ChainGPT
+    </button>
+  </div>
+
+  <!-- Colosseum -->
+  <div class="card">
+    <div class="grant-title">2. Colosseum Eternal Grant</div>
+    <div class="grant-amount">💰 $5,000 - $20,000 USD</div>
+    <div class="grant-desc">
+      منحة البنية التحتية لسولانا DeFi. FactLedger يقدم بنية تحتية لتحليل المحافظ.
+    </div>
+
+    <a href="https://colosseum.org" target="_blank" class="btn">
+      📝 افتح النموذج
+    </a>
+
+    <button onclick="copyColosseum()" class="btn btn-copy">
+      📋 نسخ كل الإجابات لـ Colosseum
+    </button>
+  </div>
+
+  <!-- Superteam -->
+  <div class="card">
+    <div class="grant-title">3. Superteam Earn</div>
+    <div class="grant-amount">💰 $200 - $5,000 USD</div>
+    <div class="grant-desc">
+      منح أدوات المطورين. FactLedger أداة مفتوحة المصدر للمطورين.
+    </div>
+
+    <a href="https://earn.superteam.fun" target="_blank" class="btn">
+      📝 افتح النموذج
+    </a>
+
+    <button onclick="copySuperteam()" class="btn btn-copy">
+      📋 نسخ كل الإجابات لـ Superteam
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="grant-title">📌 معلوماتك الأساسية</div>
+    <div class="grant-desc">اضغط لنسخ:</div>
+    <button onclick="copyText('Abdullah Al-Anzi')" class="btn btn-copy">👤 نسخ الاسم</button>
+    <button onclick="copyText('fas988840@gmail.com')" class="btn btn-copy">📧 نسخ البريد</button>
+    <button onclick="copyText('EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM')" class="btn btn-copy">💼 نسخ محفظة Solana</button>
+    <button onclick="copyText('https://github.com/fas988840-dev/PROJECT-x')" class="btn btn-copy">🔗 نسخ رابط المستودع</button>
+    <button onclick="copyText('@aamm123220')" class="btn btn-copy">🐦 نسخ X/Twitter</button>
+  </div>
+
+  <div class="success">
+    <strong>✅ عند الانتهاء:</strong><br>
+    ستُحول المنح إلى محفظتك Solana تلقائياً بعد الموافقة (1-6 أسابيع).
+  </div>
+</div>
+
+<script>
+const CHAINGPT_ANSWERS = `Project Name: FactLedger - Solana Wallet Intelligence Platform
+Applicant: Abdullah Al-Anzi (Solo Developer)
+Email: fas988840@gmail.com
+GitHub: https://github.com/fas988840-dev/PROJECT-x
+X/Twitter: @aamm123220
+Solana Wallet: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
+
+Amount Requested: $10,000 USD
+
+Problem Statement:
+Wallet analysis tools on Solana today fall into two categories: opaque commercial systems and heuristic pattern-matching that mislabels its outputs as verified. FactLedger addresses this by enforcing honesty in code — every value is either verified or explicitly null, and confidence tiers cannot be collapsed.
+
+Solution & Innovation:
+FactLedger integrates ChainGPT as an "honest AI explainer" layer — rephrasing already-computed, deterministic blockchain metrics into plain language. The model never originates facts; all financial data is read directly from Solana's blockchain. This represents a new pattern for LLM integration: enhancing UX without introducing fabrication risk.
+
+Technical Approach:
+- Read-only Solana RPC pipeline (12 REST endpoints + MCP server)
+- Deterministic scoring verified in CI (133 tests passing)
+- ChainGPT integration for natural language explanations
+- Strict separation: deterministic facts from LLM output
+- Every score cites its evidence and can be independently reproduced
+
+Milestones ($10,000 total):
+1. ChainGPT Integration Enhancement ($3,000, Month 1) - Extended prompt engineering, response validation, fallback deterministic explanations
+2. Production Deployment ($4,000, Months 2-3) - Public API endpoint, dedicated RPC provider, monitoring
+3. Documentation & Ecosystem ($3,000, Months 4-5) - Technical writeups, integration guides, community outreach
+
+Why This Matters:
+This demonstrates how LLMs can safely enhance blockchain UX. The pattern is transferable — any project can adopt "AI explainer" architecture to make complex data accessible while maintaining verifiability.
+
+Contact: fas988840@gmail.com`;
+
+const COLOSSEUM_ANSWERS = `Project Name: FactLedger
+Category: Solana DeFi Infrastructure
+Applicant: Abdullah Al-Anzi (Solo Developer)
+Email: fas988840@gmail.com
+GitHub: https://github.com/fas988840-dev/PROJECT-x
+X/Twitter: @aamm123220
+Solana Wallet: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
+
+Amount Requested: $15,000 USD
+
+Description:
+FactLedger is a deterministic, read-only Solana wallet analysis platform. It provides verified DEX detection, real-time monitoring, and transparent intelligence scoring — with every number independently verifiable from the blockchain.
+
+Problem:
+Wallet analysis on Solana splits into opaque commercial tools and heuristic guessers. Neither tells users what they don't know. FactLedger fills this gap with honest confidence tiering (confirmed/candidate/unknown) and deterministic scoring that reviewers can reproduce.
+
+Solution:
+- Verified DEX detection (Raydium, Jupiter — never guessed)
+- Real-time wallet monitoring via WebSocket + SSE
+- Transparent scoring with cited evidence
+- Read-only architecture (no keys, no signing)
+- 12 REST API endpoints + MCP server + Next.js dashboard
+
+Current Status (Aug 31, 2026):
+- 133 tests passing on GitHub's own runners
+- Determinism verified in CI
+- Production-ready Docker image
+- TypeScript strict mode, no 'any' types
+- Comprehensive documentation
+
+Milestones ($15,000 total):
+1. Production Deployment ($5,000, Months 1-2)
+2. Extended Protocol Coverage — Orca, Magic Eden, Phantom Swap ($5,000, Months 3-4)
+3. Ecosystem Integration & Sustainability ($5,000, Months 5-6)
+
+Team: 1 solo developer, full-time commitment
+License: MIT (Open Source)
+
+Impact:
+- Developers: Build on verifiable wallet data
+- Researchers: Audit and extend the system
+- Compliance: Transparent metrics for AML/KYC
+- Users: Honest analysis without black boxes
+
+Contact: fas988840@gmail.com`;
+
+const SUPERTEAM_ANSWERS = `Title: FactLedger — Solana Wallet Intelligence Platform
+Category: Developer Tools
+Applicant: Abdullah Al-Anzi
+Email: fas988840@gmail.com
+X Handle: @aamm123220
+Wallet: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
+
+Amount Requested: $5,000 USD
+
+Short Description (150 chars):
+Deterministic Solana wallet analysis API with verified DEX detection, honest confidence tiering, and transparent scoring. 133 tests passing, production-ready.
+
+Full Description:
+FactLedger is a read-only Solana wallet intelligence platform that turns raw on-chain transaction history into behavioral metrics, intelligence scores, and risk assessments. Every number is independently verifiable from the blockchain.
+
+Two design rules enforced in code:
+1. Never fabricates - unknowns are returned as null, never as plausible estimates
+2. Never overstates confidence - three tiers (confirmed/candidate/unknown) that cannot be collapsed
+
+Proof of Work:
+- Repository: https://github.com/fas988840-dev/PROJECT-x
+- 133 tests passing (CI-verified on GitHub's runners)
+- Determinism check runs on every push
+- TypeScript strict mode with full type safety
+- 12 REST API endpoints implemented
+- MCP server for AI clients
+- Next.js dashboard
+- Docker deployment ready
+
+Milestones:
+1. Public deployment on Fly.io/Railway ($2,000)
+2. Extended protocol coverage: Orca, Magic Eden ($2,000)
+3. MCP integration examples and community outreach ($1,000)
+
+Timeline: 3 months
+Team: Solo developer, full-time
+License: MIT
+
+Why Superteam?
+FactLedger is exactly the kind of open-source developer tool that strengthens the Solana ecosystem. It's honest about its limits (unlike heuristic tools that lie), open source (unlike commercial black boxes), and immediately useful for any team building on Solana.
+
+Contact: fas988840@gmail.com`;
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('✅ تم النسخ!');
+  }).catch(() => {
+    // Fallback
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    alert('✅ تم النسخ!');
+  });
+}
+
+function copyChainGPT() { copyText(CHAINGPT_ANSWERS); }
+function copyColosseum() { copyText(COLOSSEUM_ANSWERS); }
+function copySuperteam() { copyText(SUPERTEAM_ANSWERS); }
+</script>
