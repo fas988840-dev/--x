@@ -238,9 +238,16 @@ shape (`docs.chaingpt.org` was unreachable when this was written).
 GET /api/v1/protocols
 ```
 
-Returns `DexRegistry`'s registered adapters. Currently always an empty
-array — no adapters are registered in this deployment (see CLAUDE.md) —
-returned explicitly as `[]` rather than a hardcoded protocol list.
+Returns `DexRegistry`'s registered adapters. `src/main.ts` builds the
+registry via `createDefaultDexRegistry()`, which registers **Raydium AMM V4**
+and **Jupiter V6** under program IDs verified against each project's own
+docs — so this endpoint returns those two, not a hardcoded marketing list.
+
+Both are reported at `candidate` confidence: each decoder verifies the
+instruction type (a checked discriminator byte for Raydium, a computed Anchor
+sighash for Jupiter) but not the account-list layout needed to extract mints
+and amounts, so those fields stay `null`. Promoting either to `confirmed`
+requires verifying that layout, not relaxing the label.
 
 ### Agent Router
 
@@ -695,9 +702,11 @@ See `DEPLOYMENT_STATUS.md` and `API_DOCUMENTATION.md` for complete guides.
 
 ## License
 
-Copyright © 2026 FactLedger. All rights reserved.
+**MIT** — see [LICENSE](./LICENSE). Copyright (c) 2026 Abdullah Al-Anzi.
 
-This software is proprietary. See [LICENSE](./LICENSE) for full terms. No part of this repository may be copied, modified, distributed, or used without express written permission from the copyright holder.
+Anyone may audit, run, modify, and build on this code. That is deliberate:
+the project's claim is that its scores can be independently reproduced, and a
+licence forbidding copying or use would make that claim unexercisable.
 
 ## Support
 
