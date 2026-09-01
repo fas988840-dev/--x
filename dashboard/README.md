@@ -36,6 +36,25 @@ be set to `dashboard`** — Settings → Build and Deployment → Root
 Directory. This is not just the cleaner option; it is confirmed
 structurally required, below.
 
+Two UI pitfalls worth naming, both hit while setting this exact field
+in the Vercel dashboard on mobile Safari:
+
+- **Page auto-translate can corrupt the value you type.** If the
+  browser has translated the settings page, typing `dashboard` into
+  Root Directory can come back displayed (and saved) as the *translated
+  word* for "dashboard" in whatever language the page was translated
+  to, not the literal string Vercel needs. Turn off page translation
+  (or confirm "Show Original") before typing into this field, and
+  double-check what actually got saved.
+- **Framework Preset is a separate field from Root Directory setting it
+  correctly.** Editing anything near the Framework Preset dropdown can
+  change it away from `Next.js` (e.g. to `Astro`) without the change
+  being obvious, and Vercel then auto-fills that other framework's
+  Build/Output/Install/Development commands with **Override** switched
+  on for all four. Confirm Framework Preset reads `Next.js` and all
+  four Override switches are off before saving — an accepted wrong
+  preset silently ships that other framework's commands.
+
 **Do not try to route around it with a repo-root `vercel.json`.** Three
 attempts were made and all three failed, each for a different reason
 only visible in the real Vercel build log (CI never catches this —
