@@ -36,13 +36,26 @@ must be set to `dashboard`** — under Settings → Build and Deployment.
 Next.js is auto-detected from there and nothing else needs configuring.
 
 There is no repo-side way around this. A root-level `vercel.json`
-pointing `buildCommand`/`outputDirectory` at this folder was tried and
-**failed** (two deployments, both erroring in ~16s): Vercel rejects a
-custom `outputDirectory` when the framework preset is Next.js, and
-dropping the preset doesn't help either, since this app needs a server
-(server components fetching with `cache: 'no-store'`) and can't be
-served as a static output directory. That file has been removed rather
-than left in the repo breaking builds.
+pointing `installCommand`/`buildCommand`/`outputDirectory` at this
+folder was tried and **failed**, on both `main` and a branch head. The
+build log shows why: the install command ran fine (`cd dashboard && npm
+install`, 28 packages in 14s), and then
+
+```
+Warning: Could not identify Next.js version, ensure it is defined as a project dependency.
+Error: No Next.js version detected. Make sure your package.json has "next" in either "dependencies" or "devDependencies".
+```
+
+Vercel resolves the framework against the **project root's**
+`package.json` — which here is the Express API, and has no `next`
+dependency — regardless of where `vercel.json` points the commands. The
+only thing that moves that resolution into this folder is the Root
+Directory setting. (Adding `next` to the API's `package.json` to
+satisfy the check would work and is not worth it: it would pull Next.js
+into the API's Docker image and audit surface for nothing.)
+
+That `vercel.json` has been removed rather than left in the repo
+breaking every build.
 
 Set `FACTLEDGER_API_URL` to the deployed API's base URL (no trailing
 path) as an environment variable — and `FACTLEDGER_API_KEY` too if that
