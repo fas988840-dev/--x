@@ -31,28 +31,41 @@ Open the URL Next.js prints (typically `http://localhost:3001`).
 ## Deploying to Vercel
 
 This app lives in a subdirectory of a repo whose root is a different
-project (the Express API), so **the Vercel project's Root Directory
-must be set to `dashboard`** — under Settings → Build and Deployment.
-Next.js is auto-detected from there and nothing else needs configuring.
+project (the Express API). The clean fix is **setting the Vercel
+project's Root Directory to `dashboard`**, under Settings → Build and
+Deployment — Next.js is then auto-detected and nothing else needs
+configuring. That setting cannot be made from a file in the repo; it
+only exists in Vercel's own project settings.
 
-There is no repo-side way around this. A root-level `vercel.json`
+For a deploy where that setting can't be touched (no dashboard access
+to the Vercel project), the repo root also carries a `vercel.json`
 pointing `installCommand`/`buildCommand`/`outputDirectory` at this
-folder was tried and **failed**, on both `main` and a branch head. The
-build log shows why: the install command ran fine (`cd dashboard && npm
-install`, 28 packages in 14s), and then
+folder, **plus a `next` devDependency added to the repo-root
+`package.json`** purely so Vercel's framework-detection step finds it.
+
+That second part needs explaining, because it looks wrong at a glance:
+a first attempt shipped `vercel.json` alone, and both deployments it
+triggered failed in ~16s with
 
 ```
 Warning: Could not identify Next.js version, ensure it is defined as a project dependency.
 Error: No Next.js version detected. Make sure your package.json has "next" in either "dependencies" or "devDependencies".
 ```
 
-Vercel resolves the framework against the **project root's**
-`package.json` — which here is the Express API, and has no `next`
-dependency — regardless of where `vercel.json` points the commands. The
-only thing that moves that resolution into this folder is the Root
-Directory setting. (Adding `next` to the API's `package.json` to
-satisfy the check would work and is not worth it: it would pull Next.js
-into the API's Docker image and audit surface for nothing.)
+— the install command had already run fine (`cd dashboard && npm
+install`, 28 packages in 14s); the framework check that came after it
+reads the **project root's** `package.json` regardless of where
+`vercel.json` points the build commands. With Root Directory
+unreachable, the only way to pass that check is for the root
+`package.json` to list `next`. It's declared as a `devDependency`
+specifically so it's excluded from the API's own Docker image
+(`Dockerfile`'s runtime stage runs `npm install --omit=dev`) — it costs
+the API's build stage a few extra seconds and one more package in
+`npm audit`'s surface, and nothing at runtime. If Root Directory is
+ever set to `dashboard` on the Vercel project, both this dependency and
+`vercel.json` can be deleted — they'd become dead weight, not wrong,
+since Vercel would then read `dashboard/package.json` (which already
+lists `next` for real) instead.
 
 That `vercel.json` has been removed rather than left in the repo
 breaking every build.
