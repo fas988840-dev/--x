@@ -1,5 +1,14 @@
 # FactLedger Deployment Guide
 
+> ⚠️ **This file is out of date and superseded.** It predates the
+> `render.yaml` / `railway.json` / `fly.toml` blueprint configs already in
+> this repo, and its `CORS_ORIGIN=*` example below **contradicts** the app's
+> actual behavior — `src/api/server.ts` treats `CORS_ORIGIN` as a
+> comma-separated list of exact origins; `*` matches none and silently
+> blocks every browser (see `render.yaml`'s own comment). Deploy from the
+> committed `render.yaml` blueprint instead of these manual steps; see
+> [`README.md`](README.md)'s "Deployment" section.
+
 ## Quick Start: Deploy to Production (5 minutes)
 
 ### Option 1: Fly.io (Recommended)

@@ -1,5 +1,11 @@
 # FactLedger — Grant Submission Record
 
+> ⚠️ **This file is out of date and superseded.** It was written before the
+> API was deployed, before Colosseum/ChainGPT status changed, and it flags
+> the live-demo artifact link and repo-rename redirect as unverified —
+> both are resolved in current docs. For the current, accurate state, read
+> [`GRANTS/funding-roadmap.md`](GRANTS/funding-roadmap.md).
+
 **Last updated**: August 31, 2026
 
 This file records what was actually submitted, with the evidence for each

@@ -1,5 +1,15 @@
 # FactLedger Automation Scripts
 
+> ⚠️ **This whole directory is out of date and superseded — do not run
+> `deploy-fly.sh`.** It sets `CORS_ORIGIN="*"` as a deploy secret, which
+> contradicts the app's own documented behavior: `src/api/server.ts` treats
+> `CORS_ORIGIN` as a comma-separated list of **exact** origins, and `"*"`
+> matches none, silently blocking every browser. `make-public.sh`'s premise
+> (make the repo public) is already done. For the current, correct
+> deployment path, use the committed `render.yaml` / `railway.json` /
+> `fly.toml` blueprints directly through each platform's dashboard — see
+> [`README.md`](../README.md)'s "Deployment" section — not these scripts.
+
 Quick-start scripts to automate deployment and grant submissions.
 
 ---

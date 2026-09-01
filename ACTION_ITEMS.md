@@ -1,5 +1,11 @@
 # ✅ Action Items & Status
 
+> ⚠️ **This file is out of date and superseded.** It was written before the
+> API was deployed and before most grants were actually submitted — the
+> repo-visibility and deployment items below are marked pending here but are
+> both done. For the current, accurate state, read [`README.md`](README.md)
+> (see "Repository Status") and [`GRANTS/funding-roadmap.md`](GRANTS/funding-roadmap.md).
+
 **Last Updated:** August 31, 2026  
 **Session:** Grant applications and deployment preparation
 

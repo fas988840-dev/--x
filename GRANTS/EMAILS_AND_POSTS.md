@@ -1,5 +1,9 @@
 # Emails, Posts & Follow-ups
 
+> ⚠️ **This file is out of date and superseded.** For the current
+> follow-up email (with an accurate test count and deployment status), use
+> [`solana-progress-email.md`](solana-progress-email.md) instead.
+
 Ready-to-send content for after submissions.
 
 ---
