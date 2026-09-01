@@ -168,7 +168,10 @@ export class APIServer {
     // deployment look like a dead one, because the browser kept replaying a
     // 404 captured before the service was live.
     //
-    // The SSE stream sets its own Cache-Control in writeHead and is unaffected.
+    // The SSE stream's own writeHead() overrides Cache-Control with its own
+    // value below; Pragma: no-cache from this middleware still goes out on
+    // that response too (writeHead only replaces headers it names), which
+    // is harmless here since it also just discourages caching.
     this.app.use((_req: Request, res: Response, next: NextFunction) => {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.set('Pragma', 'no-cache');
