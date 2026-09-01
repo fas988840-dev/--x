@@ -20,7 +20,7 @@ Everything past tier 1 needs one or both of:
 The API is now deployed; users are not. That is not six independent options
 waiting — it is one door with six rooms behind it, and the door is half open.
 
-**Current state:** repository public and MIT, CI green (143 tests), the API
+**Current state:** repository public and MIT, CI green (151 tests), the API
 deployed at https://factledger-api.onrender.com, no users yet.
 
 That clears the first half of the gate. **Users are what remain.**

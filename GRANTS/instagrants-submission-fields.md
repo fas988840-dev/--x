@@ -8,19 +8,18 @@ application takes about 15 minutes.
 
 ---
 
-## ⚠️ Check two things before writing anything
+## Both preconditions are cleared
 
-**1. Region.** The programme's own material describes emerging markets —
-India, Southeast Asia, Eastern Europe, Africa. **Saudi Arabia is not named.**
-Ask the relevant Superteam chapter whether you are eligible before spending
-time here. A rejection on geography costs nothing; finding out after applying
-costs an afternoon.
+**Region** — Superteam confirmed a solo developer in Saudi Arabia is eligible.
+(Their published material lists India, Southeast Asia, Eastern Europe and
+Africa, which is why this was worth asking rather than assuming.)
 
-**2. The live URL.** Every claim below rests on the API actually answering.
-Open `https://factledger-api.onrender.com/api/v1/health` yourself and confirm
-it returns `{"status":"ok",...}`. **A dead link in a funding application does
-more damage than not applying.** On Render's free tier the first request after
-idle can take ~30 seconds — wait it out rather than assuming it is broken.
+**The live URL** — verified answering, and the protected routes verified
+returning 401 rather than data, so the API key gate is genuinely on.
+
+One thing to know before a reviewer opens it: on Render's free tier the
+service sleeps after about 15 minutes idle, so the first request can take
+~30 seconds. That is normal, not a fault. Worth a line if anyone mentions it.
 
 ---
 
@@ -103,7 +102,7 @@ Repository:  https://github.com/fas988840-dev/--x     (public, MIT)
 Live API:    https://factledger-api.onrender.com/api/v1/health
 CI:          https://github.com/fas988840-dev/--x/actions
 
-Deployed and answering. 143 tests pass on GitHub's own runners, including a
+Deployed and answering. 151 tests pass on GitHub's own runners, including a
 determinism check that calls each scoring function twice with fixed input and
 asserts exact equality — the build fails if scoring ever stops being
 reproducible.

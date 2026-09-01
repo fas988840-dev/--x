@@ -55,7 +55,7 @@ verification is.
 
 Built and deployed today at https://factledger-api.onrender.com: thirteen REST
 endpoints, an MCP server for AI clients, a Next.js dashboard, and a read-only
-architecture that never requests or stores a private key. 143 tests pass on
+architecture that never requests or stores a private key. 151 tests pass on
 GitHub's runners, including a determinism check that runs on every push and
 fails the build if scoring ever stops being reproducible.
 ```
@@ -70,7 +70,7 @@ Arabia.
 
 I have no team and no users yet, and I would rather say that directly than
 have you find it out. What I can point to is the code: TypeScript strict mode
-throughout, no `any` types, 143 tests passing on GitHub's own runners, and a
+throughout, no `any` types, 151 tests passing on GitHub's own runners, and a
 determinism check wired into CI so the project's central claim is enforced
 automatically rather than asserted in a README.
 

@@ -107,7 +107,7 @@ checkable detail answers both. Superlatives answer neither.
 
 ### [2:15–2:40] What's real today, and the ask
 
-> What exists right now: 143 tests passing on GitHub's runners — including a
+> What exists right now: 151 tests passing on GitHub's runners — including a
 > determinism check that runs on every push. TypeScript strict mode. Thirteen
 > REST endpoints, an MCP server, a read-only architecture that never touches
 > a private key — deployed and answering right now.
@@ -136,7 +136,7 @@ show the thing, say what it proves.
 
 *Open the CI run. Scroll to the test output.*
 
-> This is a real run on GitHub's runners. Sixteen test files, 143 tests,
+> This is a real run on GitHub's runners. Sixteen test files, 151 tests,
 > all passing. Lint clean, type-check clean, build clean.
 
 *Open `src/services/determinism.test.ts`.*
