@@ -7,19 +7,19 @@ import {
   validateTransactionSignature,
   validateTokenMint,
   WalletAddress,
-} from '../types/domain';
-import { ValidationError, RpcError } from '../types/errors';
-import { TransactionRetriever } from '../services/transaction-retriever';
-import { BehaviorAnalyzer } from '../services/behavior-analyzer';
-import { IntelligenceScorer } from '../services/intelligence-scorer';
-import { RiskAssessor } from '../services/risk-assessor';
-import { PriceProvider } from '../services/price-provider';
-import { DexRegistry } from '../services/dex-registry';
-import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent } from '../agents/core_agents';
-import { EvidenceEngine } from '../agents/evidence-engine';
-import { LiveAlertWatcher } from '../services/live-alert-watcher';
-import { TokenSecurityVerifier } from '../services/token-security-verifier';
-import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router';
+} from '../types/domain.js';
+import { ValidationError, RpcError } from '../types/errors.js';
+import { TransactionRetriever } from '../services/transaction-retriever.js';
+import { BehaviorAnalyzer } from '../services/behavior-analyzer.js';
+import { IntelligenceScorer } from '../services/intelligence-scorer.js';
+import { RiskAssessor } from '../services/risk-assessor.js';
+import { PriceProvider } from '../services/price-provider.js';
+import { DexRegistry } from '../services/dex-registry.js';
+import { ResearchAgent, WalletIntelligenceAgent, AlertAgent, ExplanationAgent } from '../agents/core_agents.js';
+import { EvidenceEngine } from '../agents/evidence-engine.js';
+import { LiveAlertWatcher } from '../services/live-alert-watcher.js';
+import { TokenSecurityVerifier } from '../services/token-security-verifier.js';
+import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router.js';
 
 /**
  * API Error Response
@@ -168,7 +168,10 @@ export class APIServer {
     // deployment look like a dead one, because the browser kept replaying a
     // 404 captured before the service was live.
     //
-    // The SSE stream sets its own Cache-Control in writeHead and is unaffected.
+    // The SSE stream's own writeHead() overrides Cache-Control with its own
+    // value below; Pragma: no-cache from this middleware still goes out on
+    // that response too (writeHead only replaces headers it names), which
+    // is harmless here since it also just discourages caching.
     this.app.use((_req: Request, res: Response, next: NextFunction) => {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.set('Pragma', 'no-cache');

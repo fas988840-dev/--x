@@ -108,7 +108,7 @@ checkable detail answers both. Superlatives answer neither.
 ### [2:15–2:40] What's real today, and the ask
 
 > What exists right now: 151 tests passing on GitHub's runners — including a
-> determinism check that runs on every push. TypeScript strict mode. Thirteen
+> determinism check that runs on every push. TypeScript strict mode. Sixteen
 > REST endpoints, an MCP server, a read-only architecture that never touches
 > a private key — deployed and answering right now.
 >

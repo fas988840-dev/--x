@@ -1,5 +1,9 @@
 # GitHub Setup & Repository Configuration
 
+> ⚠️ **This file is out of date and superseded — its whole premise is
+> already done.** The repository is already public (see `README.md`'s
+> "Repository Status" section). Nothing below needs action.
+
 ## ⚠️ Critical: Make Repository Public
 
 Your repository must be **public** for grant reviewers to see it. Here's how:

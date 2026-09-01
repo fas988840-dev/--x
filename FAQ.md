@@ -1,5 +1,10 @@
 # FactLedger — Frequently Asked Questions
 
+> ⚠️ **The specific numbers below are out of date** (this file says 133
+> tests; the current count is 151 — see `README.md`'s CI badge or
+> `GRANTS/funding-roadmap.md` for the current figure). The Q&A framing
+> itself is still broadly useful, but verify any number before repeating it.
+
 Ready answers for common questions from reviewers, users, or interviewers.
 
 ---

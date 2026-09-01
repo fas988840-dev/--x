@@ -7,7 +7,7 @@
  */
 
 import { PublicKey } from '@solana/web3.js';
-import { ValidationError } from './errors';
+import { ValidationError } from './errors.js';
 
 /**
  * Base58 alphabet for decoding validation

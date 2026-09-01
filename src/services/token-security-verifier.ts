@@ -33,8 +33,8 @@
  * more complete than it is.
  */
 
-import { SolanaRpcClient } from './solana-rpc-client';
-import { TokenMint } from '../types/domain';
+import { SolanaRpcClient } from './solana-rpc-client.js';
+import { TokenMint } from '../types/domain.js';
 
 /** The classic SPL Token program. */
 export const SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU';

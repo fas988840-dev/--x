@@ -4,7 +4,7 @@
  * CRITICAL: Never fabricates amounts. Returns null when data unavailable.
  */
 
-import { TokenBalanceDelta, Token } from '../types/domain';
+import { TokenBalanceDelta, Token } from '../types/domain.js';
 
 /**
  * Pre/post balance for a token account

@@ -4,8 +4,8 @@
  * CRITICAL: Never fabricates data. Returns 'unknown' or 'candidate' when unsure.
  */
 
-import { ParsedInstruction, Instruction } from '../types/domain';
-import { DexRegistry } from './dex-registry';
+import { ParsedInstruction, Instruction } from '../types/domain.js';
+import { DexRegistry } from './dex-registry.js';
 
 /**
  * Instruction Parser Service

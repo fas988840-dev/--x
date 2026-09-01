@@ -74,7 +74,7 @@ CANDIDATE swap or a null amount is an explicit instruction not to proceed as
 if the value were known. The agent decides what to do; our job is to make sure
 it is never confidently wrong about which of its inputs were actually checked.
 
-Seven read-only agents sit over one deterministic pipeline, exposed as thirteen
+Seven read-only agents sit over one deterministic pipeline, exposed as sixteen
 REST endpoints, a deterministic agent router with an explicit intent enum (no
 NLP guessing), and an MCP server over stdio. 151 tests pass on GitHub's
 runners, including a determinism check that calls each scorer twice with fixed

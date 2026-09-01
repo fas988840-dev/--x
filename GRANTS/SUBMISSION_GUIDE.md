@@ -1,5 +1,8 @@
 # Grant Submission Guide
 
+> ⚠️ **This file is out of date and superseded.** For current grant status
+> and strategy, read [`funding-roadmap.md`](funding-roadmap.md).
+
 ## Status: Solana Foundation ✅ SUBMITTED
 
 **Submission Date:** August 31, 2026  

@@ -5,9 +5,11 @@
 > unarchived, CI is green again, and one grant application has been
 > submitted, so step 1 below is already done.
 >
-> For the current state and next steps, read `GRANTS_COMPLETION_REPORT.md`.
-> The "3 grants = $40,000+" figure below is a plan, not a record of
-> applications filed — see that report for what was actually submitted.
+> For the current state and next steps, read `GRANTS/funding-roadmap.md`
+> (`GRANTS_COMPLETION_REPORT.md`, previously pointed to here, is itself now
+> out of date — see the banner at its own top). The "3 grants = $40,000+"
+> figure below is a plan, not a record of applications filed — see
+> `GRANTS/funding-roadmap.md` for what was actually submitted.
 
 ---
 

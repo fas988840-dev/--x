@@ -4,7 +4,7 @@
  * CRITICAL: Transparent risk factors. Never presents as financial advice.
  */
 
-import { BehaviorMetrics, RiskScore, RiskFactors } from '../types/domain';
+import { BehaviorMetrics, RiskScore, RiskFactors } from '../types/domain.js';
 
 /**
  * Risk Assessor

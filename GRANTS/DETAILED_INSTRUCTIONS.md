@@ -1,5 +1,11 @@
 # Detailed Grant Submission Instructions
 
+> ⚠️ **This file is out of date and superseded.** Its per-grant content
+> (test counts, deployment status) predates the API going live. The
+> current, ready-to-paste text for each grant lives in this same folder as
+> `*-submission-fields.md` / `*-video-scripts.md`; the overall strategy and
+> status is in [`funding-roadmap.md`](funding-roadmap.md).
+
 ## Prerequisites
 
 Before submitting any grant, ensure:

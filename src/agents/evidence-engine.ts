@@ -15,9 +15,9 @@
  * papered over with a placeholder entry.
  */
 
-import { WalletAddress, validateWalletAddress, ParsedInstructionStatus } from '../types/domain';
-import { TransactionRetriever } from '../services/transaction-retriever';
-import { AgentResponse, EvidenceStatus, TransactionIntelligenceAgent } from './core_agents';
+import { WalletAddress, validateWalletAddress, ParsedInstructionStatus } from '../types/domain.js';
+import { TransactionRetriever } from '../services/transaction-retriever.js';
+import { AgentResponse, EvidenceStatus, TransactionIntelligenceAgent } from './core_agents.js';
 
 const CONFIDENCE_PERCENT: Record<ParsedInstructionStatus, number> = {
   confirmed: 100,

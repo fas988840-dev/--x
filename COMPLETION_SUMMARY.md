@@ -1,5 +1,10 @@
 # ✅ Completion Summary - FactLedger Grant Preparation
 
+> ⚠️ **This file is out of date and superseded.** It records a mid-project
+> checkpoint (133 tests, pre-deployment). For the current, accurate state,
+> read [`README.md`](README.md) and
+> [`GRANTS/funding-roadmap.md`](GRANTS/funding-roadmap.md).
+
 **Date:** August 31, 2026  
 **Session:** Complete grant preparation and automation  
 **Status:** 🟢 **ALL DOCUMENTATION READY**

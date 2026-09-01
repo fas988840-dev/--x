@@ -4,15 +4,15 @@
  */
 
 import { Connection, PublicKey, ParsedTransactionWithMeta, Logs } from '@solana/web3.js';
-import { SolanaConfig } from '../types/config';
-import { RpcError, ValidationError } from '../types/errors';
+import { SolanaConfig } from '../types/config.js';
+import { RpcError, ValidationError } from '../types/errors.js';
 import {
   TokenMint,
   WalletAddress,
   validateTokenMint,
   validateTransactionSignature,
   validateWalletAddress,
-} from '../types/domain';
+} from '../types/domain.js';
 
 export class SolanaRpcClient {
   private connection: Connection;

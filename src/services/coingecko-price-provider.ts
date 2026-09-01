@@ -10,7 +10,7 @@
  * `priceUSD: null` with an honest `confidence`/`source`, never a guess.
  */
 
-import { PriceProvider, PriceResult } from './price-provider';
+import { PriceProvider, PriceResult } from './price-provider.js';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 const MAX_STALE_SECONDS = 5 * 60; // how far "now" a requested timestamp may be and still be served by this endpoint

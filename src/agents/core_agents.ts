@@ -32,14 +32,14 @@ import {
   RiskScore,
   Alert,
   AIExplanation,
-} from '../types/domain';
-import { TransactionRetriever } from '../services/transaction-retriever';
-import { SolanaRpcClient } from '../services/solana-rpc-client';
-import { BehaviorAnalyzer } from '../services/behavior-analyzer';
-import { RiskAssessor } from '../services/risk-assessor';
-import { InstructionParser } from '../services/instruction-parser';
-import { AlertEngine } from '../services/alert-engine';
-import { ChainGptClient } from '../services/chaingpt-client';
+} from '../types/domain.js';
+import { TransactionRetriever } from '../services/transaction-retriever.js';
+import { SolanaRpcClient } from '../services/solana-rpc-client.js';
+import { BehaviorAnalyzer } from '../services/behavior-analyzer.js';
+import { RiskAssessor } from '../services/risk-assessor.js';
+import { InstructionParser } from '../services/instruction-parser.js';
+import { AlertEngine } from '../services/alert-engine.js';
+import { ChainGptClient } from '../services/chaingpt-client.js';
 
 export enum EvidenceStatus {
   VERIFIED = 'VERIFIED', // Directly read from chain / computed deterministically from chain data
