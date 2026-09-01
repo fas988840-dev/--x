@@ -31,31 +31,35 @@ Open the URL Next.js prints (typically `http://localhost:3001`).
 ## Deploying to Vercel
 
 This app lives in a subdirectory of a repo whose root is a different
-project (the Express API), so **the Vercel project's Root Directory
-must be set to `dashboard`** — under Settings → Build and Deployment.
-Next.js is auto-detected from there and nothing else needs configuring.
+project (the Express API). **The Vercel project's Root Directory must
+be set to `dashboard`** — Settings → Build and Deployment → Root
+Directory. This is not just the cleaner option; it is confirmed
+structurally required, below.
 
-There is no repo-side way around this. A root-level `vercel.json`
-pointing `installCommand`/`buildCommand`/`outputDirectory` at this
-folder was tried and **failed**, on both `main` and a branch head. The
-build log shows why: the install command ran fine (`cd dashboard && npm
-install`, 28 packages in 14s), and then
+**Do not try to route around it with a repo-root `vercel.json`.** Three
+attempts were made and all three failed, each for a different reason
+only visible in the real Vercel build log (CI never catches this —
+GitHub Actions doesn't run a Vercel build):
 
-```
-Warning: Could not identify Next.js version, ensure it is defined as a project dependency.
-Error: No Next.js version detected. Make sure your package.json has "next" in either "dependencies" or "devDependencies".
-```
+1. `vercel.json` with `installCommand`/`buildCommand: cd dashboard &&
+   ...` and an explicit `outputDirectory` — failed immediately with
+   `No Next.js version detected`, because Vercel's framework check
+   reads the **project root's** `package.json`, which has no `next`
+   dependency.
+2. Same `vercel.json`, plus `next` added to the root `package.json`'s
+   `devDependencies` to satisfy that check — failed with the identical
+   error anyway. The build log showed why: the custom `installCommand`
+   only ever ran `npm install` inside `dashboard/`, so the repo root's
+   own `node_modules` never got a `next` package installed into it
+   at all. Vercel's check resolves an actual installed *version* from
+   `node_modules` at the root, not just a name in `package.json` — no
+   wording in the root `package.json` can substitute for that.
 
-Vercel resolves the framework against the **project root's**
-`package.json` — which here is the Express API, and has no `next`
-dependency — regardless of where `vercel.json` points the commands. The
-only thing that moves that resolution into this folder is the Root
-Directory setting. (Adding `next` to the API's `package.json` to
-satisfy the check would work and is not worth it: it would pull Next.js
-into the API's Docker image and audit surface for nothing.)
-
-That `vercel.json` has been removed rather than left in the repo
-breaking every build.
+Both attempts, and the reasoning above, were reverted rather than left
+half-working in the repo. There is no repo-side fix for this — Root
+Directory changes where Vercel treats "the project" as living, and
+nothing short of that setting moves the Next.js resolution into this
+folder.
 
 Set `FACTLEDGER_API_URL` to the deployed API's base URL (no trailing
 path) as an environment variable — and `FACTLEDGER_API_KEY` too if that
