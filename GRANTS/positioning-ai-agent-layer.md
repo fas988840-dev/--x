@@ -76,7 +76,7 @@ a gap to paper over.
 Exposed three ways: 13 REST endpoints, a deterministic agent router
 (explicit intent enum — no NLP guessing), and an MCP server over stdio.
 
-143 tests pass on GitHub's runners, including a determinism check that calls
+151 tests pass on GitHub's runners, including a determinism check that calls
 each scorer twice with fixed input and asserts exact equality, failing the
 build if scoring ever stops being reproducible.
 ```

@@ -169,6 +169,24 @@ describe('API Server', () => {
     });
   });
 
+  describe('Caching', () => {
+    // Regression: responses carried no Cache-Control, so browsers applied
+    // heuristic caching and kept replaying a stale body for the same URL —
+    // which made a working deployment look dead, because the browser was
+    // still serving a 404 captured before the service went live.
+    it('should forbid caching of API responses', async () => {
+      const response = await request(app).get('/api/v1/health');
+
+      expect(response.headers['cache-control']).toContain('no-store');
+    });
+
+    it('should forbid caching of the service index', async () => {
+      const response = await request(app).get('/');
+
+      expect(response.headers['cache-control']).toContain('no-store');
+    });
+  });
+
   describe('Rate limiting', () => {
     // Regression: the general limiter had no skip, so a platform health check
     // could be answered with 429 once other traffic used the window up. The

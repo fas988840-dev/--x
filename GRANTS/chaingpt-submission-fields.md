@@ -76,7 +76,7 @@ it is never confidently wrong about which of its inputs were actually checked.
 
 Seven read-only agents sit over one deterministic pipeline, exposed as thirteen
 REST endpoints, a deterministic agent router with an explicit intent enum (no
-NLP guessing), and an MCP server over stdio. 143 tests pass on GitHub's
+NLP guessing), and an MCP server over stdio. 151 tests pass on GitHub's
 runners, including a determinism check that calls each scorer twice with fixed
 input and asserts exact equality — the build fails if scoring ever stops being
 reproducible.
@@ -176,7 +176,7 @@ Solo founder, full time. Abdullah Al-Anzi, based in Saudi Arabia.
 
 No team and no users yet, and I would rather say that directly than have you
 find it. What I can point to is the code: TypeScript strict mode throughout,
-no `any` types, 143 tests passing on GitHub's own runners, and a determinism
+no `any` types, 151 tests passing on GitHub's own runners, and a determinism
 check wired into CI so the project's central claim is enforced automatically
 rather than asserted in a README.
 ```

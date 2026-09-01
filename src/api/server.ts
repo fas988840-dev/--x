@@ -160,6 +160,21 @@ export class APIServer {
 
     this.app.use(helmet());
 
+    // Never let a response be cached. Every route here answers from live
+    // chain state, so a stored copy is wrong the moment it is stored — and a
+    // browser applying heuristic caching (which it does when no Cache-Control
+    // is present) will keep serving a stale body for the same URL long after
+    // the server has changed. That is not hypothetical: it made a working
+    // deployment look like a dead one, because the browser kept replaying a
+    // 404 captured before the service was live.
+    //
+    // The SSE stream sets its own Cache-Control in writeHead and is unaffected.
+    this.app.use((_req: Request, res: Response, next: NextFunction) => {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      next();
+    });
+
     // CORS - allowlist of exact origins, comma-separated in CORS_ORIGIN.
     // NOTE: CORS is a browser-enforced mechanism only - it stops a script
     // running on someone else's web page from reading the response, but it
