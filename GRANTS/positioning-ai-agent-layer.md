@@ -73,7 +73,7 @@ UNKNOWN/0/null whenever the capability is not implemented or the call failed.
 MarketEventAgent returning UNKNOWN in every case is the contract working, not
 a gap to paper over.
 
-Exposed three ways: 13 REST endpoints, a deterministic agent router
+Exposed three ways: 16 REST endpoints, a deterministic agent router
 (explicit intent enum — no NLP guessing), and an MCP server over stdio.
 
 151 tests pass on GitHub's runners, including a determinism check that calls

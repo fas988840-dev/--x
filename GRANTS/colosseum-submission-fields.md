@@ -53,7 +53,7 @@ transactions it read. A reviewer can pull those transactions from any public
 RPC and recompute the score by hand. Trust is not the mechanism —
 verification is.
 
-Built and deployed today at https://factledger-api.onrender.com: thirteen REST
+Built and deployed today at https://factledger-api.onrender.com: sixteen REST
 endpoints, an MCP server for AI clients, a Next.js dashboard, and a read-only
 architecture that never requests or stores a private key. 151 tests pass on
 GitHub's runners, including a determinism check that runs on every push and

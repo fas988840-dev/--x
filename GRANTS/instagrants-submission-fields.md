@@ -107,7 +107,7 @@ determinism check that calls each scoring function twice with fixed input and
 asserts exact equality — the build fails if scoring ever stops being
 reproducible.
 
-TypeScript strict mode, no `any` types. 13 REST endpoints, an MCP server for
+TypeScript strict mode, no `any` types. 16 REST endpoints, an MCP server for
 AI clients, and a read-only architecture that never requests or stores a
 private key.
 

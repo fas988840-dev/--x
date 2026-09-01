@@ -80,7 +80,7 @@ give is "no findings among the checks performed", accompanied by an explicit
 list of the risks it did not examine. That restraint is the point of the
 project, applied to a new surface.
 
-143 tests pass on GitHub's runners, including a determinism check that calls
+151 tests pass on GitHub's runners, including a determinism check that calls
 each scoring function twice with identical input and asserts exact equality —
 the build fails if scoring ever stops being reproducible.
 
