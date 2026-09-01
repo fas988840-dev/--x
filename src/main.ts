@@ -3,24 +3,24 @@
  * Sets up and starts the API server
  */
 
-import { SolanaConfig } from './types/config';
-import { SolanaRpcClient } from './services/solana-rpc-client';
-import { TransactionRetriever } from './services/transaction-retriever';
-import { BehaviorAnalyzer } from './services/behavior-analyzer';
-import { IntelligenceScorer } from './services/intelligence-scorer';
-import { RiskAssessor } from './services/risk-assessor';
-import { PriceProvider, StubPriceProvider } from './services/price-provider';
-import { CoinGeckoPriceProvider } from './services/coingecko-price-provider';
-import { createDefaultDexRegistry } from './services/dex-registry';
-import { InstructionParser } from './services/instruction-parser';
-import { APIServer } from './api/server';
-import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent, AlertAgent, ExplanationAgent } from './agents/core_agents';
-import { EvidenceEngine } from './agents/evidence-engine';
-import { AlertEngine } from './services/alert-engine';
-import { LiveAlertWatcher } from './services/live-alert-watcher';
-import { TokenSecurityVerifier } from './services/token-security-verifier';
-import { ChainGptClient } from './services/chaingpt-client';
-import { AgentRouter } from './agents/agent-router';
+import { SolanaConfig } from './types/config.js';
+import { SolanaRpcClient } from './services/solana-rpc-client.js';
+import { TransactionRetriever } from './services/transaction-retriever.js';
+import { BehaviorAnalyzer } from './services/behavior-analyzer.js';
+import { IntelligenceScorer } from './services/intelligence-scorer.js';
+import { RiskAssessor } from './services/risk-assessor.js';
+import { PriceProvider, StubPriceProvider } from './services/price-provider.js';
+import { CoinGeckoPriceProvider } from './services/coingecko-price-provider.js';
+import { createDefaultDexRegistry } from './services/dex-registry.js';
+import { InstructionParser } from './services/instruction-parser.js';
+import { APIServer } from './api/server.js';
+import { WalletIntelligenceAgent, TransactionIntelligenceAgent, RiskAgent, ResearchAgent, MarketEventAgent, AlertAgent, ExplanationAgent } from './agents/core_agents.js';
+import { EvidenceEngine } from './agents/evidence-engine.js';
+import { AlertEngine } from './services/alert-engine.js';
+import { LiveAlertWatcher } from './services/live-alert-watcher.js';
+import { TokenSecurityVerifier } from './services/token-security-verifier.js';
+import { ChainGptClient } from './services/chaingpt-client.js';
+import { AgentRouter } from './agents/agent-router.js';
 
 /**
  * Initialize and start the application

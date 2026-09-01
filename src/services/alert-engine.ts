@@ -12,7 +12,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import { Alert, AlertType, BehaviorMetrics, RiskScore, WalletAddress } from '../types/domain';
+import { Alert, AlertType, BehaviorMetrics, RiskScore, WalletAddress } from '../types/domain.js';
 
 // Thresholds are fixed and documented here, not tuned per-wallet - keeps
 // alerts reproducible from the same input, like every other score in this

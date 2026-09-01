@@ -26,9 +26,9 @@ import {
   AlertAgentData,
   ExplanationAgent,
   EvidenceStatus,
-} from './core_agents';
-import { EvidenceEngine, WalletEvidenceReport } from './evidence-engine';
-import { RiskScore, AIExplanation } from '../types/domain';
+} from './core_agents.js';
+import { EvidenceEngine, WalletEvidenceReport } from './evidence-engine.js';
+import { RiskScore, AIExplanation } from '../types/domain.js';
 
 export type AgentIntent =
   | 'wallet_overview'

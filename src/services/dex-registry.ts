@@ -5,7 +5,7 @@
  */
 
 import { createHash } from 'crypto';
-import { ProgramId, validateProgramId } from '../types/domain';
+import { ProgramId, validateProgramId } from '../types/domain.js';
 
 /**
  * Decoder interface for swap instructions

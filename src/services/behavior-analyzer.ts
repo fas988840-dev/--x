@@ -4,7 +4,7 @@
  * CRITICAL: Never fabricates data. Only uses verified blockchain facts.
  */
 
-import { TransactionMeta, BehaviorMetrics, SwapEvent } from '../types/domain';
+import { TransactionMeta, BehaviorMetrics, SwapEvent } from '../types/domain.js';
 
 /**
  * Behavior Analysis Service

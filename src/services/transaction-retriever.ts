@@ -5,7 +5,7 @@
  */
 
 import { ParsedTransactionWithMeta } from '@solana/web3.js';
-import { SolanaRpcClient } from './solana-rpc-client';
+import { SolanaRpcClient } from './solana-rpc-client.js';
 import {
   TransactionMeta,
   TransactionSignature,
@@ -14,8 +14,8 @@ import {
   validateWalletAddress,
   Instruction,
   validateProgramId,
-} from '../types/domain';
-import { RpcError, ValidationError } from '../types/errors';
+} from '../types/domain.js';
+import { RpcError, ValidationError } from '../types/errors.js';
 
 export class TransactionRetriever {
   constructor(private rpcClient: SolanaRpcClient) {}

@@ -4,7 +4,7 @@
  * CRITICAL: Every score must be explainable. Never claims unfounded sophistication.
  */
 
-import { BehaviorMetrics, IntelligenceScore } from '../types/domain';
+import { BehaviorMetrics, IntelligenceScore } from '../types/domain.js';
 
 /**
  * Intelligence Scorer

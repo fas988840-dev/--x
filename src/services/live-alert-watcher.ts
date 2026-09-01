@@ -27,12 +27,12 @@
  * endpoint before relying on it.
  */
 
-import { WalletAddress, Alert, validateWalletAddress } from '../types/domain';
-import { SolanaRpcClient } from './solana-rpc-client';
-import { TransactionRetriever } from './transaction-retriever';
-import { BehaviorAnalyzer } from './behavior-analyzer';
-import { RiskAssessor } from './risk-assessor';
-import { AlertEngine } from './alert-engine';
+import { WalletAddress, Alert, validateWalletAddress } from '../types/domain.js';
+import { SolanaRpcClient } from './solana-rpc-client.js';
+import { TransactionRetriever } from './transaction-retriever.js';
+import { BehaviorAnalyzer } from './behavior-analyzer.js';
+import { RiskAssessor } from './risk-assessor.js';
+import { AlertEngine } from './alert-engine.js';
 
 export interface LiveAlertSubscription {
   /** Cancels the underlying RPC subscription. Never throws. */
