@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Read-only Solana wallet intelligence, backed by real on-chain evidence.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
     <html lang="en">
       <body>

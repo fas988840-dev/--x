@@ -1,6 +1,6 @@
 import { getHealth } from '@/lib/factledger-api';
 
-export default async function HomePage() {
+export default async function HomePage(): Promise<React.ReactElement> {
   const health = await getHealth();
 
   return (
