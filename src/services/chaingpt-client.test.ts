@@ -105,6 +105,20 @@ describe('ChainGptClient', () => {
       expect(result.ok).toBe(false);
     });
 
+    it('returns ok:false with "timed out" reason when fetch throws an AbortError (timeout path)', async () => {
+      // Simulate what happens when the AbortController fires after REQUEST_TIMEOUT_MS
+      // without waiting 15 s in the test: throw the named AbortError directly.
+      const abortError = new Error('The operation was aborted');
+      abortError.name = 'AbortError';
+      global.fetch = vi.fn().mockRejectedValue(abortError) as unknown as typeof fetch;
+
+      const client = new ChainGptClient('secret');
+      const result = await client.generateExplanation('test prompt');
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain('timed out');
+    });
+
     it('sends the documented request shape with a Bearer auth header', async () => {
       const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ bot: 'ok' }) });
       global.fetch = fetchSpy as unknown as typeof fetch;

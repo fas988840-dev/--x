@@ -97,7 +97,7 @@ export class LiveAlertWatcher {
     });
 
     return {
-      stop: async () => {
+      stop: async (): Promise<void> => {
         active = false;
         await this.rpcClient.unsubscribeFromLogs(subscriptionId);
       },
