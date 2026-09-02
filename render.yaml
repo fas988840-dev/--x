@@ -1,3 +1,9 @@
+# Render blueprint for the FactLedger API.
+#
+# API_KEYS and CORS_ORIGIN are intentionally declared with sync: false so
+# Render requires explicit values instead of silently exposing the API or
+# deploying with an unusable browser CORS configuration.
+
 services:
   - type: web
     name: factledger-api
@@ -6,15 +12,17 @@ services:
     plan: free
     region: oregon
     branch: main
+    healthCheckPath: /api/v1/health
 
     envVars:
       - key: NODE_ENV
         value: production
       - key: SOLANA_RPC_URL
         value: https://api.mainnet-beta.solana.com
-      # Set these in the Render dashboard → Environment:
-      # CORS_ORIGIN   — e.g. https://your-dashboard.vercel.app
-      # API_KEYS      — comma-separated API keys
-      # CHAINGPT_API_KEY — optional, for live explanations
-
-    healthCheckPath: /api/v1/health
+      - key: API_KEYS
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      # Optional; add in Render dashboard if live ChainGPT explanations are enabled.
+      # - key: CHAINGPT_API_KEY
+      #   sync: false
