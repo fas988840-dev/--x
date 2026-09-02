@@ -1,0 +1,59 @@
+name: Deploy to Fly.io
+
+# Deploys the API (src/ → Dockerfile → Fly.io) on every push to main.
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   FLY_API_TOKEN  — from `flyctl auth token` or Fly.io dashboard
+#
+# First-time setup (run once on your machine):
+#   flyctl launch   ← generates fly.toml (already in repo)
+#   flyctl secrets set SOLANA_RPC_URL=... API_KEYS=... CORS_ORIGIN=...
+#
+# After this workflow succeeds, the live-verify.yml workflow triggers
+# automatically to run smoke tests against the deployed URL.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'fly.toml'
+      - 'package*.json'
+      - 'tsconfig.json'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy API to Fly.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check FLY_API_TOKEN
+        run: |
+          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
+            echo "::error::FLY_API_TOKEN secret is not set."
+            echo "Run: flyctl auth token"
+            echo "Then: Settings → Secrets → Actions → New secret → FLY_API_TOKEN"
+            exit 1
+          fi
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Verify health after deploy
+        run: |
+          APP=$(flyctl info --json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('Hostname',''))" 2>/dev/null || echo "")
+          if [ -n "$APP" ]; then
+            sleep 5
+            curl -sf --max-time 15 "https://$APP/api/v1/health" && echo "✅ Post-deploy health check passed"
+          fi
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        continue-on-error: true
