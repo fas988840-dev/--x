@@ -132,4 +132,70 @@ describe('LiveAlertWatcher', () => {
     await Promise.resolve();
     await Promise.resolve();
   });
+
+  it('stop() sets active=false so a concurrent evaluation in flight does not call onAlert after stop', async () => {
+    // The evaluate() promise is created before stop() is called but resolves
+    // after: onAlert must not fire because `active` is already false.
+    let resolveEval!: () => void;
+    const evalPromise = new Promise<void>((r) => (resolveEval = r));
+
+    const transactionRetriever = {
+      // Hangs until resolved manually so we can call stop() in between.
+      getWalletTransactionsMeta: vi.fn().mockReturnValue(evalPromise.then(() => [])),
+    } as unknown as TransactionRetriever;
+    const alertEngine = { evaluate: vi.fn().mockReturnValue([buildAlert()]) } as unknown as AlertEngine;
+    const rpcClient = {
+      subscribeToLogs: vi.fn().mockReturnValue(7),
+      unsubscribeFromLogs: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SolanaRpcClient;
+
+    const watcher = new LiveAlertWatcher(rpcClient, transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor(), alertEngine);
+    const onAlert = vi.fn();
+    const subscription = watcher.watch(VALID_ADDRESS, onAlert);
+
+    // Stop immediately, before the hanging getWalletTransactionsMeta resolves.
+    await subscription.stop();
+
+    // Now let the evaluation finish - onAlert must still not be called.
+    resolveEval();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onAlert).not.toHaveBeenCalled();
+  });
+
+  it('onLogs callback triggers a re-evaluation and reports new alerts', async () => {
+    let capturedCallback!: () => void;
+    const rpcClient = {
+      subscribeToLogs: vi.fn((_addr: unknown, cb: () => void) => {
+        capturedCallback = cb;
+        return 5;
+      }),
+      unsubscribeFromLogs: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SolanaRpcClient;
+
+    const alertEngine = {
+      evaluate: vi.fn()
+        .mockReturnValueOnce([])                        // initial eval: no alerts
+        .mockReturnValue([buildAlert({ id: 'new-1' })]), // subsequent evals: one alert
+    } as unknown as AlertEngine;
+
+    const transactionRetriever = {
+      getWalletTransactionsMeta: vi.fn().mockResolvedValue([]),
+    } as unknown as TransactionRetriever;
+
+    const watcher = new LiveAlertWatcher(rpcClient, transactionRetriever, new BehaviorAnalyzer(), new RiskAssessor(), alertEngine);
+    const onAlert = vi.fn();
+
+    watcher.watch(VALID_ADDRESS, onAlert);
+    await vi.waitFor(() => expect(alertEngine.evaluate).toHaveBeenCalledTimes(1));
+
+    // Simulate the onLogs callback firing (a new transaction landed).
+    capturedCallback();
+    await vi.waitFor(() => {
+      expect(onAlert).toHaveBeenCalledTimes(1);
+    });
+    expect(onAlert).toHaveBeenCalledWith(expect.objectContaining({ type: 'high_failure_rate' }));
+  });
 });
