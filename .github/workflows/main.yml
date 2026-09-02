@@ -1,1 +1,40 @@
+name: Dashboard CI
 
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/main.yml'
+  pull_request:
+    branches: ['**']
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/main.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dashboard-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint, type-check, and build dashboard
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run build

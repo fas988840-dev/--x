@@ -20,6 +20,7 @@ import { EvidenceEngine } from '../agents/evidence-engine.js';
 import { LiveAlertWatcher } from '../services/live-alert-watcher.js';
 import { TokenSecurityVerifier } from '../services/token-security-verifier.js';
 import { AgentRouter, AGENT_INTENTS, AgentIntent } from '../agents/agent-router.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * API Error Response
@@ -231,7 +232,7 @@ export class APIServer {
 
     // Request logging
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
-      console.log(`${req.method} ${req.path}`);
+      logger.info(`${req.method} ${req.path}`);
       next();
     });
 
@@ -376,7 +377,7 @@ export class APIServer {
         res: Response,
         _next: NextFunction
       ) => {
-        console.error('Error:', err);
+        logger.error('Error:', err);
 
         if (err instanceof ValidationError) {
           return res.status(400).json({
@@ -865,8 +866,8 @@ export class APIServer {
    */
   public start(): void {
     this.app.listen(this.port, () => {
-      console.log(`FactLedger API listening on port ${this.port}`);
-      console.log(`Health check: http://localhost:${this.port}/api/v1/health`);
+      logger.info(`FactLedger API listening on port ${this.port}`);
+      logger.info(`Health check: http://localhost:${this.port}/api/v1/health`);
     });
   }
 

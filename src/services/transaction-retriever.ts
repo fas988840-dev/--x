@@ -16,6 +16,7 @@ import {
   validateProgramId,
 } from '../types/domain.js';
 import { RpcError, ValidationError } from '../types/errors.js';
+import { logger } from '../utils/logger.js';
 
 export class TransactionRetriever {
   constructor(private rpcClient: SolanaRpcClient) {}
@@ -40,7 +41,7 @@ export class TransactionRetriever {
           transactions.push(meta);
         } catch (error) {
           // Log but continue if single transaction fails
-          console.warn(`Failed to parse transaction ${signature}:`, error);
+          logger.warn(`Failed to parse transaction ${signature}:`, error);
         }
       }
 
@@ -124,7 +125,7 @@ export class TransactionRetriever {
         };
         instructions.push(instruction);
       } catch (error) {
-        console.warn('Failed to parse instruction:', error);
+        logger.warn('Failed to parse instruction:', error);
       }
     }
 

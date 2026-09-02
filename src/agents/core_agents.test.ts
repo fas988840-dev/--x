@@ -270,7 +270,7 @@ describe('ResearchAgent', () => {
 });
 
 describe('ExplanationAgent', () => {
-  function buildAgents() {
+  function buildAgents(): { walletAgent: WalletIntelligenceAgent; riskAgent: RiskAgent } {
     const transactionRetriever = {
       getWalletTransactionsMeta: vi.fn().mockResolvedValue([]),
     } as unknown as TransactionRetriever;

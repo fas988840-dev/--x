@@ -12,7 +12,14 @@ import {
 } from './core_agents';
 import { EvidenceEngine } from './evidence-engine';
 
-function mockAgentResponse(data: unknown = {}) {
+function mockAgentResponse(data: unknown = {}): {
+  agentId: string;
+  timestamp: number;
+  evidenceStatus: EvidenceStatus;
+  confidenceScore: number;
+  data: unknown;
+  justification: string;
+} {
   return {
     agentId: 'x',
     timestamp: Date.now(),

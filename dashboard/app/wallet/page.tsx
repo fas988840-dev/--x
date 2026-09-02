@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
  * Handles the search form's GET submission (?address=...) and redirects
  * to the actual wallet detail route.
  */
-export default function WalletSearchRedirect({ searchParams }: { searchParams: { address?: string } }) {
+export default function WalletSearchRedirect({ searchParams }: { searchParams: { address?: string } }): never {
   const address = searchParams.address?.trim();
 
   if (address) {

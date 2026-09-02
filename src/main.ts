@@ -21,6 +21,7 @@ import { LiveAlertWatcher } from './services/live-alert-watcher.js';
 import { TokenSecurityVerifier } from './services/token-security-verifier.js';
 import { ChainGptClient } from './services/chaingpt-client.js';
 import { AgentRouter } from './agents/agent-router.js';
+import { logger } from './utils/logger.js';
 
 /**
  * Initialize and start the application
@@ -29,9 +30,9 @@ async function main(): Promise<void> {
   const port = parseInt(process.env.PORT || '3000', 10);
   const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
-  console.log('Initializing FactLedger...');
-  console.log(`RPC URL: ${rpcUrl}`);
-  console.log(`Port: ${port}`);
+  logger.info('Initializing FactLedger...');
+  logger.info(`RPC URL: ${rpcUrl}`);
+  logger.info(`Port: ${port}`);
 
   // Initialize services
   const solanaConfig: SolanaConfig = {
@@ -84,13 +85,13 @@ async function main(): Promise<void> {
   const agentRouter = new AgentRouter(walletAgent, txAgent, riskAgent, evidenceEngine, alertAgent, explanationAgent, researchAgent, marketAgent);
 
   if (process.env.NODE_ENV === 'production' && !process.env.API_KEYS) {
-    console.warn(
+    logger.warn(
       'WARNING: running with NODE_ENV=production but API_KEYS is unset - the API is open to any caller. Set API_KEYS to require authentication.'
     );
   }
 
   if (!process.env.CHAINGPT_API_KEY) {
-    console.warn('CHAINGPT_API_KEY is not set - /wallet/:address/explanation will use deterministic summaries only (no AI-generated prose).');
+    logger.warn('CHAINGPT_API_KEY is not set - /wallet/:address/explanation will use deterministic summaries only (no AI-generated prose).');
   }
 
   // Create and start API server
@@ -117,6 +118,6 @@ async function main(): Promise<void> {
 
 // Start application
 main().catch((error) => {
-  console.error('Failed to start application:', error);
+  logger.error('Failed to start application:', error);
   process.exit(1);
 });

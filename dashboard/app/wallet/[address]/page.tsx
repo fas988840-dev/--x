@@ -1,11 +1,11 @@
 import { getWalletAnalysis, getWalletEvidence, getWalletResearch, getWalletExplanation } from '@/lib/factledger-api';
 
-function statusBadge(status: string) {
+function statusBadge(status: string): React.ReactElement {
   const cls = status.toLowerCase();
   return <span className={`badge badge-${cls}`}>{status}</span>;
 }
 
-export default async function WalletPage({ params }: { params: { address: string } }) {
+export default async function WalletPage({ params }: { params: { address: string } }): Promise<React.ReactElement> {
   const address = decodeURIComponent(params.address);
 
   // Fetched independently and in parallel - one endpoint failing (e.g. an
