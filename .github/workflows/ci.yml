@@ -54,11 +54,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: dashboard/package-lock.json
 
       - name: Install dashboard dependencies
-        run: npm ci
+        # npm install (not ci) because the lock file is regenerated whenever
+        # dashboard/package.json changes in an environment without npm registry
+        # access; npm ci would fail if the lock file is out of sync.
+        run: npm install
 
       - name: Build dashboard
         env:
