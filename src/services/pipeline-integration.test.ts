@@ -120,14 +120,14 @@ describe('IntelligenceScorer (pipeline stage 2)', () => {
   it('score is in [0, 100]', () => {
     const txs = Array.from({ length: 10 }, (_, i) => makeTx(i));
     const metrics = analyzer.analyzeBehavior(txs, [], new Set(['t1']), new Set(['p1', 'p2']));
-    const score = scorer.scoreWallet(metrics);
+    const score = scorer.scoreIntelligence(metrics);
     expect(score.score).toBeGreaterThanOrEqual(0);
     expect(score.score).toBeLessThanOrEqual(100);
   });
 
   it('returns components with all four named sub-scores', () => {
     const metrics = analyzer.analyzeBehavior([makeTx(0)], [], new Set(), new Set());
-    const score = scorer.scoreWallet(metrics);
+    const score = scorer.scoreIntelligence(metrics);
     expect(score.components).toMatchObject({
       activity: expect.any(Number),
       sophistication: expect.any(Number),
@@ -138,14 +138,14 @@ describe('IntelligenceScorer (pipeline stage 2)', () => {
 
   it('returns a non-empty factors array', () => {
     const metrics = analyzer.analyzeBehavior([makeTx(0)], [], new Set(), new Set());
-    const score = scorer.scoreWallet(metrics);
+    const score = scorer.scoreIntelligence(metrics);
     expect(Array.isArray(score.factors)).toBe(true);
     expect(score.factors.length).toBeGreaterThan(0);
   });
 
   it('empty transaction list produces score 0', () => {
     const metrics = analyzer.analyzeBehavior([], [], new Set(), new Set());
-    const score = scorer.scoreWallet(metrics);
+    const score = scorer.scoreIntelligence(metrics);
     expect(score.score).toBe(0);
   });
 });
@@ -168,12 +168,10 @@ describe('RiskAssessor (pipeline stage 3)', () => {
   });
 
   it('high failure rate increases risk score vs zero failure rate', () => {
-    // 100 % failure
     const allFailed = Array.from({ length: 10 }, (_, i) => makeTx(i, 'failed'));
     const metricsHigh = analyzer.analyzeBehavior(allFailed, [], new Set(), new Set());
     const riskHigh = assessor.assessRisk(metricsHigh);
 
-    // 0 % failure
     const allOk = Array.from({ length: 10 }, (_, i) => makeTx(i, 'success'));
     const metricsLow = analyzer.analyzeBehavior(allOk, [], new Set(), new Set());
     const riskLow = assessor.assessRisk(metricsLow);
@@ -226,14 +224,11 @@ describe('AlertEngine (pipeline stage 4)', () => {
     const metrics = analyzer.analyzeBehavior(txs, [], new Set(['tok']), new Set(['prog']));
     const risk = assessor.assessRisk(metrics);
     const alerts = engine.evaluate(WALLET, metrics, risk);
-    // Normal wallet — no high_failure_rate / abnormal_frequency / concentration / high_risk_behavior
     expect(alerts.every((a) => ['high_failure_rate', 'abnormal_frequency', 'program_concentration', 'high_risk_behavior'].includes(a.type))).toBe(true);
-    // Specifically: failureRate is 0, so high_failure_rate alert must not appear
     expect(alerts.some((a) => a.type === 'high_failure_rate')).toBe(false);
   });
 
   it('fires high_failure_rate when failure rate exceeds the threshold', () => {
-    // 100 % failure — well above any threshold
     const txs = Array.from({ length: 10 }, (_, i) => makeTx(i, 'failed'));
     const metrics = analyzer.analyzeBehavior(txs, [], new Set(), new Set());
     const risk = assessor.assessRisk(metrics);
@@ -282,14 +277,13 @@ describe('Full pipeline: BehaviorAnalyzer → IntelligenceScorer + RiskAssessor'
     ];
     const metrics = analyzer.analyzeBehavior(txs, [], new Set(['usdc', 'sol']), new Set(['raydium', 'system']));
 
-    const intel = scorer.scoreWallet(metrics);
+    const intel = scorer.scoreIntelligence(metrics);
     const risk = assessor.assessRisk(metrics);
 
     expect(intel.score).toBeGreaterThanOrEqual(0);
     expect(intel.score).toBeLessThanOrEqual(100);
     expect(risk.score).toBeGreaterThanOrEqual(0);
     expect(risk.score).toBeLessThanOrEqual(100);
-    // A 30 % failure rate should push risk above the pure-success baseline.
     expect(risk.score).toBeGreaterThan(0);
   });
 
@@ -301,8 +295,8 @@ describe('Full pipeline: BehaviorAnalyzer → IntelligenceScorer + RiskAssessor'
     const m1 = analyzer.analyzeBehavior(txs, [], tokens, programs);
     const m2 = analyzer.analyzeBehavior(txs, [], tokens, programs);
 
-    const i1 = scorer.scoreWallet(m1);
-    const i2 = scorer.scoreWallet(m2);
+    const i1 = scorer.scoreIntelligence(m1);
+    const i2 = scorer.scoreIntelligence(m2);
     const r1 = assessor.assessRisk(m1);
     const r2 = assessor.assessRisk(m2);
 
