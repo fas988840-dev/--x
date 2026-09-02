@@ -6,16 +6,7 @@ name: Deploy to Render
 #   RENDER_API_KEY    — from render.com/u/settings → API Keys → Create API Key
 #   RENDER_SERVICE_ID — from render.com dashboard → your service → Settings → top of page
 #
-# First-time setup (all from browser, no CLI needed):
-#   1. Go to render.com → sign up with GitHub (free)
-#   2. New → Web Service → connect fas988840-dev/--x
-#   3. Runtime: Docker  |  Branch: main
-#   4. Copy the Service ID from the service Settings page
-#   5. Copy your API key from render.com/u/settings → API Keys
-#   6. Add both to: GitHub Settings → Secrets → Actions
-#
-# After this workflow succeeds, the live-verify.yml workflow triggers
-# automatically to run smoke tests against the deployed URL.
+# Render service environment must also include API_KEYS and CORS_ORIGIN.
 
 on:
   push:
@@ -27,6 +18,8 @@ on:
       - 'package*.json'
       - 'tsconfig.json'
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   deploy:
@@ -41,14 +34,7 @@ jobs:
           [ -z "${{ secrets.RENDER_SERVICE_ID }}" ] && MISSING="$MISSING RENDER_SERVICE_ID"
           if [ -n "$MISSING" ]; then
             echo "::error::Missing secrets:$MISSING"
-            echo ""
-            echo "Setup steps (browser only, no CLI needed):"
-            echo "  1. Go to render.com → sign up with GitHub"
-            echo "  2. New → Web Service → connect fas988840-dev/--x"
-            echo "  3. Runtime: Docker | Branch: main | click Deploy"
-            echo "  4. Copy Service ID from: service Settings page → top"
-            echo "  5. Copy API Key from: render.com/u/settings → API Keys"
-            echo "  6. Add both to: GitHub Settings → Secrets → Actions"
+            echo "Add them as GitHub Repository secrets under Settings → Secrets and variables → Actions."
             exit 1
           fi
 
@@ -61,41 +47,55 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"clearCache": false}' \
             "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys")
-          echo "Deploy triggered:"
-          echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
-          DEPLOY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
-          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          echo "Deploy triggered."
+          DEPLOY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          if [ -z "$DEPLOY_ID" ]; then
+            echo "::error::Render did not return a deploy ID."
+            exit 1
+          fi
+          echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
 
       - name: Wait for deploy to complete
         run: |
           echo "Waiting for Render deploy to finish..."
+          LIVE=0
           for i in $(seq 1 20); do
             STATUS=$(curl -sf --max-time 10 \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
               "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys/${{ steps.deploy.outputs.deploy_id }}" \
               | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null || echo "unknown")
             echo "[$i/20] Deploy status: $STATUS"
-            if [ "$STATUS" = "live" ]; then
-              echo "✅ Deploy is live!"
-              break
-            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "build_failed" ]; then
-              echo "::error::Deploy failed with status: $STATUS"
-              exit 1
-            fi
+            case "$STATUS" in
+              live)
+                LIVE=1
+                break
+                ;;
+              deactivated|build_failed|update_failed|canceled)
+                echo "::error::Deploy failed with status: $STATUS"
+                exit 1
+                ;;
+            esac
             sleep 15
           done
+          if [ "$LIVE" -ne 1 ]; then
+            echo "::error::Render deploy did not reach live state before timeout."
+            exit 1
+          fi
 
       - name: Health check
         run: |
-          # Get the service URL from Render
           SVC=$(curl -sf --max-time 10 \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}")
-          URL=$(echo "$SVC" | python3 -c "import sys,json; print(json.load(sys.stdin).get('serviceDetails',{}).get('url',''))" 2>/dev/null || echo "")
-          if [ -n "$URL" ]; then
-            sleep 5
-            STATUS=$(curl -sf --max-time 15 -o /dev/null -w "%{http_code}" "$URL/api/v1/health" || echo "000")
-            echo "Health check HTTP $STATUS at $URL/api/v1/health"
-            [ "$STATUS" = "200" ] && echo "✅ API is healthy" || echo "⚠️ Got $STATUS (may still be warming up)"
+          URL=$(echo "$SVC" | python3 -c "import sys,json; print(json.load(sys.stdin).get('serviceDetails',{}).get('url',''))")
+          if [ -z "$URL" ]; then
+            echo "::error::Could not resolve Render service URL."
+            exit 1
           fi
-        continue-on-error: true
+          sleep 5
+          STATUS=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "$URL/api/v1/health" || echo "000")
+          echo "Health check HTTP $STATUS at $URL/api/v1/health"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::API health check failed with HTTP $STATUS."
+            exit 1
+          fi
