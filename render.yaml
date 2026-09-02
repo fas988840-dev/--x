@@ -1,36 +1,20 @@
-# Render blueprint for the FactLedger API.
-#
-# Builds the same Dockerfile as Fly.io and Railway, so all three hosts run an
-# identical image rather than three subtly different builds.
-#
-# Two variables are deliberately NOT given values here:
-#
-#   CORS_ORIGIN  src/api/server.ts treats this as a comma-separated list of
-#                EXACT origins, not a wildcard. "*" would match no origin and
-#                silently block every browser. Set it to your real dashboard
-#                origin(s) once one exists.
-#   API_KEYS     Required before exposing the service publicly. src/main.ts
-#                warns at startup when NODE_ENV=production and it is unset;
-#                without it every route except /api/v1/health is open.
-#                `sync: false` makes Render prompt for it at deploy time
-#                instead of storing it in this file.
-
 services:
   - type: web
     name: factledger-api
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
-    healthCheckPath: /api/v1/health
+    region: oregon
+    branch: main
+
     envVars:
-      - key: SOLANA_RPC_URL
-        # The public endpoint rate-limits and commonly disables the WebSocket
-        # log subscriptions /alerts/stream depends on. Use a dedicated
-        # provider in production.
-        value: https://api.mainnet-beta.solana.com
       - key: NODE_ENV
         value: production
-      - key: API_KEYS
-        sync: false
-      - key: CORS_ORIGIN
-        sync: false
+      - key: SOLANA_RPC_URL
+        value: https://api.mainnet-beta.solana.com
+      # Set these in the Render dashboard → Environment:
+      # CORS_ORIGIN   — e.g. https://your-dashboard.vercel.app
+      # API_KEYS      — comma-separated API keys
+      # CHAINGPT_API_KEY — optional, for live explanations
+
+    healthCheckPath: /api/v1/health

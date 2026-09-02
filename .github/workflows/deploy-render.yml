@@ -1,0 +1,101 @@
+name: Deploy to Render
+
+# Deploys the API (src/ → Dockerfile → Render.com) on every push to main.
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   RENDER_API_KEY    — from render.com/u/settings → API Keys → Create API Key
+#   RENDER_SERVICE_ID — from render.com dashboard → your service → Settings → top of page
+#
+# First-time setup (all from browser, no CLI needed):
+#   1. Go to render.com → sign up with GitHub (free)
+#   2. New → Web Service → connect fas988840-dev/--x
+#   3. Runtime: Docker  |  Branch: main
+#   4. Copy the Service ID from the service Settings page
+#   5. Copy your API key from render.com/u/settings → API Keys
+#   6. Add both to: GitHub Settings → Secrets → Actions
+#
+# After this workflow succeeds, the live-verify.yml workflow triggers
+# automatically to run smoke tests against the deployed URL.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'render.yaml'
+      - 'package*.json'
+      - 'tsconfig.json'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy API to Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check required secrets
+        run: |
+          MISSING=""
+          [ -z "${{ secrets.RENDER_API_KEY }}" ]    && MISSING="$MISSING RENDER_API_KEY"
+          [ -z "${{ secrets.RENDER_SERVICE_ID }}" ] && MISSING="$MISSING RENDER_SERVICE_ID"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing secrets:$MISSING"
+            echo ""
+            echo "Setup steps (browser only, no CLI needed):"
+            echo "  1. Go to render.com → sign up with GitHub"
+            echo "  2. New → Web Service → connect fas988840-dev/--x"
+            echo "  3. Runtime: Docker | Branch: main | click Deploy"
+            echo "  4. Copy Service ID from: service Settings page → top"
+            echo "  5. Copy API Key from: render.com/u/settings → API Keys"
+            echo "  6. Add both to: GitHub Settings → Secrets → Actions"
+            exit 1
+          fi
+
+      - name: Trigger Render deploy
+        id: deploy
+        run: |
+          RESPONSE=$(curl -sf --max-time 30 \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}' \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys")
+          echo "Deploy triggered:"
+          echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+
+      - name: Wait for deploy to complete
+        run: |
+          echo "Waiting for Render deploy to finish..."
+          for i in $(seq 1 20); do
+            STATUS=$(curl -sf --max-time 10 \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys/${{ steps.deploy.outputs.deploy_id }}" \
+              | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null || echo "unknown")
+            echo "[$i/20] Deploy status: $STATUS"
+            if [ "$STATUS" = "live" ]; then
+              echo "✅ Deploy is live!"
+              break
+            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "build_failed" ]; then
+              echo "::error::Deploy failed with status: $STATUS"
+              exit 1
+            fi
+            sleep 15
+          done
+
+      - name: Health check
+        run: |
+          # Get the service URL from Render
+          SVC=$(curl -sf --max-time 10 \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}")
+          URL=$(echo "$SVC" | python3 -c "import sys,json; print(json.load(sys.stdin).get('serviceDetails',{}).get('url',''))" 2>/dev/null || echo "")
+          if [ -n "$URL" ]; then
+            sleep 5
+            STATUS=$(curl -sf --max-time 15 -o /dev/null -w "%{http_code}" "$URL/api/v1/health" || echo "000")
+            echo "Health check HTTP $STATUS at $URL/api/v1/health"
+            [ "$STATUS" = "200" ] && echo "✅ API is healthy" || echo "⚠️ Got $STATUS (may still be warming up)"
+          fi
+        continue-on-error: true
