@@ -2,19 +2,12 @@ name: Deploy Dashboard to Vercel
 
 # Deploys dashboard/ to Vercel on every push to main that touches dashboard/.
 #
-# Required GitHub Secrets (Settings → Secrets → Actions):
-#   VERCEL_TOKEN       — from vercel.com/account/tokens
-#   VERCEL_ORG_ID      — from .vercel/project.json after `vercel link`
-#   VERCEL_PROJECT_ID  — from .vercel/project.json after `vercel link`
+# Required GitHub Secret:
+#   VERCEL_TOKEN — from vercel.com/account/tokens
 #
-# Required Vercel Environment Variables (set in Vercel dashboard):
-#   FACTLEDGER_API_URL  — e.g. https://factledger-api.fly.dev
-#   FACTLEDGER_API_KEY  — server-side only; NO NEXT_PUBLIC_ prefix
-#
-# First-time setup (run once on your machine):
-#   npm i -g vercel
-#   cd dashboard && vercel link   ← creates .vercel/project.json
-#   Copy VERCEL_ORG_ID + VERCEL_PROJECT_ID to GitHub secrets
+# The workflow discovers the Vercel project from its GitHub link or a known
+# FactLedger dashboard name. It never falls back to an arbitrary first project.
+# Optional: VERCEL_PROJECT_NAME can force an exact project-name match.
 
 on:
   push:
@@ -22,6 +15,8 @@ on:
     paths:
       - 'dashboard/**'
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   deploy-dashboard:
@@ -31,57 +26,131 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check required secrets
+      - name: Check VERCEL_TOKEN
         run: |
-          MISSING=""
-          [ -z "${{ secrets.VERCEL_TOKEN }}" ]      && MISSING="$MISSING VERCEL_TOKEN"
-          [ -z "${{ secrets.VERCEL_ORG_ID }}" ]     && MISSING="$MISSING VERCEL_ORG_ID"
-          [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ] && MISSING="$MISSING VERCEL_PROJECT_ID"
-          if [ -n "$MISSING" ]; then
-            echo "::error::Missing secrets:$MISSING"
-            echo ""
-            echo "Setup steps:"
-            echo "  1. npm i -g vercel"
-            echo "  2. cd dashboard && vercel link"
-            echo "  3. Copy VERCEL_ORG_ID and VERCEL_PROJECT_ID from .vercel/project.json"
-            echo "  4. Add all three to: Settings → Secrets → Actions"
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "::error::VERCEL_TOKEN secret is not set."
             exit 1
           fi
 
+      - name: Discover Vercel project
+        id: vercel_ids
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_NAME: ${{ secrets.VERCEL_PROJECT_NAME }}
+        run: |
+          PROJECTS_RESP=$(curl -sf --max-time 20 \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects?limit=100") || {
+              echo "::error::Could not authenticate with Vercel or list projects."
+              exit 1
+            }
+
+          MATCH=$(printf '%s' "$PROJECTS_RESP" | python3 -c '
+          import json, os, sys
+
+          data = json.load(sys.stdin)
+          projects = data.get("projects", [])
+          override = os.environ.get("VERCEL_PROJECT_NAME", "").strip().lower()
+
+          def repo_name(project):
+              link = project.get("link") or {}
+              return str(link.get("repo") or link.get("repoName") or "").strip().lower()
+
+          if override:
+              candidates = [p for p in projects if str(p.get("name", "")).lower() == override]
+          else:
+              repo_candidates = []
+              for p in projects:
+                  repo = repo_name(p)
+                  if repo in {"--x", "fas988840-dev/--x"} or repo.endswith("/--x"):
+                      repo_candidates.append(p)
+              if repo_candidates:
+                  candidates = repo_candidates
+              else:
+                  known = {"factledger", "factledger-dashboard", "dashboard"}
+                  candidates = [p for p in projects if str(p.get("name", "")).lower() in known]
+
+          if len(candidates) != 1:
+              print("")
+              sys.exit(0)
+
+          project = candidates[0]
+          project_id = str(project.get("id") or "")
+          account_id = str(project.get("accountId") or "")
+          if not project_id or not account_id:
+              print("")
+              sys.exit(0)
+
+          print(project_id + "\t" + account_id)
+          ')
+
+          if [ -z "$MATCH" ]; then
+            echo "::error::Could not uniquely identify the FactLedger Vercel project."
+            echo "Link the Vercel project to fas988840-dev/--x or set repository secret VERCEL_PROJECT_NAME to its exact name."
+            exit 1
+          fi
+
+          IFS=$'\t' read -r PROJECT_ID ORG_ID <<< "$MATCH"
+          if [ -z "$PROJECT_ID" ] || [ -z "$ORG_ID" ]; then
+            echo "::error::Vercel project metadata is incomplete."
+            exit 1
+          fi
+
+          echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+          echo "org_id=$ORG_ID" >> "$GITHUB_OUTPUT"
+          echo "Selected Vercel project: $PROJECT_ID"
+
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
+
+      - name: Link Vercel project
+        working-directory: dashboard
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<EOF
+          {
+            "projectId": "${{ steps.vercel_ids.outputs.project_id }}",
+            "orgId": "${{ steps.vercel_ids.outputs.org_id }}"
+          }
+          EOF
 
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: dashboard
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ steps.vercel_ids.outputs.org_id }}
+          VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
 
       - name: Build dashboard
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: dashboard
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ steps.vercel_ids.outputs.org_id }}
+          VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
 
       - name: Deploy to Vercel
         id: deploy
-        run: |
-          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $URL"
         working-directory: dashboard
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ steps.vercel_ids.outputs.org_id }}
+          VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          if [ -z "$URL" ]; then
+            echo "::error::Vercel did not return a deployment URL."
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Deployed to: $URL"
 
       - name: Smoke test dashboard
         run: |
           URL="${{ steps.deploy.outputs.url }}"
-          if [ -n "$URL" ]; then
-            STATUS=$(curl -sf --max-time 15 -o /dev/null -w "%{http_code}" "$URL")
-            echo "Dashboard HTTP $STATUS at $URL"
-            [ "$STATUS" = "200" ] && echo "✅ Dashboard reachable" || echo "⚠️ Got $STATUS"
+          sleep 5
+          STATUS=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "$URL" || echo "000")
+          echo "Dashboard HTTP $STATUS at $URL"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Dashboard smoke test failed with HTTP $STATUS."
+            exit 1
           fi
-        continue-on-error: true

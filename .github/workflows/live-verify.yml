@@ -19,7 +19,7 @@ on:
         required: false
         type: string
   workflow_run:
-    workflows: ['Deploy to Fly.io']
+    workflows: ['Deploy to Fly.io', 'Deploy to Render']
     types: [completed]
 
 jobs:
