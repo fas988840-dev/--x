@@ -27,18 +27,11 @@ jobs:
   deploy:
     name: Deploy API to Fly.io
     runs-on: ubuntu-latest
+    # Skip (not fail) when the token isn't configured — use deploy-render.yml instead.
+    if: ${{ secrets.FLY_API_TOKEN != '' }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check FLY_API_TOKEN
-        run: |
-          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
-            echo "::error::FLY_API_TOKEN secret is not set."
-            echo "Run: flyctl auth token"
-            echo "Then: Settings → Secrets → Actions → New secret → FLY_API_TOKEN"
-            exit 1
-          fi
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 

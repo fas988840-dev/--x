@@ -100,9 +100,14 @@ These are verification gaps, not missing MVP code.
 
 ### Dashboard / deployment
 - [x] Dashboard CI install/build
+- [x] Render.com deployment workflow added (PR #42) — browser-only setup, no CLI needed
+- [x] deploy-dashboard.yml updated to auto-discover Vercel org/project IDs (PR #43) — only VERCEL_TOKEN needed
+- [x] live-verify.yml updated to trigger on Render deploys (PR #43)
+- [x] deploy-fly.yml updated to skip (not fail) when FLY_API_TOKEN is unset
+- [ ] GitHub Secrets added: RENDER_API_KEY, RENDER_SERVICE_ID → first live API deploy
+- [ ] GitHub Secret added: VERCEL_TOKEN → first live dashboard deploy
 - [ ] Dashboard connected to the deployed API with production `FACTLEDGER_API_URL`
 - [ ] Auth round-trip using server-side `FACTLEDGER_API_KEY`
-- [ ] Actual Vercel deployment verified with Root Directory set to `dashboard`
 - [ ] External browser verification of the deployed dashboard URL
 
 ### MCP
