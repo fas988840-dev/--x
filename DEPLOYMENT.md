@@ -1,171 +1,123 @@
 # FactLedger Deployment Guide
 
-> ⚠️ **This file is out of date and superseded.** It predates the
-> `render.yaml` / `railway.json` / `fly.toml` blueprint configs already in
-> this repo, and its `CORS_ORIGIN=*` example below **contradicts** the app's
-> actual behavior — `src/api/server.ts` treats `CORS_ORIGIN` as a
-> comma-separated list of exact origins; `*` matches none and silently
-> blocks every browser (see `render.yaml`'s own comment). Deploy from the
-> committed `render.yaml` blueprint instead of these manual steps; see
-> [`README.md`](README.md)'s "Deployment" section.
-
-## Quick Start: Deploy to Production (5 minutes)
-
-### Option 1: Fly.io (Recommended)
-
-```bash
-# 1. Install flyctl
-# macOS: brew install flyctl
-# Linux: curl https://fly.io/install.sh | sh
-# Windows: choco install flyctl
-
-# 2. Login
-flyctl auth login
-
-# 3. Launch the app
-flyctl launch
-
-# 4. Set environment variables
-flyctl secrets set SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
-flyctl secrets set CORS_ORIGIN="https://*.yourdomain.com"
-flyctl secrets set PORT="3000"
-
-# 5. Deploy
-flyctl deploy
-```
-
-**Cost:** Free tier includes 3 shared-cpu-1x VMs  
-**Result:** Your API is live at `https://<app-name>.fly.dev`
+> ⚠️ **Updated for browser-only deployment.** The previous version of this
+> file listed Fly.io as the recommended option and contained
+> `CORS_ORIGIN=*` examples — both are now incorrect.  
+> `src/api/server.ts` treats `CORS_ORIGIN` as a comma-separated list of
+> exact origins; `*` matches none and silently blocks every browser-based
+> request. See [`README.md`](README.md)'s "Deployment" section for the
+> full quick-start.
 
 ---
 
-### Option 2: Railway
+## Recommended: Render.com (Browser-only, No CLI required)
 
-1. Go to https://railway.app
-2. Click "New Project" → "Deploy from GitHub"
-3. Select `fas988840-dev/PROJECT-x`
-4. Add environment variables:
-   - `SOLANA_RPC_URL=https://api.mainnet-beta.solana.com`
-   - `CORS_ORIGIN=*` (development) or domain (production)
-   - `PORT=3000`
-5. Deploy
+Render.com reads the committed `render.yaml` file from this repo
+automatically. No `fly.toml`, no `railway.json`, no CLI installs needed.
 
-**Cost:** Free tier (5,000 compute minutes/month)  
-**Result:** Your API is live at `https://<project>.railway.app`
+### Step-by-step (browser only)
+
+1. Go to [render.com](https://render.com) → sign in / create account.
+2. Click **New +** → **Web Service**.
+3. Connect your GitHub account → select `fas988840-dev/PROJECT-x`.
+4. Render detects `render.yaml` automatically and pre-fills most settings.
+5. Under **Environment** add any secrets not in `render.yaml`:
+   - `API_KEYS` (optional — comma-separated; if unset, API is open)
+   - `CHAINGPT_API_KEY` (optional — enables AI explanations)
+   - `CORS_ORIGIN` (set to your dashboard's Vercel URL once it's deployed)
+6. Click **Create Web Service**.
+7. Wait for the build (~2 min). Service URL: `https://factledger-api.onrender.com`.
+
+> **Note:** Free tier services on Render spin down after 15 minutes of
+> inactivity and restart on the next request (cold start ~30 s). Upgrade
+> to a paid instance type for always-on production use.
+
+### GitHub Actions CI/CD
+
+Once you have the Render service URL and API key, add these two secrets
+to the repository (**Settings → Secrets and variables → Actions**):
+
+| Secret name | Where to find it |
+|---|---|
+| `RENDER_API_KEY` | render.com → Account Settings → API Keys |
+| `RENDER_SERVICE_ID` | render.com → service Settings (starts with `srv-`) |
+
+After both secrets are set, every push to `main` that touches source code,
+the `Dockerfile`, or `render.yaml` will automatically trigger a deploy via
+the `deploy-render.yml` workflow and then run a live health check via
+`live-verify.yml`.
 
 ---
 
-### Option 3: Render
+## Dashboard: Vercel (Browser setup + automatic deploys)
 
-1. Go to https://render.com
-2. Click "New+" → "Web Service"
-3. Connect GitHub repo → `fas988840-dev/PROJECT-x`
-4. Add environment variables (same as above)
-5. Deploy
+The `dashboard/` Next.js app deploys to Vercel via `deploy-dashboard.yml`.
 
-**Cost:** Free tier (spins down after 15 min inactivity)  
-**Result:** Your API is live at `https://<service>.onrender.com`
+### Setup (browser only)
+
+1. Go to [vercel.com](https://vercel.com) → sign in / create account.
+2. Click **Add New… → Project** → import `fas988840-dev/PROJECT-x`.
+3. Set **Root Directory** to `dashboard` (Vercel auto-detects Next.js).
+4. Under **Environment Variables** add:
+   - `FACTLEDGER_API_URL` = `https://factledger-api.onrender.com` (or your Render URL)
+5. Click **Deploy**.
+
+Then add one secret to GitHub Actions:
+
+| Secret name | Where to find it |
+|---|---|
+| `VERCEL_TOKEN` | vercel.com → Settings → Tokens → Create |
+
+After that, every push to `main` that touches `dashboard/` triggers an
+automatic Vercel deployment via `deploy-dashboard.yml` — it discovers
+your org/project IDs from the token automatically, no `vercel link` needed.
 
 ---
 
-## Environment Variables
+## Environment Variables Reference
 
-| Variable | Required | Default | Example |
-|----------|----------|---------|---------|
-| `SOLANA_RPC_URL` | Yes | - | `https://api.mainnet-beta.solana.com` |
-| `PORT` | No | `3000` | `3000` |
-| `CORS_ORIGIN` | No | `*` | `https://myapp.com,https://api.myapp.com` |
-| `API_KEYS` | No | - | `key1,key2,key3` (comma-separated) |
-| `PRICE_PROVIDER` | No | `coingecko` | `coingecko` or `stub` |
-| `CHAINGPT_API_KEY` | No | - | Your ChainGPT API key |
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SOLANA_RPC_URL` | Yes | — | Solana JSON-RPC endpoint |
+| `PORT` | No | `3000` | HTTP port the server listens on |
+| `CORS_ORIGIN` | No | (none — all origins blocked) | Comma-separated list of allowed browser origins (e.g. `https://myapp.vercel.app`) |
+| `API_KEYS` | No | — | Comma-separated keys; if set, all routes except `/api/v1/health` require `X-API-Key` header |
+| `PRICE_PROVIDER` | No | `coingecko` | `coingecko` or `stub` (stub always returns null) |
+| `CHAINGPT_API_KEY` | No | — | Enables AI-generated summaries in `/api/v1/wallet/:address/explanation` |
 | `NODE_ENV` | No | `production` | `production` or `development` |
 
----
-
-## Important Notes
-
-### Solana RPC Provider
-
-- **Free public endpoints** (api.mainnet-beta.solana.com) restrict WebSocket subscriptions
-- For production use with `/api/v1/wallet/:address/alerts/stream`, use a **dedicated RPC provider:**
-  - [Helius](https://helius.dev) — Free tier available
-  - [Magic Eden](https://magiceden.io)
-  - [QuickNode](https://quicknode.com)
-
-### CORS Configuration
-
-- Development: `CORS_ORIGIN=*` (allow all origins)
-- Production: `CORS_ORIGIN=https://yourdomain.com,https://app.yourdomain.com`
-
-### API Keys
-
-- If `API_KEYS` is set: all endpoints except `/api/v1/health` require `X-API-Key` header
-- If unset: all endpoints are open
+> `CORS_ORIGIN=*` does **not** allow all origins — the app treats it as a
+> literal origin string that matches nothing. To allow all origins in
+> development, run without setting `CORS_ORIGIN` and note that the server
+> still blocks cross-origin browser requests (use direct curl/API client
+> calls for local testing). For production, always list exact origins.
 
 ---
 
-## Testing the Deployment
+## Solana RPC Provider Notes
 
-Once deployed, test these endpoints:
+The default `https://api.mainnet-beta.solana.com` endpoint:
+- Supports all read-only JSON-RPC calls (analysis, intelligence, risk).
+- **Restricts WebSocket log subscriptions** — the `/api/v1/wallet/:address/alerts/stream`
+  Server-Sent Events endpoint may fail silently on free public endpoints.
+
+For production live-alert streaming, use a dedicated RPC provider:
+- [Helius](https://helius.dev) — free tier available
+- [QuickNode](https://quicknode.com)
+- [Alchemy](https://alchemy.com)
+
+---
+
+## Manual: Docker (own infrastructure)
 
 ```bash
-# Health check
-curl https://<your-api-url>/api/v1/health
-
-# Get wallet intelligence
-curl https://<your-api-url>/api/v1/wallet/11111111111111111111111111111112/intelligence
-
-# Get available protocols
-curl https://<your-api-url>/api/v1/protocols
-
-# Real-time alerts (Server-Sent Events)
-curl -N https://<your-api-url>/api/v1/wallet/11111111111111111111111111111112/alerts/stream
-```
-
----
-
-## Monitoring
-
-### Fly.io
-```bash
-flyctl logs
-flyctl status
-flyctl apps list
-```
-
-### Railway
-Dashboard at https://railway.app — view logs in real-time
-
-### Render
-Dashboard at https://render.com — view logs in real-time
-
----
-
-## Scaling
-
-### For high traffic:
-- **Fly.io**: Scale up instance size with `flyctl scale vm shared-cpu-2x`
-- **Railway**: Add more VMs via dashboard
-- **Render**: Upgrade to paid tier
-
-### Rate Limiting (Built-in)
-- General: 60 requests per 15 minutes per IP
-- Heavy routes (wallet/transaction): 20 requests per 15 minutes per IP
-
----
-
-## Docker (Manual Deployment)
-
-If deploying to your own infrastructure:
-
-```bash
-# Build image
+# Build
 docker build -t factledger:latest .
 
-# Run container
+# Run
 docker run -p 3000:3000 \
   -e SOLANA_RPC_URL="https://api.mainnet-beta.solana.com" \
-  -e CORS_ORIGIN="*" \
+  -e CORS_ORIGIN="https://your-dashboard.vercel.app" \
   factledger:latest
 
 # Test
@@ -174,28 +126,73 @@ curl http://localhost:3000/api/v1/health
 
 ---
 
+## Manual: Fly.io (requires CLI — not browser-deployable)
+
+Fly.io's token creation requires their CLI or SSO login, which is not
+possible from a browser-only workflow. The `deploy-fly.yml` GitHub Action
+is therefore **manual-only** (`workflow_dispatch`) and will not auto-run.
+
+If you have `flyctl` installed locally:
+
+```bash
+flyctl auth login
+flyctl launch          # first time; reads fly.toml if present
+flyctl secrets set SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
+flyctl secrets set CORS_ORIGIN="https://your-dashboard.vercel.app"
+flyctl deploy
+```
+
+**Render.com is the recommended alternative** — same Docker-based hosting,
+but fully operable from a browser.
+
+---
+
+## Testing the Deployment
+
+```bash
+# Health check (always open, no API key needed)
+curl https://factledger-api.onrender.com/api/v1/health
+
+# Wallet intelligence
+curl https://factledger-api.onrender.com/api/v1/wallet/11111111111111111111111111111112/intelligence
+
+# List supported protocols/programs
+curl https://factledger-api.onrender.com/api/v1/protocols
+
+# Real-time alerts (Server-Sent Events)
+curl -N https://factledger-api.onrender.com/api/v1/wallet/11111111111111111111111111111112/alerts/stream
+```
+
+---
+
 ## Troubleshooting
 
-### "Cannot connect to Solana RPC"
-- Check `SOLANA_RPC_URL` is correct and reachable
-- Verify your network allows outbound HTTPS to the RPC endpoint
+**"Cannot connect to Solana RPC"**  
+Check `SOLANA_RPC_URL` is reachable. The default mainnet endpoint may be
+rate-limited; try a dedicated provider.
 
-### "WebSocket subscription failed"
-- Free endpoints restrict log subscriptions
-- Switch to a dedicated RPC provider (see "Solana RPC Provider" section above)
+**"WebSocket subscription failed"**  
+Free public RPC endpoints restrict log subscriptions. Use a dedicated
+provider (Helius, QuickNode, Alchemy) for the alerts stream.
 
-### "CORS errors in browser"
-- Set `CORS_ORIGIN` to match your frontend's domain
-- Multiple origins: `https://app.com,https://api.app.com`
+**"CORS errors in browser"**  
+Set `CORS_ORIGIN` to your dashboard's exact origin (e.g.
+`https://my-dashboard.vercel.app`). Multiple origins:
+`https://app.com,https://staging.app.com`. Do not use `*` — it matches
+nothing in this server's implementation.
 
-### "API_KEY header not accepted"
-- Verify header is named `X-API-Key` (capital X, capital K)
-- Check that `API_KEYS` environment variable is set
+**"X-API-Key header not accepted"**  
+Verify the header name is exactly `X-API-Key` and that the value matches
+one of the comma-separated values in the `API_KEYS` environment variable.
+
+**"Service is slow / timing out"**  
+Free tier Render services spin down after 15 minutes of inactivity.
+The first request after a spin-down has a ~30 s cold start. Upgrade to a
+paid instance to keep the service always-on.
 
 ---
 
 ## Support
 
 - **Issues**: https://github.com/fas988840-dev/PROJECT-x/issues
-- **Email**: fas988840@gmail.com
-- **Docs**: https://github.com/fas988840-dev/PROJECT-x/blob/main/README.md
+- **Docs**: [README.md](README.md)
