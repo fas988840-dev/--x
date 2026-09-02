@@ -59,13 +59,13 @@ Branch: `claude/claude-md-docs-zdlvr9`
 - [x] Central logging boundary added for main/MCP/transaction-retrieval paths
 
 ### Automated verification — current head
-- [x] CI run #174 passed
-- [x] CodeQL Advanced run #33 passed
+- [x] CI run #180 passed
+- [x] CodeQL Advanced run #36 passed
 - [x] 173 tests passed / 0 failed (17 test files)
 - [x] Type-check passed
 - [x] Root build passed
 - [x] Dashboard `npm ci` + build passed
-- [x] Lint: 0 errors / 5 warnings (non-blocking style warnings only)
+- [x] Lint: 0 errors / 4 warnings (all four are `no-console` style warnings in `src/api/server.ts`)
 
 ---
 
