@@ -1,36 +1,37 @@
 name: Deploy to Fly.io
 
-# Deploys the API (src/ → Dockerfile → Fly.io) on every push to main.
+# Deploys the API (src/ → Dockerfile → Fly.io).
 #
-# Required GitHub Secrets (Settings → Secrets → Actions):
-#   FLY_API_TOKEN  — from `flyctl auth token` or Fly.io dashboard
+# This workflow is MANUAL-ONLY (workflow_dispatch) — it does not auto-trigger
+# on push. The primary auto-deploy path is deploy-render.yml (Render.com),
+# which requires only a browser to set up.
 #
-# First-time setup (run once on your machine):
-#   flyctl launch   ← generates fly.toml (already in repo)
-#   flyctl secrets set SOLANA_RPC_URL=... API_KEYS=... CORS_ORIGIN=...
+# To use this workflow, first set FLY_API_TOKEN in GitHub Secrets:
+#   flyctl tokens create deploy   (run once from a machine with the CLI)
+#   Then: Settings → Secrets → Actions → New secret → FLY_API_TOKEN
 #
-# After this workflow succeeds, the live-verify.yml workflow triggers
-# automatically to run smoke tests against the deployed URL.
+# fly.toml is in the repo root — no `flyctl launch` needed.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'Dockerfile'
-      - 'fly.toml'
-      - 'package*.json'
-      - 'tsconfig.json'
   workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy API to Fly.io
     runs-on: ubuntu-latest
-    # Skip (not fail) when the token isn't configured — use deploy-render.yml instead.
-    if: ${{ secrets.FLY_API_TOKEN != '' }}
 
     steps:
+      - name: Check FLY_API_TOKEN
+        run: |
+          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
+            echo "::error::FLY_API_TOKEN secret is not set."
+            echo "Run: flyctl tokens create deploy"
+            echo "Then: Settings → Secrets → Actions → New secret → FLY_API_TOKEN"
+            echo ""
+            echo "Tip: Use deploy-render.yml instead — it only needs render.com browser setup."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
