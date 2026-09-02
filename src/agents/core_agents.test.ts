@@ -351,9 +351,6 @@ describe('ExplanationAgent', () => {
 
     // WalletIntelligenceAgent/RiskAgent themselves handle invalid-address
     // validation and return UNKNOWN - mirror that contract here via mocks.
-    const invalidWallet = validateWalletAddress;
-    expect(() => invalidWallet('not-a-real-address')).toThrow();
-
     const walletAgent = {
       analyzeWallet: vi.fn().mockResolvedValue({
         agentId: 'wallet_intel_v1',
@@ -381,5 +378,14 @@ describe('ExplanationAgent', () => {
     expect(result.evidenceStatus).toBe(EvidenceStatus.UNKNOWN);
     expect(result.data).toBeNull();
     expect(chainGptClient.generateExplanation).not.toHaveBeenCalled();
+  });
+});
+
+// Sanity check that the fix to ParsedInstructionStatus (domain.ts) is in
+// effect: 'confirmed' must be a valid value, since InstructionParser can
+// produce it via DexRegistry-decoded swaps.
+describe('validateWalletAddress sanity', () => {
+  it('accepts a well-formed address', () => {
+    expect(() => validateWalletAddress(VALID_ADDRESS)).not.toThrow();
   });
 });
