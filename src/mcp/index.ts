@@ -9,18 +9,19 @@
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { buildMcpServer } from './server';
+import { logger } from '../utils/logger.js';
 
 async function main(): Promise<void> {
   const server = buildMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // No console.log here - stdio is the MCP wire protocol itself, and
-  // writing plain text to stdout would corrupt it. Use console.error
-  // (stderr) for any diagnostic logging in this process.
-  console.error('FactLedger MCP server running on stdio');
+  // No stdout logging here - stdio is the MCP wire protocol itself, and
+  // writing plain text to stdout would corrupt it. Use the logger's stderr
+  // method for any diagnostic logging in this process.
+  logger.error('FactLedger MCP server running on stdio');
 }
 
 main().catch((error) => {
-  console.error('Failed to start MCP server:', error);
+  logger.error('Failed to start MCP server:', error);
   process.exit(1);
 });
