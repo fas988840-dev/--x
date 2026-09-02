@@ -1,6 +1,6 @@
 # FactLedger: Solana Wallet Intelligence Platform
 
-[![CI](https://github.com/fas988840-dev/PROJECT-x/actions/workflows/ci.yml/badge.svg)](https://github.com/fas988840-dev/PROJECT-x/actions/workflows/ci.yml)
+[![CI](https://github.com/fas988840-dev/--x/actions/workflows/ci.yml/badge.svg)](https://github.com/fas988840-dev/--x/actions/workflows/ci.yml)
 
 This badge is rendered live by GitHub from `.github/workflows/ci.yml`'s
 actual run status - it is not a static image. It goes green only after a
@@ -329,7 +329,7 @@ on that platform, which is credentials/access only you have.
   `dashboard/`, and set `FACTLEDGER_API_URL` to wherever the API above
   ends up deployed.
 
-Once deployed, replace the placeholder `https://fas988840-dev.github.io/PROJECT-x/`
+Once deployed, replace the placeholder `https://fas988840-dev.github.io/--x/`
 link in the funding application drafts with the real API/dashboard URL.
 
 ## Public Docs Page
@@ -707,8 +707,8 @@ and unarchived the same day; GitHub Actions runs normally again, so the CI
 badge above reflects the current state of `main`.
 
 - Canonical URL: https://github.com/fas988840-dev/--x
-- https://github.com/fas988840-dev/PROJECT-x also works (HTTP 301 redirect
-  to the above; verified).
+- https://github.com/fas988840-dev/PROJECT-x also redirects here (HTTP 301;
+  verified when the repo was renamed).
 
 ### Grants
 
