@@ -53,37 +53,45 @@ Branch: `claude/claude-md-docs-zdlvr9`
 - [x] Correct NodeNext `.js` relative imports preserved for compiled ESM
 - [x] `src/main.ts` / `dist/main.js` entry point preserved
 - [x] Empty `apps/api/src/solana.ts` removed after reference check
-- [x] Empty `.github/workflows/main.yml` removed
+- [x] Accidental 1-byte `.github/workflows/main.yml` removed instead of adding a duplicate Dashboard workflow
 - [x] Stale repo links corrected in current docs
 - [x] Architecture document present with the current 16-endpoint map
+- [x] Central logging boundary added for main/MCP/transaction-retrieval paths
 
-### Automated verification
-- [x] Root CI installs dependencies, runs audit, lint, type-check, tests, and build
-- [x] 173 tests passed / 0 failed on the latest reviewed pre-hardening run
-- [x] Type-check passed on the latest reviewed pre-hardening run
-- [x] Root build passed on the latest reviewed pre-hardening run
-- [x] CodeQL passed on the latest reviewed pre-hardening run
-- [x] Dashboard install/build has now been added as a separate CI job; final status must be taken from the workflow triggered by this commit
+### Automated verification — current head
+- [x] CI run #174 passed
+- [x] CodeQL Advanced run #33 passed
+- [x] 173 tests passed / 0 failed (17 test files)
+- [x] Type-check passed
+- [x] Root build passed
+- [x] Dashboard `npm ci` + build passed
+- [x] Lint: 0 errors / 5 warnings (non-blocking style warnings only)
 
 ---
 
-## ⚠️ SECURITY STATUS — OPEN AND EXPLICIT
+## ⚠️ SECURITY STATUS — CLASSIFIED
 
-The latest reviewed root `npm audit` reported **8 vulnerabilities total: 5 moderate, 1 high, 2 critical**.
+The full dependency audit reports **8 findings total: 5 moderate, 1 high, 2 critical**. The production-only audit (`npm audit --omit=dev`) reports **3 moderate, 0 high, 0 critical**.
 
-- [ ] Do not describe the remaining audit findings as “moderate only”.
-- [ ] Do not use `npm audit fix --force`; the suggested fixes may involve breaking major-version changes.
-- [ ] The CI audit step is deliberately non-blocking so lint/tests/build still execute and produce evidence. A green CI run therefore does **not** mean npm audit is clean.
-- [ ] Before production launch, classify each high/critical advisory as runtime vs dev/transitive and remediate safely or document the accepted risk with package/advisory IDs.
+- [x] High/critical findings classified: they are in development tooling (`vitest`, `@vitest/ui`, `vite`) and are not production runtime dependencies.
+- [x] Production/runtime findings classified: `@solana/web3.js` → `jayson` → `uuid`, currently reported as 3 moderate findings.
+- [x] Critical dev advisory identified: `GHSA-5xrq-8626-4rwp` in Vitest UI-related tooling.
+- [x] High dev advisory identified: `GHSA-fx2h-pf6j-xcff` in Vite.
+- [x] Runtime UUID advisory identified: `GHSA-w5hq-g745-h8pq`.
+- [x] No `npm audit fix --force` used. npm's proposed fixes require breaking/major dependency changes and are not accepted blindly.
+- [ ] Controlled dev-tool upgrade (Vitest/Vite/UI) can be evaluated separately with full regression testing; it is not a production high/critical exposure.
+- [ ] Runtime Solana/uuid transitive chain should be revisited when a safe compatible upstream fix is available.
 
 ---
 
 ## ⚠️ UNVERIFIED — requires live credentials or external infrastructure
 
+These are verification gaps, not missing MVP code.
+
 ### Solana RPC / WebSocket
 - [ ] `SolanaRpcClient.subscribeToLogs()` against a production/mainnet RPC WebSocket endpoint
-- [ ] `TransactionRetriever.getWalletTransactionsMeta()` against mainnet-beta
-- [ ] `getParsedTokenAccountsByOwner()` against mainnet-beta
+- [ ] `TransactionRetriever.getWalletTransactionsMeta()` against mainnet-beta in the target production environment
+- [ ] `getParsedTokenAccountsByOwner()` against mainnet-beta in the target production environment
 - [ ] Long-running WebSocket reconnect behavior with the chosen production RPC provider
 
 ### ChainGPT live service
@@ -91,22 +99,22 @@ The latest reviewed root `npm audit` reported **8 vulnerabilities total: 5 moder
 - [ ] Actual 15-second clock-triggered timeout in a reachable environment
 
 ### Dashboard / deployment
-- [ ] Final result of the new dashboard CI build job
-- [ ] Dashboard connected to a running API with `FACTLEDGER_API_URL`
+- [x] Dashboard CI install/build
+- [ ] Dashboard connected to the deployed API with production `FACTLEDGER_API_URL`
 - [ ] Auth round-trip using server-side `FACTLEDGER_API_KEY`
-- [ ] Actual Vercel deployment with Root Directory set to `dashboard`
-- [ ] External browser verification of the deployed URL
+- [ ] Actual Vercel deployment verified with Root Directory set to `dashboard`
+- [ ] External browser verification of the deployed dashboard URL
 
 ### MCP
 - [ ] End-to-end run with a real MCP client
 - [ ] Production-style `npm run mcp` smoke test in a reachable environment
 
 ### Funding / demo proof
-- [ ] Public live demo URL
-- [ ] Current architecture link/screenshots
-- [ ] 2–3 minute product walkthrough video
-- [ ] Final grant/funding narrative with verified claims only
-- [ ] Actual Colosseum/grant submission status recorded after submission
+- [ ] Public live dashboard/demo URL verified
+- [x] Current architecture document present in repo
+- [ ] 2–3 minute product walkthrough video recorded/published
+- [x] Grant/funding narrative materials exist in `GRANTS/`; claims must remain evidence-based
+- [ ] Actual Colosseum submission status recorded after submission
 
 ---
 
@@ -115,7 +123,6 @@ The latest reviewed root `npm audit` reported **8 vulnerabilities total: 5 moder
 - [ ] Verified Raydium/Jupiter amount extraction from protocol layouts; keep current decoders candidate-only until layouts are independently verified
 - [ ] `unusual_volume`, `large_swap`, and `new_token_interaction` alerts after real swap amounts exist
 - [ ] General MarketEvent/Geyser pipeline
-- [ ] MCP full static type-check workaround for deep SDK generics
 - [ ] Robust WebSocket reconnect/backoff for long-running alert monitoring
 - [ ] Historical price provider beyond current free-tier limitations
 - [ ] Replace StubPriceProvider in production configuration where live price data is required
