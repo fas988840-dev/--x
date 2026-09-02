@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FactLedger Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0d14;
+    --surface:  #111520;
+    --surface2: #181d2a;
+    --border:   #1f2840;
+    --border2:  #2a3550;
+    --text:     #e2e8f7;
+    --muted:    #7a8ab0;
+    --accent:   #9945ff;
+    --accent2:  #14f195;
+    --gold:     #f7c948;
+    --red:      #ff4d6d;
+    --blue:     #3a86ff;
+    --arrow:    #3a4a70;
+    --pipe-glow: rgba(153,69,255,0.18);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg:       #f0f2f8;
+      --surface:  #ffffff;
+      --surface2: #f5f6fb;
+      --border:   #d4d9eb;
+      --border2:  #bcc4df;
+      --text:     #1a1f35;
+      --muted:    #5a6480;
+      --arrow:    #9faac8;
+      --pipe-glow: rgba(153,69,255,0.10);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:       #0a0d14;
+    --surface:  #111520;
+    --surface2: #181d2a;
+    --border:   #1f2840;
+    --border2:  #2a3550;
+    --text:     #e2e8f7;
+    --muted:    #7a8ab0;
+    --arrow:    #3a4a70;
+    --pipe-glow: rgba(153,69,255,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .page-header .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+  .page-header h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-wrap: balance;
+  }
+  .page-header p {
+    margin-top: 0.55rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    max-width: 56ch;
+    margin-inline: auto;
+  }
+
+  /* ── diagram canvas ── */
+  .diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 900px;
+    margin-inline: auto;
+  }
+
+  /* row of nodes side-by-side */
+  .row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  /* vertical connector between rows */
+  .vconn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 2.5rem;
+    position: relative;
+  }
+  .vconn::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background: linear-gradient(to bottom, var(--border2), var(--accent));
+    opacity: 0.55;
+  }
+  .vconn::after {
+    content: '▼';
+    position: absolute;
+    bottom: -0.1rem;
+    font-size: 0.6rem;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+
+  /* a node / box */
+  .node {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 1rem 0.8rem;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+  .node:hover { border-color: var(--border2); }
+
+  .node-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.28rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .node-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .node-badge {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.65rem;
+    font-size: 0.6rem;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.06em;
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  /* colour variants */
+  .node-external {
+    border-color: var(--border2);
+    background: var(--surface2);
+  }
+  .node-external .node-label { color: var(--muted); }
+
+  .node-rpc    { border-left: 3px solid var(--blue); }
+  .node-core   { border-left: 3px solid var(--accent); }
+  .node-score  { border-left: 3px solid var(--accent2); }
+  .node-api    { border-left: 3px solid var(--gold); }
+  .node-agent  { border-left: 3px solid #f97316; }
+  .node-mcp    { border-left: 3px solid #e879f9; }
+  .node-dash   { border-left: 3px solid var(--blue); }
+  .node-ext    { border-left: 3px solid var(--red); }
+
+  /* badge colours */
+  .badge-rpc   { background: rgba(58,134,255,0.12);  color: var(--blue); }
+  .badge-core  { background: rgba(153,69,255,0.12);  color: var(--accent); }
+  .badge-score { background: rgba(20,241,149,0.12);  color: var(--accent2); }
+  .badge-api   { background: rgba(247,201,72,0.12);  color: var(--gold); }
+  .badge-agent { background: rgba(249,115,22,0.12);  color: #f97316; }
+  .badge-mcp   { background: rgba(232,121,249,0.12); color: #e879f9; }
+  .badge-dash  { background: rgba(58,134,255,0.12);  color: var(--blue); }
+  .badge-ext   { background: rgba(255,77,109,0.12);  color: var(--red); }
+
+  /* section label above rows */
+  .section-label {
+    width: 100%;
+    text-align: center;
+    font-size: 0.65rem;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.55rem;
+    opacity: 0.7;
+  }
+
+  /* wide single-node rows */
+  .node-wide { flex: 2; }
+  .node-xl   { flex: 3; }
+
+  /* horizontal connector between sibling nodes in a row */
+  .hconn {
+    display: flex;
+    align-items: center;
+    color: var(--arrow);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    padding-top: 1.6rem; /* align with node text */
+  }
+  .hconn::before {
+    content: '→';
+    font-size: 1rem;
+  }
+
+  /* split‐outputs section */
+  .split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  /* legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.2rem;
+    justify-content: center;
+    margin-top: 2.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-width: 700px;
+    margin-inline: auto;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* key facts strip */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    max-width: 900px;
+    margin: 2rem auto 0;
+  }
+  .fact {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    text-align: center;
+  }
+  .fact-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .fact-num.green  { color: var(--accent2); }
+  .fact-num.gold   { color: var(--gold); }
+  .fact-num.blue   { color: var(--blue); }
+  .fact-label {
+    margin-top: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* invariant callout */
+  .invariants {
+    max-width: 900px;
+    margin: 2.5rem auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+  .inv {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+  }
+  .inv-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+  }
+  .inv-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .inv-text strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.78rem;
+  }
+
+  @media (max-width: 600px) {
+    .row { flex-direction: column; }
+    .hconn { display: none; }
+    .split-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <p class="eyebrow">FactLedger · System Architecture</p>
+  <h1>Read-Only Solana Intelligence Pipeline</h1>
+  <p>A linear, deterministic pipeline that turns raw on-chain data into scored wallet intelligence — no writes, no keys, no guesses.</p>
+</header>
+
+<div class="diagram">
+
+  <!-- ── EXTERNAL SOURCES ── -->
+  <div class="section-label">External Data Sources</div>
+  <div class="row">
+    <div class="node node-ext">
+      <span class="node-badge badge-ext">RPC</span>
+      <div class="node-label">Solana Mainnet</div>
+      <div class="node-desc">api.mainnet-beta.solana.com<br>read-only · no signing</div>
+    </div>
+    <div class="node node-ext">
+      <span class="node-badge badge-ext">HTTP</span>
+      <div class="node-label">CoinGecko API</div>
+      <div class="node-desc">Free public tier<br>USD prices · null on failure</div>
+    </div>
+    <div class="node node-ext">
+      <span class="node-badge badge-ext">HTTP</span>
+      <div class="node-label">ChainGPT API</div>
+      <div class="node-desc">Plain-language summaries<br>rephrases facts only</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 1: RPC CLIENT ── -->
+  <div class="section-label">Data Ingestion</div>
+  <div class="row">
+    <div class="node node-rpc node-xl">
+      <span class="node-badge badge-rpc">src</span>
+      <div class="node-label">SolanaRpcClient</div>
+      <div class="node-desc">Wraps @solana/web3.js Connection · getSignaturesForAddress, getParsedTransaction, getBalance, getParsedTokenAccountsByOwner, getAccountInfo, onLogs (WebSocket, read-only)</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 2: RETRIEVER ── -->
+  <div class="row">
+    <div class="node node-core node-xl">
+      <span class="node-badge badge-core">src</span>
+      <div class="node-label">TransactionRetriever</div>
+      <div class="node-desc">Fetches signatures + transactions → normalises into TransactionMeta · extracts Instructions from both legacy and versioned transactions</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 3: PARSER + DEX ── -->
+  <div class="section-label">Classification</div>
+  <div class="row">
+    <div class="node node-core">
+      <span class="node-badge badge-core">src</span>
+      <div class="node-label">InstructionParser</div>
+      <div class="node-desc">Looks up each instruction's programId in DexRegistry · classifies as confirmed / candidate / unknown</div>
+    </div>
+    <div class="hconn"></div>
+    <div class="node node-core">
+      <span class="node-badge badge-core">src</span>
+      <div class="node-label">DexRegistry</div>
+      <div class="node-desc">Raydium + Jupiter adapters · verified program IDs · checks discriminator only → status: 'candidate'</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 4: BALANCES + PRICE ── -->
+  <div class="row">
+    <div class="node node-core">
+      <span class="node-badge badge-core">src</span>
+      <div class="node-label">TokenBalanceDeltaCalculator</div>
+      <div class="node-desc">Diffs pre/post token balances into TokenBalanceDelta · amounts kept as string to preserve precision</div>
+    </div>
+    <div class="hconn"></div>
+    <div class="node node-core">
+      <span class="node-badge badge-core">src</span>
+      <div class="node-label">PriceProvider</div>
+      <div class="node-desc">CoinGeckoPriceProvider (live) or StubPriceProvider · returns null honestly on any failure</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 5: BEHAVIOR ── -->
+  <div class="section-label">Analysis</div>
+  <div class="row">
+    <div class="node node-core node-xl">
+      <span class="node-badge badge-core">src</span>
+      <div class="node-label">BehaviorAnalyzer</div>
+      <div class="node-desc">Aggregates TransactionMeta + SwapEvents → BehaviorMetrics (frequency, failure rate, program diversity, volume, timing patterns, peak activity hour)</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 6: SCORING (SPLIT) ── -->
+  <div class="section-label">Scoring — deterministic weighted sums, always with reasoning[]</div>
+  <div class="split-row">
+    <div class="node node-score">
+      <span class="node-badge badge-score">src</span>
+      <div class="node-label">IntelligenceScorer</div>
+      <div class="node-desc">activity · sophistication · consistency · efficiency — each 25% weight → IntelligenceScore + factors[]</div>
+    </div>
+    <div class="node node-score">
+      <span class="node-badge badge-score">src</span>
+      <div class="node-label">RiskAssessor</div>
+      <div class="node-desc">failure_rate · frequency · concentration · volatility · suspicious_patterns → RiskScore + reasoning[]</div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 7: EXPRESS API ── -->
+  <div class="section-label">HTTP Layer</div>
+  <div class="row">
+    <div class="node node-api node-xl">
+      <span class="node-badge badge-api">Express</span>
+      <div class="node-label">APIServer · src/api/server.ts</div>
+      <div class="node-desc">
+        helmet · CORS allowlist · rate-limit (60/15 min) · heavyLimiter (20/15 min) · apiKeyAuth (X-API-Key) · JSON body · asyncHandler() on every route
+        <br><br>
+        16 REST endpoints — /health · /wallet/:addr · /wallet/:addr/intelligence · /risk · /behavior · /transactions · /research · /evidence · /alerts · /alerts/stream (SSE) · /explanation · /agents/:intent · /token/:mint/security · /programs · /programs/:id · /protocols
+      </div>
+    </div>
+  </div>
+
+  <div class="vconn"></div>
+
+  <!-- ── LAYER 8: CONSUMERS ── -->
+  <div class="section-label">Consumers</div>
+  <div class="row">
+    <div class="node node-agent">
+      <span class="node-badge badge-agent">agents</span>
+      <div class="node-label">Agent Layer</div>
+      <div class="node-desc">WalletIntelligenceAgent · RiskAgent · ResearchAgent · AlertAgent · ExplanationAgent · EvidenceEngine · AgentRouter — all return AgentResponse with evidenceStatus</div>
+    </div>
+    <div class="node node-mcp">
+      <span class="node-badge badge-mcp">MCP</span>
+      <div class="node-label">MCP Server</div>
+      <div class="node-desc">Model Context Protocol tools over the same agents · stdio transport · npm run mcp</div>
+    </div>
+    <div class="node node-dash">
+      <span class="node-badge badge-dash">Next.js</span>
+      <div class="node-label">Dashboard</div>
+      <div class="node-desc">dashboard/ — read-only UI calling the API · Server Components · no direct chain access</div>
+    </div>
+  </div>
+
+</div><!-- /diagram -->
+
+<!-- ── KEY NUMBERS ── -->
+<div class="facts">
+  <div class="fact">
+    <div class="fact-num">16</div>
+    <div class="fact-label">REST Endpoints</div>
+  </div>
+  <div class="fact">
+    <div class="fact-num green">151</div>
+    <div class="fact-label">Tests Passing (CI)</div>
+  </div>
+  <div class="fact">
+    <div class="fact-num gold">3</div>
+    <div class="fact-label">Confidence Tiers<br>confirmed / candidate / unknown</div>
+  </div>
+  <div class="fact">
+    <div class="fact-num blue">0</div>
+    <div class="fact-label">Writes to Chain<br>read-only by design</div>
+  </div>
+</div>
+
+<!-- ── INVARIANTS ── -->
+<div class="invariants">
+  <div class="inv">
+    <span class="inv-icon">🔒</span>
+    <div class="inv-text">
+      <strong>No writes · No signing · No keys</strong>
+      SolanaRpcClient calls only read methods. Nothing requests private keys, seed phrases, or credentials.
+    </div>
+  </div>
+  <div class="inv">
+    <span class="inv-icon">🎯</span>
+    <div class="inv-text">
+      <strong>Never fabricate data</strong>
+      Unknown prices, fees, and block times return null or 'unknown', never a guess or default.
+    </div>
+  </div>
+  <div class="inv">
+    <span class="inv-icon">🔁</span>
+    <div class="inv-text">
+      <strong>Deterministic scoring</strong>
+      Same input always produces identical scores. A CI test calls every scorer twice and asserts exact equality.
+    </div>
+  </div>
+  <div class="inv">
+    <span class="inv-icon">🧮</span>
+    <div class="inv-text">
+      <strong>String-precision amounts</strong>
+      Lamports and raw token amounts are kept as string throughout — never cast to number where float precision could be lost.
+    </div>
+  </div>
+  <div class="inv">
+    <span class="inv-icon">💬</span>
+    <div class="inv-text">
+      <strong>LLM only rephrases</strong>
+      ChainGPT receives already-computed facts in the prompt and is instructed to add nothing. Every structured field is built from deterministic pipeline output.
+    </div>
+  </div>
+  <div class="inv">
+    <span class="inv-icon">⚠️</span>
+    <div class="inv-text">
+      <strong>Disclaimer on every score</strong>
+      Intelligence, risk, and analysis endpoints always include a disclaimer: not financial advice.
+    </div>
+  </div>
+</div>
+
+<!-- ── LEGEND ── -->
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>External services</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Solana RPC layer</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Core pipeline services</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--accent2)"></span>Scoring outputs</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span>HTTP / Express layer</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span>Agent layer</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#e879f9"></span>MCP server</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Next.js dashboard</div>
+</div>
+
+</body>
+</html>
