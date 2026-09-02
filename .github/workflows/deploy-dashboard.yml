@@ -1,0 +1,87 @@
+name: Deploy Dashboard to Vercel
+
+# Deploys dashboard/ to Vercel on every push to main that touches dashboard/.
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   VERCEL_TOKEN       — from vercel.com/account/tokens
+#   VERCEL_ORG_ID      — from .vercel/project.json after `vercel link`
+#   VERCEL_PROJECT_ID  — from .vercel/project.json after `vercel link`
+#
+# Required Vercel Environment Variables (set in Vercel dashboard):
+#   FACTLEDGER_API_URL  — e.g. https://factledger-api.fly.dev
+#   FACTLEDGER_API_KEY  — server-side only; NO NEXT_PUBLIC_ prefix
+#
+# First-time setup (run once on your machine):
+#   npm i -g vercel
+#   cd dashboard && vercel link   ← creates .vercel/project.json
+#   Copy VERCEL_ORG_ID + VERCEL_PROJECT_ID to GitHub secrets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboard/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-dashboard:
+    name: Deploy dashboard to Vercel
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required secrets
+        run: |
+          MISSING=""
+          [ -z "${{ secrets.VERCEL_TOKEN }}" ]      && MISSING="$MISSING VERCEL_TOKEN"
+          [ -z "${{ secrets.VERCEL_ORG_ID }}" ]     && MISSING="$MISSING VERCEL_ORG_ID"
+          [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ] && MISSING="$MISSING VERCEL_PROJECT_ID"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing secrets:$MISSING"
+            echo ""
+            echo "Setup steps:"
+            echo "  1. npm i -g vercel"
+            echo "  2. cd dashboard && vercel link"
+            echo "  3. Copy VERCEL_ORG_ID and VERCEL_PROJECT_ID from .vercel/project.json"
+            echo "  4. Add all three to: Settings → Secrets → Actions"
+            exit 1
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: dashboard
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build dashboard
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: dashboard
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $URL"
+        working-directory: dashboard
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Smoke test dashboard
+        run: |
+          URL="${{ steps.deploy.outputs.url }}"
+          if [ -n "$URL" ]; then
+            STATUS=$(curl -sf --max-time 15 -o /dev/null -w "%{http_code}" "$URL")
+            echo "Dashboard HTTP $STATUS at $URL"
+            [ "$STATUS" = "200" ] && echo "✅ Dashboard reachable" || echo "⚠️ Got $STATUS"
+          fi
+        continue-on-error: true
