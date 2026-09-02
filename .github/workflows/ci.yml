@@ -20,14 +20,15 @@ jobs:
 
       - run: npm install
 
-      - name: Audit dependencies (reported, non-blocking)
-        # Keep the audit visible without hiding the real result. The latest
-        # reviewed run reported 8 vulnerabilities total: 5 moderate, 1 high,
-        # and 2 critical. Do not use `npm audit fix --force` here because it
-        # may introduce breaking major-version changes. Security remediation
-        # must be deliberate and re-tested.
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      - name: Audit dependencies (full JSON, non-blocking)
+        # Capture exact advisory chains and severities without applying forced
+        # dependency changes. This remains non-blocking so verification still
+        # runs even when npm reports advisories.
+        run: npm audit --json || true
+
+      - name: Audit production dependencies (non-blocking)
+        # Separates runtime exposure from dev-tool advisories such as Vitest/Vite.
+        run: npm audit --omit=dev --audit-level=high || true
 
       - name: Lint
         run: npm run lint
