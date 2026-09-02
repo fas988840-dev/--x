@@ -315,19 +315,30 @@ needed, works on any Docker-based host. This is what gives the "unverified
 website link" problem in the funding drafts an actual fix: pick one of
 these, deploy, and the API has a real, stable, public URL.
 
-**⚠️ I cannot deploy this myself** — every option below needs an account
-on that platform, which is credentials/access only you have.
+**Automated deployment via GitHub Actions** — push to `main` and CI
+handles the rest. Two workflows cover both parts:
 
-- **Railway / Render (free tier)**: connect the GitHub repo, both
-  auto-detect `Dockerfile` with no extra config. Set the environment
-  variables from `.env.example` (at minimum `API_KEYS` — see the Security
-  section above) in that platform's dashboard, not in a committed file.
-- **Fly.io**: `fly launch` in the repo root detects the `Dockerfile`
-  automatically; `fly deploy` after that.
-- **Dashboard (`dashboard/`) on Vercel**: Vercel auto-detects Next.js with
-  zero config — connect the repo, set the project's root directory to
-  `dashboard/`, and set `FACTLEDGER_API_URL` to wherever the API above
-  ends up deployed.
+**API → Render.com** (browser-only setup, no CLI needed):
+1. [render.com](https://render.com) → Sign in with GitHub → **New Web Service** → connect this repo
+2. Runtime: **Docker** | Branch: **main** → Deploy
+3. Copy the **Service ID** from the service Settings page
+4. Copy your **API Key** from Account Settings → API Keys
+5. Add both to GitHub: **Settings → Secrets → Actions**
+   - `RENDER_API_KEY` and `RENDER_SERVICE_ID`
+
+After the first deploy, add `FACTLEDGER_API_URL` (e.g. `https://factledger-api.onrender.com`)
+as a GitHub Secret — the `live-verify.yml` smoke tests run automatically.
+
+**Dashboard → Vercel** (browser-only, no CLI needed):
+1. [vercel.com](https://vercel.com) → Sign in → Avatar → **Settings** → **Tokens** → Create Token
+2. Add to GitHub: **Settings → Secrets → Actions** → `VERCEL_TOKEN`
+3. The workflow auto-discovers the project — no `vercel link` step required.
+   Set `FACTLEDGER_API_URL` and `FACTLEDGER_API_KEY` in the Vercel project dashboard.
+
+**Fly.io** (requires CLI — kept for future use):
+`flyctl launch` + `flyctl deploy` after creating an account and token.
+The `deploy-fly.yml` workflow is present but skips automatically until
+`FLY_API_TOKEN` is added to GitHub Secrets.
 
 Once deployed, replace the placeholder `https://fas988840-dev.github.io/--x/`
 link in the funding application drafts with the real API/dashboard URL.
@@ -725,14 +736,13 @@ badge above reflects the current state of `main`.
 
 ### Deployment
 
-API deployment ready via:
-- **Fly.io** (recommended): `flyctl launch && flyctl deploy`
-- **Railway**: Connect GitHub repo directly
-- **Render**: Connect GitHub repo directly
+API deploys automatically to **Render.com** on every push to `main`.
+Dashboard deploys automatically to **Vercel** on every push touching `dashboard/`.
+Both use GitHub Actions — browser-only setup, no CLI tools required.
 
-See `DEPLOYMENT_STATUS.md` and `API_DOCUMENTATION.md` for complete guides.
+See `LAUNCH_CHECKLIST.md` for current status and remaining steps.
 
-**Live Demo**: https://factledger-api.fly.dev (post-deployment)
+**Live Demo**: pending first Render.com deploy (add `RENDER_API_KEY` + `RENDER_SERVICE_ID` GitHub Secrets)
 
 ### Documentation
 
