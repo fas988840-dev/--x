@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { InstructionParser } from '../services/instruction-parser';
 import { DexRegistry } from '../services/dex-registry';
 import { Instruction, validateProgramId } from '../types/domain';
@@ -36,7 +36,7 @@ describe('InstructionParser', () => {
         programId: unknownProgramId,
         data: Buffer.from([0, 1, 2, 3]),
         accounts: [
-          { pubkey: 'EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ', isSigner: true, isWritable: true },
+          { pubkey: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', isSigner: true, isWritable: true },
           { pubkey: 'So11111111111111111111111111111111111111112', isSigner: false, isWritable: false },
         ],
       };
@@ -44,7 +44,7 @@ describe('InstructionParser', () => {
       const parsed = parser.parseInstruction(instruction);
 
       expect(parsed.raw.accounts.length).toBe(2);
-      expect(parsed.raw.accounts[0].pubkey).toBe('EPjFWaLb3odccccfFFd82hhSSUmUjKP6MtoxQTxxuQ');
+      expect(parsed.raw.accounts[0].pubkey).toBe('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
       expect(parsed.raw.accounts[0].isSigner).toBe(true);
       expect(parsed.raw.accounts[1].isSigner).toBe(false);
     });

@@ -23,12 +23,7 @@ export class IntelligenceScorer {
     // Weighted average of components
     const overallScore = (activityScore * 0.25 + sophisticationScore * 0.25 + consistencyScore * 0.25 + efficiencyScore * 0.25);
 
-    const factors = this.generateFactors(behavior, {
-      activityScore,
-      sophisticationScore,
-      consistencyScore,
-      efficiencyScore,
-    });
+    const factors = this.generateFactors(behavior);
 
     return {
       score: Math.round(overallScore),
@@ -143,15 +138,7 @@ export class IntelligenceScorer {
   /**
    * Generate human-readable factors explaining the score
    */
-  private generateFactors(
-    behavior: BehaviorMetrics,
-    components: {
-      activityScore: number;
-      sophisticationScore: number;
-      consistencyScore: number;
-      efficiencyScore: number;
-    }
-  ): string[] {
+  private generateFactors(behavior: BehaviorMetrics): string[] {
     const factors: string[] = [];
 
     // Activity factors

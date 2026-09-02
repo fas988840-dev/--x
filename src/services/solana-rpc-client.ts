@@ -3,17 +3,15 @@
  * NEVER signs transactions, NEVER requests credentials
  */
 
-import { Connection, PublicKey, Transaction, ParsedTransactionWithMeta } from '@solana/web3.js';
+import { Connection, PublicKey, ParsedTransactionWithMeta } from '@solana/web3.js';
 import { SolanaConfig } from '../types/config';
 import { RpcError, ValidationError } from '../types/errors';
-import { TransactionSignature, WalletAddress, validateTransactionSignature, validateWalletAddress } from '../types/domain';
+import { WalletAddress, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 export class SolanaRpcClient {
   private connection: Connection;
-  private config: SolanaConfig;
 
   constructor(config: SolanaConfig) {
-    this.config = config;
     this.connection = new Connection(config.rpcUrl, config.commitment);
   }
 
@@ -69,7 +67,7 @@ export class SolanaRpcClient {
 
       const pubkey = new PublicKey(walletAddress);
       const response = await this.connection.getParsedTokenAccountsByOwner(pubkey, {
-        programId: new PublicKey('TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU'),
+        programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
       });
 
       return response.value

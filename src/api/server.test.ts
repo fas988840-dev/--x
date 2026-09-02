@@ -8,14 +8,15 @@ import { StubPriceProvider } from '../services/price-provider';
 import { DexRegistry } from '../services/dex-registry';
 import { EvidenceEngine } from '../agents/evidence-engine';
 import { ResearchAgent, EvidenceStatus } from '../agents/core_agents';
+import { TransactionRetriever } from '../services/transaction-retriever';
 import { TransactionMeta, validateTransactionSignature, validateWalletAddress } from '../types/domain';
 
 describe('API Server', () => {
-  let app: any;
+  let app: ReturnType<APIServer['getApp']>;
   let server: APIServer;
-  let mockTransactionRetriever: any;
-  let mockEvidenceEngine: any;
-  let mockResearchAgent: any;
+  let mockTransactionRetriever: Pick<TransactionRetriever, 'getWalletTransactionsMeta' | 'getTransaction'>;
+  let mockEvidenceEngine: Pick<EvidenceEngine, 'buildWalletEvidence'>;
+  let mockResearchAgent: Pick<ResearchAgent, 'generateReport'>;
 
   beforeEach(() => {
     // Mock transaction retriever
@@ -56,8 +57,8 @@ describe('API Server', () => {
       new RiskAssessor(),
       new StubPriceProvider(),
       new DexRegistry(),
-      mockEvidenceEngine as EvidenceEngine,
-      mockResearchAgent as ResearchAgent
+      mockEvidenceEngine as unknown as EvidenceEngine,
+      mockResearchAgent as unknown as ResearchAgent
     );
 
     app = server.getApp();
