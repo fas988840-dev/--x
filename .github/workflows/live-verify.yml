@@ -4,12 +4,18 @@ name: Live Verification
 # or manually via workflow_dispatch with the deployed URL.
 #
 # Required GitHub Secrets (Settings → Secrets → Actions):
-#   FACTLEDGER_API_URL   — e.g. https://factledger-api.fly.dev
+#   FACTLEDGER_API_URL   — e.g. https://factledger-api.onrender.com
 #   FACTLEDGER_API_KEY   — optional; leave empty if API_KEYS not set on the server
 #   SOLANA_RPC_URL       — optional; defaults to public mainnet-beta endpoint
 #
 # The job does NOT require CHAINGPT_API_KEY — it only checks the /explanation
 # endpoint's fallback path (deterministic summary) to avoid spending credits.
+#
+# Diagnostics: each check captures the HTTP status AND response body even on
+# failure (no `curl -f`, which would hide both), so a non-200 from the live
+# API is reported with its actual error text instead of an opaque exit code.
+# A warm-up loop first wakes Render free-tier services, which cold-start in
+# ~30-60s after 15 min of inactivity — longer than a single request timeout.
 
 on:
   workflow_dispatch:
@@ -45,17 +51,39 @@ jobs:
           fi
           echo "Testing against: $API_URL"
 
+      # ── 0. Warm up: wake a cold-started Render free-tier service ────────────
+      # A free instance spins down after 15 min idle and takes ~30-60s to wake.
+      # Retry /health with a generous per-attempt timeout until it answers 200
+      # (or attempts are exhausted) so the real checks below hit a live server.
+      - name: Warm up (tolerate Render cold start)
+        run: |
+          echo "Warming up $API_URL — Render free tier can cold-start for ~30-60s..."
+          AWAKE=0
+          for i in $(seq 1 10); do
+            CODE=$(curl -s -o /tmp/warm.json -w "%{http_code}" --max-time 30 \
+              "$API_URL/api/v1/health" || echo "000")
+            echo "  attempt $i → HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              AWAKE=1
+              echo "✅ service is awake"
+              break
+            fi
+            sleep 10
+          done
+          if [ "$AWAKE" != "1" ]; then
+            echo "::warning::Service did not return 200 within warm-up window; checks below will report the real status."
+          fi
+
       # ── 1. Health check ────────────────────────────────────────────────────
       - name: Health check
         run: |
-          STATUS=$(curl -sf --max-time 10 \
-            -o /tmp/health.json \
-            -w "%{http_code}" \
-            "$API_URL/api/v1/health")
-          echo "HTTP $STATUS"
-          cat /tmp/health.json
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Health check returned $STATUS"
+          CODE=$(curl -s --max-time 20 \
+            -o /tmp/health.json -w "%{http_code}" \
+            "$API_URL/api/v1/health" || echo "000")
+          echo "HTTP $CODE"
+          echo "--- body ---"; cat /tmp/health.json 2>/dev/null; echo
+          if [ "$CODE" != "200" ]; then
+            echo "::error::Health check returned $CODE"
             exit 1
           fi
           echo "✅ /api/v1/health → 200"
@@ -63,19 +91,19 @@ jobs:
       # ── 2. Wallet intelligence ─────────────────────────────────────────────
       - name: Wallet intelligence (System Program)
         run: |
-          STATUS=$(curl -sf --max-time 30 \
+          CODE=$(curl -s --max-time 60 \
             -H "${API_KEY:+X-API-Key: $API_KEY}" \
-            -o /tmp/intel.json \
-            -w "%{http_code}" \
-            "$API_URL/api/v1/wallet/$TEST_WALLET/intelligence")
-          echo "HTTP $STATUS"
-          cat /tmp/intel.json | python3 -m json.tool --no-ensure-ascii 2>/dev/null || cat /tmp/intel.json
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Wallet intelligence returned $STATUS"
+            -o /tmp/intel.json -w "%{http_code}" \
+            "$API_URL/api/v1/wallet/$TEST_WALLET/intelligence" || echo "000")
+          echo "HTTP $CODE"
+          echo "--- body ---"
+          python3 -m json.tool --no-ensure-ascii /tmp/intel.json 2>/dev/null || cat /tmp/intel.json 2>/dev/null
+          echo
+          if [ "$CODE" != "200" ]; then
+            echo "::error::Wallet intelligence returned $CODE (see body above for the real cause)"
             exit 1
           fi
-          # Verify score is a number in [0,100]
-          SCORE=$(cat /tmp/intel.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['score'])")
+          SCORE=$(python3 -c "import json; print(json.load(open('/tmp/intel.json'))['data']['score'])")
           echo "Intelligence score: $SCORE"
           python3 -c "
           s = float('$SCORE')
@@ -86,18 +114,19 @@ jobs:
       # ── 3. Risk assessment ─────────────────────────────────────────────────
       - name: Risk assessment (System Program)
         run: |
-          STATUS=$(curl -sf --max-time 30 \
+          CODE=$(curl -s --max-time 60 \
             -H "${API_KEY:+X-API-Key: $API_KEY}" \
-            -o /tmp/risk.json \
-            -w "%{http_code}" \
-            "$API_URL/api/v1/wallet/$TEST_WALLET/risk")
-          echo "HTTP $STATUS"
-          cat /tmp/risk.json | python3 -m json.tool --no-ensure-ascii 2>/dev/null || cat /tmp/risk.json
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Risk assessment returned $STATUS"
+            -o /tmp/risk.json -w "%{http_code}" \
+            "$API_URL/api/v1/wallet/$TEST_WALLET/risk" || echo "000")
+          echo "HTTP $CODE"
+          echo "--- body ---"
+          python3 -m json.tool --no-ensure-ascii /tmp/risk.json 2>/dev/null || cat /tmp/risk.json 2>/dev/null
+          echo
+          if [ "$CODE" != "200" ]; then
+            echo "::error::Risk assessment returned $CODE (see body above for the real cause)"
             exit 1
           fi
-          LEVEL=$(cat /tmp/risk.json | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['level'])")
+          LEVEL=$(python3 -c "import json; print(json.load(open('/tmp/risk.json'))['data']['level'])")
           echo "Risk level: $LEVEL"
           python3 -c "
           assert '$LEVEL' in ('low','medium','high'), f'Unexpected level: $LEVEL'
@@ -107,33 +136,34 @@ jobs:
       # ── 4. Explanation endpoint (deterministic fallback, no ChainGPT key) ─
       - name: Explanation endpoint (deterministic fallback)
         run: |
-          STATUS=$(curl -sf --max-time 30 \
+          CODE=$(curl -s --max-time 60 \
             -H "${API_KEY:+X-API-Key: $API_KEY}" \
-            -o /tmp/explanation.json \
-            -w "%{http_code}" \
-            "$API_URL/api/v1/wallet/$TEST_WALLET/explanation")
-          echo "HTTP $STATUS"
-          cat /tmp/explanation.json | python3 -m json.tool --no-ensure-ascii 2>/dev/null || cat /tmp/explanation.json
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Explanation returned $STATUS"
+            -o /tmp/explanation.json -w "%{http_code}" \
+            "$API_URL/api/v1/wallet/$TEST_WALLET/explanation" || echo "000")
+          echo "HTTP $CODE"
+          echo "--- body ---"
+          python3 -m json.tool --no-ensure-ascii /tmp/explanation.json 2>/dev/null || cat /tmp/explanation.json 2>/dev/null
+          echo
+          if [ "$CODE" != "200" ]; then
+            echo "::error::Explanation returned $CODE (see body above for the real cause)"
             exit 1
           fi
-          SOURCE=$(cat /tmp/explanation.json | python3 -c \
-            "import sys,json; print(json.load(sys.stdin)['data']['summarySource'])" 2>/dev/null || echo "unknown")
+          SOURCE=$(python3 -c \
+            "import json; print(json.load(open('/tmp/explanation.json'))['data']['summarySource'])" 2>/dev/null || echo "unknown")
           echo "Summary source: $SOURCE"
           echo "✅ /explanation reachable — summarySource=$SOURCE"
 
       # ── 5. Validation rejects bad address → 400 ───────────────────────────
       - name: 400 on invalid address
         run: |
-          STATUS=$(curl -s --max-time 10 \
+          CODE=$(curl -s --max-time 20 \
             -H "${API_KEY:+X-API-Key: $API_KEY}" \
-            -o /tmp/bad.json \
-            -w "%{http_code}" \
-            "$API_URL/api/v1/wallet/not-a-wallet/intelligence")
-          echo "HTTP $STATUS"
-          if [ "$STATUS" != "400" ]; then
-            echo "::error::Expected 400 for invalid address, got $STATUS"
+            -o /tmp/bad.json -w "%{http_code}" \
+            "$API_URL/api/v1/wallet/not-a-wallet/intelligence" || echo "000")
+          echo "HTTP $CODE"
+          echo "--- body ---"; cat /tmp/bad.json 2>/dev/null; echo
+          if [ "$CODE" != "400" ]; then
+            echo "::error::Expected 400 for invalid address, got $CODE"
             exit 1
           fi
           echo "✅ invalid address → 400"
@@ -141,7 +171,7 @@ jobs:
       # ── 6. Solana RPC connectivity ─────────────────────────────────────────
       - name: Solana mainnet-beta RPC reachability
         run: |
-          RESPONSE=$(curl -sf --max-time 10 \
+          RESPONSE=$(curl -sf --max-time 15 \
             -X POST "$SOLANA_RPC" \
             -H "Content-Type: application/json" \
             -d '{"jsonrpc":"2.0","id":1,"method":"getSlot","params":[]}')
