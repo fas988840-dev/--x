@@ -105,10 +105,10 @@ jobs:
           echo "Selected Vercel project: $PROJECT_ID"
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@59.11.2
+        run: npm install -g vercel@59.11.2 --no-audit --no-fund
 
       - name: Install dashboard dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
         working-directory: dashboard
 
       - name: Link Vercel project
