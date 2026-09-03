@@ -16,7 +16,7 @@
 > [README.md](https://github.com/fas988840-dev/PROJECT-x/blob/main/README.md)
 > for the current state at any later date.
 > 
-> 🔗 **Live demo:** https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+> 🔗 **Live demo:** https://factledger-api.onrender.com
 > — the project's public-facing page, live now (published as an interactive
 > page, ahead of GitHub Pages being enabled on the repo). A short screen-recorded
 > walkthrough of this same page is attached separately with this application.
@@ -507,7 +507,7 @@ GET /api/v1/agents/:intent
 **Email:** fas988840@gmail.com  
 **GitHub:** https://github.com/fas988840-dev/PROJECT-x  
 **Solana Wallet (grant disbursement):** `EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM`  
-**Live Demo** (public docs page, live now): https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be  
+**Live Demo** (live public API — try /api/v1/health): https://factledger-api.onrender.com  
 **Live API** (backend): not yet deployed — this grant's Week 1 deliverable  
 
 > **Update, Aug 31 2026:** the API has since been deployed and is

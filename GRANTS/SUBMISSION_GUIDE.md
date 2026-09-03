@@ -97,7 +97,7 @@
 ### Project Info
 - **Name:** FactLedger
 - **Repository:** https://github.com/fas988840-dev/PROJECT-x
-- **Live Demo:** https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+- **Live Demo:** https://factledger-api.onrender.com
 - **CI Badge:** https://github.com/fas988840-dev/PROJECT-x/actions/workflows/ci.yml
 - **Last Verified Run:** Commit `21e8fea` (133 tests passing)
 

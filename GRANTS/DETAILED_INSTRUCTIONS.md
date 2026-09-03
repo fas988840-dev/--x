@@ -47,7 +47,7 @@ Project Name: FactLedger - Solana Wallet Intelligence Platform
 Category: Infrastructure / Development Tools
 Project Stage: Active Development / Production Ready
 GitHub Repository: https://github.com/fas988840-dev/PROJECT-x
-Website/Demo: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+Website/Demo: https://factledger-api.onrender.com
 ```
 
 **Step 4: Copy-paste long-form answers from** `GRANTS/grant-answers.html`
@@ -176,7 +176,7 @@ Wallet Address: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
 Project Name: FactLedger - Wallet Intelligence
 Description: [Copy from grant-answers.html - Superteam section]
 Repository: https://github.com/fas988840-dev/PROJECT-x
-Live Demo: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+Live Demo: https://factledger-api.onrender.com
 Category: Developer Tools
 Status: Production Ready
 ```
