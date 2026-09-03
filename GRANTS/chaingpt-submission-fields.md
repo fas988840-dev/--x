@@ -15,11 +15,17 @@ it and ask rather than improvising.
 tested and now deployed, but has no users yet — that is what builder-stage means.
 Claiming *growth* invites questions about traction you don't have yet.
 
-**⚠️ VERIFY THE CEILING BEFORE SENDING.** Two figures are in circulation and
-they disagree: a search summary gave "up to $50,000 per project" across the
-programme, while the grant page reportedly caps the **builder** tier at
-**$5,000 USDC plus $10,000 in API credits**. chaingpt.org is unreachable from
-where this was written, so it could not be checked here.
+**⚠️ VERIFY THE CEILING BEFORE SENDING.** The programme and application page
+are **confirmed live** (verified via web search, Sept 2026):
+https://www.chaingpt.org/web3-ai-grant — a real $1M programme with three
+tiers (growth / builder / research), reviewed on a rolling basis, open to
+open-source projects that use ChainGPT's AI. FactLedger qualifies (it already
+integrates ChainGPT — see `ExplanationAgent`).
+
+What is **still unconfirmed** is the per-tier ceiling: a search summary gave
+"up to $50,000 per project" across the programme, while the builder tier was
+reported at **$5,000 USDC plus $10,000 in API credits**. Read the exact
+builder-tier figure off the grant page before sending.
 
 The amount and milestones below are written for the **$5,000 + credits**
 reading, because that is the safer error: asking under a ceiling costs some
