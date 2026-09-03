@@ -100,13 +100,17 @@ These are verification gaps, not missing MVP code.
 
 ### Dashboard / deployment
 - [x] Dashboard CI install/build
+- [x] Dashboard upgraded to Next.js 16.3.4 / React 19.2.8; lint, type-check, build, and audit (0 findings) verified
 - [x] Render.com deployment workflow added (PR #42) — browser-only setup, no CLI needed
 - [x] deploy-dashboard.yml updated to auto-discover Vercel org/project IDs (PR #43) — only VERCEL_TOKEN needed
 - [x] live-verify.yml updated to trigger on Render deploys (PR #43)
 - [x] deploy-fly.yml updated to skip (not fail) when FLY_API_TOKEN is unset
 - [ ] GitHub Secrets added: RENDER_API_KEY, RENDER_SERVICE_ID → first live API deploy
 - [ ] GitHub Secret added: VERCEL_TOKEN → first live dashboard deploy
-- [ ] Dashboard connected to the deployed API with production `FACTLEDGER_API_URL`
+- [x] Render API live at `https://factledger-api-8hth.onrender.com`; `/api/v1/health` returns HTTP 200 and `status: ok`
+- [x] Dashboard production fallback points to the verified Render API; `FACTLEDGER_API_URL` remains an override
+- [x] Vercel production build created for `factledger-dashboard`
+- [ ] Remove/adjust Vercel Authentication before claiming a public dashboard URL
 - [ ] Auth round-trip using server-side `FACTLEDGER_API_KEY`
 - [ ] External browser verification of the deployed dashboard URL
 

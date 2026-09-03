@@ -11,7 +11,12 @@
  * state honestly rather than crash the whole page for one failed call.
  */
 
-const API_BASE_URL = process.env.FACTLEDGER_API_URL || 'http://localhost:3000';
+const DEFAULT_API_BASE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://factledger-api-8hth.onrender.com'
+    : 'http://localhost:3000';
+
+const API_BASE_URL = (process.env.FACTLEDGER_API_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '');
 const API_KEY = process.env.FACTLEDGER_API_KEY; // optional - only needed if the API has API_KEYS set
 
 export type EvidenceStatus = 'VERIFIED' | 'CANDIDATE' | 'UNKNOWN';

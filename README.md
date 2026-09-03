@@ -702,7 +702,7 @@ This platform provides data analysis only. It is not financial advice, investmen
 - [~] MCP server (`src/mcp/`) - implemented, **API surface unverified** (docs were unreachable when written; run `npm install && npm test` before relying on it)
 - [x] CI (`.github/workflows/ci.yml`) - npm audit, lint, type-check, test (incl. an automated determinism check), build, on every push/PR
 - [x] Dependabot (`.github/dependabot.yml`) - weekly npm + GitHub Actions update PRs
-- [~] Dashboard UI (`dashboard/`) - Next.js app, implemented but **unverified** (npm registry unreachable when written; run `npm install` in `dashboard/` before relying on it)
+- [x] Dashboard UI (`dashboard/`) - Next.js 16 app; clean install, lint, type-check, production build, and dependency audit verified. A Vercel production build exists, but its project currently requires Vercel Authentication, so public access remains pending.
 - [x] Real price provider (`CoinGeckoPriceProvider`, `src/services/coingecko-price-provider.ts`) - CoinGecko's free public API, no key required
 - [~] DEX protocol adapters (Raydium, Jupiter) - verified program IDs registered by default; instruction *type* detection only (`candidate` status), amount/mint extraction not yet implemented (see CLAUDE.md)
 - [x] Alert system (`src/services/alert-engine.ts` + `AlertAgent`) - deterministic, one-shot evaluation; each alert cites the real numbers behind it

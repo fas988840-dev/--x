@@ -24,13 +24,15 @@ jobs:
   deploy-dashboard:
     name: Deploy dashboard to Vercel
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Check VERCEL_TOKEN
         run: |
-          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+          if [ -z "$VERCEL_TOKEN" ]; then
             echo "::error::VERCEL_TOKEN secret is not set."
             exit 1
           fi
@@ -38,7 +40,6 @@ jobs:
       - name: Discover Vercel project
         id: vercel_ids
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_NAME: ${{ secrets.VERCEL_PROJECT_NAME }}
         run: |
           PROJECTS_RESP=$(curl -sf --max-time 20 \
@@ -104,7 +105,11 @@ jobs:
           echo "Selected Vercel project: $PROJECT_ID"
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+        run: npm install -g vercel@59.11.2
+
+      - name: Install dashboard dependencies
+        run: npm ci
+        working-directory: dashboard
 
       - name: Link Vercel project
         working-directory: dashboard
@@ -118,14 +123,14 @@ jobs:
           EOF
 
       - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production
         working-directory: dashboard
         env:
           VERCEL_ORG_ID: ${{ steps.vercel_ids.outputs.org_id }}
           VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
 
       - name: Build dashboard
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod
         working-directory: dashboard
         env:
           VERCEL_ORG_ID: ${{ steps.vercel_ids.outputs.org_id }}
@@ -138,7 +143,7 @@ jobs:
           VERCEL_ORG_ID: ${{ steps.vercel_ids.outputs.org_id }}
           VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
         run: |
-          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          URL=$(vercel deploy --prebuilt --prod)
           if [ -z "$URL" ]; then
             echo "::error::Vercel did not return a deployment URL."
             exit 1

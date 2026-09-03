@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
@@ -12,9 +13,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
     <html lang="en">
       <body>
         <header className="site-header">
-          <a href="/" className="brand">
+          <Link href="/" className="brand">
             FactLedger
-          </a>
+          </Link>
           <span className="tagline">Evidence-backed, not guessed</span>
         </header>
         <main>{children}</main>

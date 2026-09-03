@@ -5,7 +5,8 @@ function statusBadge(status: string): React.ReactElement {
   return <span className={`badge badge-${cls}`}>{status}</span>;
 }
 
-export default async function WalletPage({ params }: { params: { address: string } }): Promise<React.ReactElement> {
+export default async function WalletPage(props: { params: Promise<{ address: string }> }): Promise<React.ReactElement> {
+  const params = await props.params;
   const address = decodeURIComponent(params.address);
 
   // Fetched independently and in parallel - one endpoint failing (e.g. an
