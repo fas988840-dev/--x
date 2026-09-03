@@ -36,7 +36,9 @@ export default async function HomePage(): Promise<React.ReactElement> {
           <div className="error-box">
             Could not reach the FactLedger API at the configured URL: {health.error}
             <br />
-            <span className="muted">Set FACTLEDGER_API_URL if it isn&rsquo;t running on http://localhost:3000.</span>
+            <span className="muted">
+              Set FACTLEDGER_API_URL to override the default API endpoint for this environment.
+            </span>
           </div>
         )}
       </div>

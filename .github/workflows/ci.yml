@@ -18,17 +18,17 @@ jobs:
         with:
           node-version: '20'
 
-      - run: npm install
+      - run: npm install --no-audit --no-fund
 
       - name: Audit dependencies (full JSON, non-blocking)
         # Capture exact advisory chains and severities without applying forced
         # dependency changes. This remains non-blocking so verification still
         # runs even when npm reports advisories.
-        run: npm audit --json || true
+        run: timeout 120s npm audit --json || true
 
       - name: Audit production dependencies (non-blocking)
         # Separates runtime exposure from dev-tool advisories such as Vitest/Vite.
-        run: npm audit --omit=dev --audit-level=high || true
+        run: timeout 120s npm audit --omit=dev --audit-level=high || true
 
       - name: Lint
         run: npm run lint
@@ -56,10 +56,10 @@ jobs:
           node-version: '20'
 
       - name: Install dashboard dependencies
-        # npm install (not ci) because the lock file is regenerated whenever
-        # dashboard/package.json changes in an environment without npm registry
-        # access; npm ci would fail if the lock file is out of sync.
-        run: npm install
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint dashboard
+        run: npm run lint
 
       - name: Build dashboard
         env:

@@ -5,18 +5,16 @@ Read-only web UI over the FactLedger REST API (`../src`). This app has
 just calls the existing API and renders whatever it returns, including
 its `UNKNOWN`/error states honestly.
 
-⚠️ **Not yet verified to actually build/run.** Written against Next.js
-14 (App Router) from training knowledge — the npm registry was
-unreachable from the sandbox that wrote it, so `npm install` was never
-actually run here. Treat any build error as likely dependency-version
-drift to fix locally, not a sign the approach is wrong.
+Verified on Next.js 16.3.4 and React 19.2.8 with a clean `npm ci`, ESLint,
+TypeScript check, production build, and `npm audit` (0 findings) on
+2026-09-03.
 
 ## Run it
 
 ```bash
 # 1. Start the FactLedger API first (from the repo root)
 cd ..
-npm install
+npm ci
 npm run dev   # listens on :3000 by default
 
 # 2. In a second terminal, start the dashboard
@@ -80,12 +78,14 @@ Directory changes where Vercel treats "the project" as living, and
 nothing short of that setting moves the Next.js resolution into this
 folder.
 
-Set `FACTLEDGER_API_URL` to the deployed API's base URL (no trailing
-path) as an environment variable — and `FACTLEDGER_API_KEY` too if that
-API was started with `API_KEYS` set, or every server-side call it makes
-will come back `401`.
+Production defaults to the verified Render service at
+`https://factledger-api-8hth.onrender.com`. Set `FACTLEDGER_API_URL` to
+override that base URL (no trailing path), and set `FACTLEDGER_API_KEY`
+if the API is later started with `API_KEYS` enabled.
 
-⚠️ No successful Vercel build of this app has been observed yet.
+A successful Vercel production build has been observed. The current
+Vercel project still enforces Vercel Authentication, so public access
+must not be claimed until that project setting is intentionally changed.
 
 ## Pages
 
