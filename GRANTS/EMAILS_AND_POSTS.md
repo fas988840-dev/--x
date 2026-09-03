@@ -33,7 +33,7 @@ Key highlights of the project:
 - Fully open-source (MIT license)
 
 Repository: https://github.com/fas988840-dev/PROJECT-x
-Live demo: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+Live demo: https://factledger-api.onrender.com
 
 I'm happy to answer any questions or provide additional information 
 if needed.

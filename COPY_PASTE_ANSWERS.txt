@@ -50,7 +50,7 @@ https://github.com/fas988840-dev/PROJECT-x
 خاصة افتراضياً. اختبار حاسم بـ 10 ثواني: افتحه في نافذة تصفح خفي
 (incognito). إذا طلب تسجيل دخول، فالمراجع بيشوف جدار ولا شي — ولا ترسله
 موصوفاً بأنه "عرض حي" أو "صفحة عامة تعمل الآن".
-https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+https://factledger-api.onrender.com
 
 بديل مضمون العمومية: فعّل GitHub Pages على docs/ (README ← "Public Docs
 Page")، أو انشر الـ API فعلياً واستخدم رابطه. لين يصير كذا، الرابط الوحيد

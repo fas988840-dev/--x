@@ -4,7 +4,7 @@
 **Applicant:** Abdullah Al-Anzi (solo developer)
 **Contact:** fas988840@gmail.com
 **Repository:** https://github.com/fas988840-dev/PROJECT-x
-**Live page:** https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+**Live page:** https://factledger-api.onrender.com
 **Amount requested:** $25,000 USD
 
 ---
@@ -155,6 +155,6 @@ guesses. It is open source, so any team can audit the method or build on it.
 ## 8. Links
 
 - Repository: https://github.com/fas988840-dev/PROJECT-x
-- Live project page: https://claude.ai/code/artifact/d4bd6b65-b871-4e54-a0e6-ae418bc3e4be
+- Live project page: https://factledger-api.onrender.com
 - Passing CI run: https://github.com/fas988840-dev/PROJECT-x/actions/runs/33347156720
 - Contact: fas988840@gmail.com
