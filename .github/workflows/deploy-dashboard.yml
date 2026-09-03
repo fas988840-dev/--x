@@ -3,8 +3,9 @@ name: Deploy Dashboard to Vercel
 # Deploys dashboard/ to Vercel on every push to main that touches dashboard/
 # or this workflow file itself, so deployment workflow fixes are exercised immediately.
 #
-# Required GitHub Secret:
+# GitHub Secret used for automatic deployment:
 #   VERCEL_TOKEN — from vercel.com/account/tokens
+# If it is unset, the workflow reports a notice and exits successfully.
 #
 # The workflow discovers the Vercel project from its GitHub link or a known
 # FactLedger dashboard name. It never falls back to an arbitrary first project.
@@ -31,13 +32,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check VERCEL_TOKEN
+        id: vercel_auth
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::VERCEL_TOKEN secret is not set."
-            exit 1
+            echo "::notice::VERCEL_TOKEN is not set; skipping automatic Vercel deployment."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Discover Vercel project
+        if: steps.vercel_auth.outputs.available == 'true'
         id: vercel_ids
         env:
           VERCEL_PROJECT_NAME: ${{ secrets.VERCEL_PROJECT_NAME }}
@@ -105,13 +110,16 @@ jobs:
           echo "Selected Vercel project: $PROJECT_ID"
 
       - name: Install Vercel CLI
+        if: steps.vercel_auth.outputs.available == 'true'
         run: npm install -g vercel@59.11.2 --no-audit --no-fund
 
       - name: Install dashboard dependencies
+        if: steps.vercel_auth.outputs.available == 'true'
         run: npm ci --no-audit --no-fund
         working-directory: dashboard
 
       - name: Link Vercel project
+        if: steps.vercel_auth.outputs.available == 'true'
         working-directory: dashboard
         run: |
           mkdir -p .vercel
@@ -123,6 +131,7 @@ jobs:
           EOF
 
       - name: Pull Vercel environment
+        if: steps.vercel_auth.outputs.available == 'true'
         run: vercel pull --yes --environment=production
         working-directory: dashboard
         env:
@@ -130,6 +139,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
 
       - name: Build dashboard
+        if: steps.vercel_auth.outputs.available == 'true'
         run: vercel build --prod
         working-directory: dashboard
         env:
@@ -137,6 +147,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ steps.vercel_ids.outputs.project_id }}
 
       - name: Deploy to Vercel
+        if: steps.vercel_auth.outputs.available == 'true'
         id: deploy
         working-directory: dashboard
         env:
@@ -152,6 +163,7 @@ jobs:
           echo "Deployed to: $URL"
 
       - name: Smoke test dashboard
+        if: steps.vercel_auth.outputs.available == 'true'
         run: |
           URL="${{ steps.deploy.outputs.url }}"
           sleep 5
