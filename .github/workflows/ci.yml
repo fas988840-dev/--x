@@ -24,11 +24,11 @@ jobs:
         # Capture exact advisory chains and severities without applying forced
         # dependency changes. This remains non-blocking so verification still
         # runs even when npm reports advisories.
-        run: npm audit --json || true
+        run: timeout 120s npm audit --json || true
 
       - name: Audit production dependencies (non-blocking)
         # Separates runtime exposure from dev-tool advisories such as Vitest/Vite.
-        run: npm audit --omit=dev --audit-level=high || true
+        run: timeout 120s npm audit --omit=dev --audit-level=high || true
 
       - name: Lint
         run: npm run lint
