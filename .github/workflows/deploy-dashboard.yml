@@ -1,6 +1,7 @@
 name: Deploy Dashboard to Vercel
 
-# Deploys dashboard/ to Vercel on every push to main that touches dashboard/.
+# Deploys dashboard/ to Vercel on every push to main that touches dashboard/
+# or this workflow file itself, so deployment workflow fixes are exercised immediately.
 #
 # Required GitHub Secret:
 #   VERCEL_TOKEN — from vercel.com/account/tokens
@@ -14,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'dashboard/**'
+      - '.github/workflows/deploy-dashboard.yml'
   workflow_dispatch:
 
 permissions: {}
