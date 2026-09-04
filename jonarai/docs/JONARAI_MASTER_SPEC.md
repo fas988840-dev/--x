@@ -136,12 +136,23 @@ not an implementation detail.
 
 **AWAITING (Claude must NOT invent):**
 - Concrete data field list, source per field, licensing per source
-- Tech stack final decision (Python vs TypeScript for backend; frontend framework confirmation)
 - Concrete MTF alignment rules (how exactly Weekly → Daily → 1H → 15M → 5M is combined into a score)
 - Concrete flow classification thresholds
 - Concrete gamma level formulas
 - Concrete score weights (the components are known; the weights are not)
-- Concrete Phase-A DoD checklist (folder tree only? or including CI/tsconfig/package.json?)
+
+See `docs/BLOCKED_ON_ARCHITECT.md` for the fully enumerated list of
+architect blockers (one item per phase, with the exact question that
+must be answered).
+
+**CLAUDE-SELECTED DEFAULTS (reversible, documented in `docs/TECH_STACK_DECISION.md`):**
+- Backend: Python 3.12 + FastAPI + SQLAlchemy 2.0 async + asyncpg + Alembic
+- Backend quality: ruff + mypy --strict + pytest + hypothesis
+- Frontend: Next.js 14 App Router + TypeScript + Tailwind (was spec-mandated; Claude picked scaffold shape)
+- Local DB: PostgreSQL 16 + TimescaleDB 2.16 via docker-compose.dev.yml
+
+Everything above lives under `jonarai/` per Phase A.1 scaffold and can
+be replaced without touching any trading logic (there isn't any yet).
 
 ---
 

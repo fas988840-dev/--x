@@ -3,10 +3,20 @@
 **SPX / SPXW 0DTE Options Trading Intelligence.**
 Selectivity-first. Time as a P0 signal. Confidence score, not probability.
 
-> **Status:** 🅰️ Phase A — Scaffold only. **Not runnable.**
-> There is no backend, no frontend, no database, no live data pipeline yet.
-> Phase A is limited to the repository skeleton and the authoritative
-> specification documents in `docs/`.
+> **Status:** 🅰️ Phase A.1 — Scaffold + runnable health-check only.
+>
+> The backend has a real FastAPI app whose only meaningful endpoint is
+> `GET /health`. Every trading engine is a stub that raises
+> `SpecNotYetProvidedError` — this is **enforced** by a test suite
+> (`backend/tests/test_engines_are_stubs.py`) that fails the moment
+> anyone slips in a fabricated number.
+>
+> The frontend is a Next.js 14 holding page that refuses to render a
+> fabricated dashboard.
+>
+> Phase B (Data Master) is deliberately blocked until the architect
+> delivers the field enumeration and licensing decisions
+> (see `docs/BLOCKED_ON_ARCHITECT.md`).
 
 ---
 
@@ -51,19 +61,39 @@ answer as `NO TRADE`:
 
 ```
 jonarai/
-├── backend/         # (empty — Phase D+)
-├── frontend/        # (empty — Phase Z)
-├── database/        # (empty — Phase E)
-├── analytics/       # (empty — Phase F+)
-├── tests/           # (empty — Phase F+ per module)
-├── infrastructure/  # (empty — Phase Z / deploy)
+├── backend/                    # Python 3.12 · FastAPI · Engine stubs
+│   ├── pyproject.toml
+│   ├── src/jonarai/
+│   │   ├── config.py           # env-driven settings
+│   │   ├── domain/             # entities, errors (pure data)
+│   │   ├── engines/            # 16 Engine stubs — all raise SpecNotYetProvidedError
+│   │   ├── providers/          # DataProvider ABC + empty registry
+│   │   └── api/main.py         # FastAPI app — /health responds
+│   └── tests/                  # guardrail-enforcing pytest suite
+├── frontend/                   # Next.js 14 · TypeScript · Tailwind
+│   ├── package.json
+│   └── app/                    # one holding page
+├── database/
+│   ├── README.md               # Alembic bootstrap plan (Phase E)
+│   └── migrations/             # empty until Phase E
+├── analytics/                  # reserved for Phase F+
+├── tests/                      # cross-cutting tests (Phase X+)
+├── infrastructure/
+│   ├── docker-compose.dev.yml  # Postgres 16 + TimescaleDB 2.16 (local)
+│   └── Dockerfile.backend      # multi-stage image for the FastAPI app
 ├── docs/
 │   ├── JONARAI_MASTER_SPEC.md               # spec index
-│   ├── JONARAI_TIME_ENTRY_MANAGEMENT_SPEC.md # binding
+│   ├── JONARAI_TIME_ENTRY_MANAGEMENT_SPEC.md # binding (from architect)
 │   ├── JONARAI_DATA_MASTER.md               # placeholder (awaiting architect)
-│   └── JONARAI_BUILD_ROADMAP.md             # phase A → Z
-├── CLAUDE.md        # rules for Claude Code sessions
-└── README.md        # this file
+│   ├── JONARAI_BUILD_ROADMAP.md             # phase A → Z
+│   ├── TECH_STACK_DECISION.md               # Claude-selected defaults (reversible)
+│   ├── BLOCKED_ON_ARCHITECT.md              # what the architect owes us
+│   └── CLAUDE_AUTONOMOUS_WORK_LOG.md        # transparency log
+├── .github/workflows/ci.yml    # CI template (activates on repo migration)
+├── Makefile                    # dev commands (setup, lint, test, db-up, ...)
+├── CLAUDE.md                   # rules for Claude Code sessions
+├── README.md                   # this file
+└── .gitignore
 ```
 
 ---
