@@ -23,21 +23,11 @@ export class SolanaRpcClient {
     this.connection = new Connection(config.rpcUrl, config.commitment);
   }
 
-  /**
-   * Get wallet transactions - read-only
-   */
-  async getWalletTransactions(
-    walletAddress: WalletAddress,
-    limit: number = 100
-  ): Promise<string[]> {
+  async getWalletTransactions(walletAddress: WalletAddress, limit: number = 100): Promise<string[]> {
     try {
       validateWalletAddress(walletAddress);
-
       const pubkey = new PublicKey(walletAddress);
-      const signatures = await this.connection.getSignaturesForAddress(pubkey, {
-        limit,
-      });
-
+      const signatures = await this.connection.getSignaturesForAddress(pubkey, { limit });
       return signatures.map((s) => s.signature);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
@@ -48,15 +38,10 @@ export class SolanaRpcClient {
     }
   }
 
-  /**
-   * Get transaction details - read-only
-   */
   async getTransaction(signature: string): Promise<ParsedTransactionWithMeta | null> {
     try {
       validateTransactionSignature(signature);
-
-      const tx = await this.connection.getParsedTransaction(signature, 'confirmed');
-      return tx;
+      return await this.connection.getParsedTransaction(signature, 'confirmed');
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       throw new RpcError(
@@ -67,12 +52,31 @@ export class SolanaRpcClient {
   }
 
   /**
-   * Get token balances for wallet
+   * Returns the network confirmation state for a transaction signature.
+   * Payment verification uses this to require `finalized` before granting an
+   * entitlement. This is read-only and never signs or submits anything.
    */
+  async getTransactionConfirmationStatus(
+    signature: string
+  ): Promise<'processed' | 'confirmed' | 'finalized' | null> {
+    try {
+      validateTransactionSignature(signature);
+      const response = await this.connection.getSignatureStatuses([signature], {
+        searchTransactionHistory: true,
+      });
+      return response.value[0]?.confirmationStatus ?? null;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      throw new RpcError(
+        `Failed to fetch transaction confirmation status: ${error instanceof Error ? error.message : String(error)}`,
+        500
+      );
+    }
+  }
+
   async getTokenBalances(walletAddress: WalletAddress): Promise<Array<{ mint: string; amount: string; decimals: number }>> {
     try {
       validateWalletAddress(walletAddress);
-
       const pubkey = new PublicKey(walletAddress);
       const response = await this.connection.getParsedTokenAccountsByOwner(pubkey, {
         programId: new PublicKey('TokenkegQfeZyiNwAJsyFbPVwwQQfuM32jneSYOAxU'),
@@ -94,21 +98,6 @@ export class SolanaRpcClient {
     }
   }
 
-  /**
-   * Read an SPL token mint account - read-only.
-   *
-   * Returns the parsed mint fields the RPC actually gives us, plus the
-   * program that owns the account, and `null` when the address holds no
-   * account at all or the account is not a parseable mint (e.g. it is a
-   * wallet, or a token *account* rather than the mint). The caller decides
-   * what an absent mint means; this method never substitutes a default.
-   *
-   * `owningProgramId` matters: the classic SPL Token program and Token-2022
-   * are different programs, and Token-2022 mints can carry extensions
-   * (transfer fees, transfer hooks) that change a token's behaviour in ways
-   * the fields below do not capture. TokenSecurityVerifier reports that
-   * distinction rather than flattening it.
-   */
   async getMintInfo(mint: TokenMint): Promise<{
     mintAuthority: string | null;
     freezeAuthority: string | null;
@@ -119,16 +108,12 @@ export class SolanaRpcClient {
   } | null> {
     try {
       validateTokenMint(mint);
-
       const pubkey = new PublicKey(mint);
       const response = await this.connection.getParsedAccountInfo(pubkey);
       const account = response.value;
-
       if (!account) return null;
 
       const data = account.data;
-      // A non-parsed account comes back as a Buffer; only the parsed shape
-      // carries the mint fields, and only when the RPC recognised it as one.
       if (!('parsed' in data)) return null;
       if (data.parsed?.type !== 'mint') return null;
 
@@ -152,16 +137,11 @@ export class SolanaRpcClient {
     }
   }
 
-  /**
-   * Get SOL balance
-   */
   async getSolBalance(walletAddress: WalletAddress): Promise<number> {
     try {
       validateWalletAddress(walletAddress);
-
       const pubkey = new PublicKey(walletAddress);
-      const balance = await this.connection.getBalance(pubkey);
-      return balance; // in lamports
+      return await this.connection.getBalance(pubkey);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       throw new RpcError(
@@ -171,9 +151,6 @@ export class SolanaRpcClient {
     }
   }
 
-  /**
-   * Health check
-   */
   async isHealthy(): Promise<boolean> {
     try {
       const slot = await this.connection.getSlot();
@@ -183,35 +160,11 @@ export class SolanaRpcClient {
     }
   }
 
-  /**
-   * Subscribes to new log notifications for a wallet address (read-only -
-   * this is a WebSocket *subscription*, never a signed transaction). Used
-   * by LiveAlertWatcher (src/services/live-alert-watcher.ts) to notice new
-   * transactions as they land instead of only on request.
-   *
-   * ⚠️ Not independently verified against a live endpoint: Solana RPC was
-   * blocked by this sandbox's network egress policy when this was written,
-   * so `onLogs` has not actually been exercised here. It is written
-   * against @solana/web3.js's documented Connection.onLogs API from
-   * training knowledge. Separately, many public/free RPC endpoints
-   * (including the default api.mainnet-beta.solana.com) rate-limit or
-   * disable WebSocket log subscriptions entirely - a dedicated RPC
-   * provider (e.g. Helius, QuickNode, Triton) is typically required for
-   * this to work reliably in production. Test against a real endpoint
-   * before relying on it.
-   *
-   * @returns a subscription id to pass to unsubscribeFromLogs()
-   */
   subscribeToLogs(walletAddress: WalletAddress, onLogs: (logs: Logs) => void): number {
     const pubkey = new PublicKey(walletAddress);
     return this.connection.onLogs(pubkey, (logs) => onLogs(logs), this.config.commitment);
   }
 
-  /**
-   * Cancels a subscription created by subscribeToLogs(). Never throws -
-   * callers (LiveAlertWatcher's stop()) should be able to unwind cleanly
-   * even if the underlying WebSocket connection already dropped.
-   */
   async unsubscribeFromLogs(subscriptionId: number): Promise<void> {
     try {
       await this.connection.removeOnLogsListener(subscriptionId);
