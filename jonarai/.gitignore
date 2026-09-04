@@ -1,0 +1,72 @@
+# ---------- Node / JS / TS ----------
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- Python ----------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+
+# ---------- Editor / OS ----------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---------- Logs / temp ----------
+*.log
+logs/
+tmp/
+.cache/
+
+# ---------- Environment ----------
+.env
+.env.local
+.env.*.local
+.envrc
+
+# ---------- Trading-specific: NEVER commit these ----------
+# Broker credentials, API keys, private material.
+# JONARAI does not need any of these in the repo; treat any file matching
+# these patterns as sensitive by default.
+secrets/
+credentials.json
+credentials.*.json
+broker-tokens/
+*.pem
+*.key
+*.p12
+*.pfx
+ibkr-*.json
+tws-*.json
+
+# ---------- Data snapshots (large / licensed) ----------
+# Raw market data may be licensed and non-redistributable — keep it out.
+data/raw/
+data/snapshots/
+*.parquet
+*.feather
