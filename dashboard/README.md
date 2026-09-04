@@ -14,12 +14,12 @@ TypeScript check, production build, and `npm audit` (0 findings) on
 ```bash
 # 1. Start the FactLedger API first (from the repo root)
 cd ..
-npm ci
+npm install
 npm run dev   # listens on :3000 by default
 
 # 2. In a second terminal, start the dashboard
 cd dashboard
-npm install
+npm ci
 cp .env.example .env.local   # edit FACTLEDGER_API_URL/FACTLEDGER_API_KEY if needed
 npm run dev                  # listens on :3001 (Next.js picks the next free port)
 ```
