@@ -2,7 +2,7 @@
 
 _Last updated: 2026-09-06_
 
-Use this file as the single source of truth for grant and accelerator applications. Do not infer or invent legal, billing, KYC, investment, incorporation, or identity details that are not stated here.
+Use this file as the single source of truth for grant, accelerator and investor application preparation. Do not infer or invent legal, billing, KYC, investment, incorporation, or identity details that are not stated here.
 
 ## Founder
 
@@ -16,7 +16,7 @@ Use this file as the single source of truth for grant and accelerator applicatio
 - X: https://x.com/aamm123220
 - Telegram: @abdullhaa11
 - GitHub: https://github.com/fas988840-dev/--x
-- Solana wallet: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
+- Solana wallet for application contact/payout fields when a Solana wallet is requested: EWEY53t7rXLTQ964EhuAXHAMV9WoEkxn4h4fYB1ZRFNM
 
 ## Project
 
@@ -38,6 +38,12 @@ A read-only Solana wallet intelligence API that never fabricates data. Every val
 - No users, revenue, investment, or awards should be claimed unless a later verified record documents them.
 - The system does not request or custody private keys and does not sign transactions.
 - Riyadh, Saudi Arabia is the founder/project location for ordinary form fields. It must not be presented as a registered company address or legal incorporation address.
+
+## Founder authorization for applications
+
+The founder has authorized use of the factual data in this profile to prepare and submit grant, funding and investor applications when the programme is suitable for FactLedger. Use the Solana wallet above when an application asks for a Solana wallet/contact/payout wallet and no different wallet has been specified for that programme.
+
+This authorization does **not** permit invention of missing facts or autonomous acceptance of legally or financially binding terms. Explicit founder action/confirmation is still required for KYC/identity verification, SMS/email/OAuth/wallet-signature codes, payment methods, tax declarations, bank details, SAFE/equity/token-sale/IP-assignment terms, incorporation/legal representations, or any agreement that creates a financial or legal obligation.
 
 ## Fields still requiring founder/account truth at submission time
 
