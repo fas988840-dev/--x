@@ -10,7 +10,8 @@ Status: prepared, **not submitted**. Current official guidance checked on 6 Sept
 **Stage:** MVP / early prototype; choose the portal's matching option  
 **Repository:** https://github.com/fas988840-dev/--x  
 **Product URL:** https://factledger-api.onrender.com  
-**Email:** fas988840@gmail.com  
+**Project email:** fas988840@gmail.com  
+**Microsoft account email:** Xx053233@hotmail.com  
 **Phone:** 0532331116  
 **X:** https://x.com/aamm123220  
 **Telegram:** @abdullhaa11
@@ -49,7 +50,7 @@ Official 2026 guidance states that Microsoft for Startups supports early-stage p
 
 The authenticated flow can require:
 
-- Personal Microsoft account sign-in.
+- Personal Microsoft account sign-in using `Xx053233@hotmail.com`.
 - Phone and email verification.
 - Country/region and time zone.
 - Registered startup name matching legal documents when the business-application route requests it.
