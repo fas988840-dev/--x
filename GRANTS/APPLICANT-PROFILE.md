@@ -9,7 +9,8 @@ Use this file as the single source of truth for grant and accelerator applicatio
 - Name: Abdullah Al-Anzi
 - Country: Saudi Arabia
 - Phone: 0532331116
-- Email: fas988840@gmail.com
+- Project email: fas988840@gmail.com
+- Microsoft account email: Xx053233@hotmail.com
 - X: https://x.com/aamm123220
 - Telegram: @abdullhaa11
 - GitHub: https://github.com/fas988840-dev/--x
