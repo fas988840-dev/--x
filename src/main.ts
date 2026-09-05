@@ -9,9 +9,8 @@ import { TransactionRetriever } from './services/transaction-retriever.js';
 import { BehaviorAnalyzer } from './services/behavior-analyzer.js';
 import { IntelligenceScorer } from './services/intelligence-scorer.js';
 import { RiskAssessor } from './services/risk-assessor.js';
-import { PriceProvider, StubPriceProvider } from './services/price-provider.js';
-import { CoinGeckoPriceProvider } from './services/coingecko-price-provider.js';
-import { PythHermesPriceProvider, parsePythFeedMap } from './services/pyth-hermes-price-provider.js';
+import { createPriceProvider } from './services/create-price-provider.js';
+import { parsePythFeedMap } from './services/pyth-hermes-price-provider.js';
 import { createDefaultDexRegistry } from './services/dex-registry.js';
 import { InstructionParser } from './services/instruction-parser.js';
 import { APIServer } from './api/server.js';
@@ -23,20 +22,6 @@ import { TokenSecurityVerifier } from './services/token-security-verifier.js';
 import { ChainGptClient } from './services/chaingpt-client.js';
 import { AgentRouter } from './agents/agent-router.js';
 import { logger } from './utils/logger.js';
-
-function createPriceProvider(): PriceProvider {
-  switch (process.env.PRICE_PROVIDER) {
-    case 'stub':
-      return new StubPriceProvider();
-    case 'pyth':
-      return new PythHermesPriceProvider({
-        apiKey: process.env.PYTH_API_KEY,
-        feedMap: parsePythFeedMap(process.env.PYTH_FEED_MAP_JSON),
-      });
-    default:
-      return new CoinGeckoPriceProvider();
-  }
-}
 
 /**
  * Initialize and start the application

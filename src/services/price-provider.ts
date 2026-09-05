@@ -1,13 +1,15 @@
 /**
  * Price Provider Interface
- * Retrieves verified token prices
+ * Retrieves provider-reported token prices; does not imply signature verification.
  * CRITICAL: Never fabricates prices. Returns null when data unavailable.
  */
 
 export interface PriceResult {
   mint: string;
   priceUSD: number | null; // null if price unavailable
-  timestamp: number; // Unix timestamp when price was fetched
+  timestamp: number; // Provider publish time; requested time when unavailable.
+  feedId?: string; // Provider identifier, not an on-chain account or slot proof.
+  confidenceIntervalUSD?: number; // Uncertainty interval, not probability of profit.
   source: string; // e.g., "coingecko", "birdeye", "unknown"
   confidence: 'high' | 'medium' | 'low' | 'unknown';
 }

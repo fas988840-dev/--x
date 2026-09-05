@@ -1,4 +1,12 @@
-# Colosseum Eternal — Ready-to-Paste Submission
+# Colosseum Eternal — Prepared Submission
+
+**Status 2026-09-05:** Founder-reported in progress; no new submission receipt.
+The official [Eternal page](https://colosseum.com/eternal) pauses new sprints;
+existing sprints can continue until their own deadline. Sign in at
+https://colosseum.com/arena/eternal to verify the actual sprint, deadline and
+required videos. The $250,000 accelerator investment is selective; it is not
+a grant automatically received on submission. The $25,000 Eternal Award is
+separate. Written scripts are not recorded pitch/technical videos.
 
 **How to use:** copy each block below into the matching field at
 https://www.colosseum.com. Every field is written out in full English. You do
@@ -23,8 +31,8 @@ FactLedger
 
 ```
 A read-only Solana wallet intelligence API whose scores can be independently
-reproduced. Every value is either verified on-chain or returned as null —
-never estimated — and every score cites the exact transactions behind it.
+reproduced. Observed data, provider-reported prices, derived scores and unknown results
+remain distinct, with explainable scoring factors and transaction evidence.
 ```
 
 ---
@@ -53,10 +61,9 @@ transactions it read. A reviewer can pull those transactions from any public
 RPC and recompute the score by hand. Trust is not the mechanism —
 verification is.
 
-Built and deployed today at https://factledger-api.onrender.com: sixteen REST
+Built and deployed today at https://factledger-api.onrender.com: REST
 endpoints, an MCP server for AI clients, a Next.js dashboard, and a read-only
-architecture that never requests or stores a private key. 151 tests pass on
-GitHub's runners, including a determinism check that runs on every push and
+architecture that never requests or stores a private key. 219 tests pass in the local verification run on 2026-09-05, including a determinism check that runs on every push and
 fails the build if scoring ever stops being reproducible.
 ```
 
@@ -69,8 +76,7 @@ Solo founder, working on this full time. Abdullah Al-Anzi, based in Saudi
 Arabia.
 
 I have no team and no users yet, and I would rather say that directly than
-have you find it out. What I can point to is the code: TypeScript strict mode
-throughout, no `any` types, 151 tests passing on GitHub's own runners, and a
+have you find it out. What I can point to is the code: TypeScript strict mode in the core build, 219 tests passing locally on 2026-09-05, and a
 determinism check wired into CI so the project's central claim is enforced
 automatically rather than asserted in a README.
 
@@ -124,7 +130,8 @@ First, the honest gaps. Raydium and Jupiter detection verifies the
 instruction type but not the account layout, so swap amounts stay null and
 the status stays "candidate" rather than "confirmed". The live WebSocket
 alert stream is unit-tested but has not been exercised against a real RPC
-subscription. Prices come from CoinGecko's free API and return null often.
+subscription. CoinGecko remains the default. A Pyth provider is now implemented and tested
+locally, with real-key configuration and production activation still pending.
 The API is deployed at https://factledger-api.onrender.com. These are
 stated in the repository's own documentation, not just here.
 
@@ -136,12 +143,10 @@ because it has to justify decisions, and what a protocol gating access needs,
 because it has to answer the users it blocks. That is a position incumbents
 are structurally unable to copy.
 
-Third, concurrent applications. I have submitted to the Solana Foundation
-grant program (confirmed received, awaiting review) and to the Startup
-Accelerator Grant from Webacy / DD.xyz via Superteam Earn (confirmed
-received). Nothing has been awarded. I am telling you unprompted because you
-would ask, and because a project built on not concealing things should not
-conceal this.
+Third, concurrent applications. Current applications reported submitted are Solana Foundation, Webacy /
+DD.xyz, ChainGPT and Superteam Solana Summit. These statuses do not represent
+cash awards received. Costs will be reconciled across programmes to avoid
+double-funding the same deliverable.
 ```
 
 ---

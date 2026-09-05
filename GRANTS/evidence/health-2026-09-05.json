@@ -1,0 +1,7 @@
+{
+  "checkedDate": "2026-09-05",
+  "url": "https://factledger-api.onrender.com/api/v1/health",
+  "httpStatus": 200,
+  "body": {"status":"ok","service":"FactLedger","version":"0.1.0","dependencies":{"priceProvider":"degraded"}},
+  "scope": "One external process-liveness request; not proof of Pyth activation, RPC/WebSocket behaviour, protected endpoints or dashboard deployment."
+}

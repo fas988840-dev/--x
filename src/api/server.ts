@@ -347,6 +347,7 @@ export class APIServer {
     // confidence" invariant. Returns an empty array rather than a
     // hardcoded protocol list.)
     this.app.get('/api/v1/token/:mint/security', this.heavyLimiter, this.asyncHandler(this.handleTokenSecurity.bind(this)));
+    this.app.get('/api/v1/token/:mint/price', this.heavyLimiter, this.asyncHandler(this.handleTokenPrice.bind(this)));
 
     this.app.get('/api/v1/protocols', this.handleProtocols.bind(this));
 
@@ -406,6 +407,26 @@ export class APIServer {
         } as ErrorResponse);
       }
     );
+  }
+
+  /** Retrieve a price without promoting a provider response to verified evidence. */
+  private async handleTokenPrice(req: Request, res: Response): Promise<void> {
+    const mint = validateTokenMint(req.params.mint);
+    const raw = req.query.timestamp;
+    let timestamp: number | undefined;
+    if (raw !== undefined) {
+      if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
+        throw new ValidationError('timestamp must be a positive Unix timestamp in seconds');
+      }
+      timestamp = Number(raw);
+      if (!Number.isSafeInteger(timestamp) || timestamp <= 0 || timestamp > Math.floor(Date.now() / 1000)) {
+        throw new ValidationError('timestamp must be in the past or present, in Unix seconds');
+      }
+    }
+    const price = await this.priceProvider.getPrice(mint, timestamp);
+    res.json({ price, evidenceStatus: price.priceUSD === null ? 'UNKNOWN' : 'PROVIDER_REPORTED',
+      verification: 'Provider response; no local cryptographic or on-chain signature verification.',
+      disclaimer: 'Market data only. Not financial advice or a token safety rating.' });
   }
 
   /**
@@ -489,7 +510,7 @@ export class APIServer {
           '/api/v1/wallet/:address/alerts/stream',
           '/api/v1/wallet/:address/explanation',
         ],
-        token: ['/api/v1/token/:mint/security'],
+        token: ['/api/v1/token/:mint/security', '/api/v1/token/:mint/price'],
         transaction: ['/api/v1/transaction/:signature'],
         other: ['/api/v1/protocols', '/api/v1/agents/:intent'],
       },

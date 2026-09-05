@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { buildMcpServer } from './server';
 
 // NOTE: this only checks that buildMcpServer() wires up without throwing
@@ -12,5 +14,28 @@ import { buildMcpServer } from './server';
 describe('buildMcpServer', () => {
   it('constructs without throwing and registers the expected tools', () => {
     expect(() => buildMcpServer()).not.toThrow();
+  });
+});
+
+
+describe('Pyth MCP round trip', () => {
+  it('advertises and calls token_price without fabricating a quote when the key is missing', async () => {
+    vi.stubEnv('PRICE_PROVIDER', 'pyth');
+    vi.stubEnv('PYTH_API_KEY', '');
+    const server = buildMcpServer();
+    const client = new Client({ name: 'factledger-test', version: '1.0.0' });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      expect((await client.listTools()).tools.some(tool => tool.name === 'token_price')).toBe(true);
+      const result = await client.callTool({ name: 'token_price', arguments: { mint: 'So11111111111111111111111111111111111111112' } });
+      const content = result.content as Array<{ type: string; text: string }>;
+      expect(JSON.parse(content[0].text)).toMatchObject({ evidenceStatus: 'UNKNOWN', price: { priceUSD: null, source: 'pyth-hermes' } });
+    } finally {
+      await client.close();
+      await server.close();
+      vi.unstubAllEnvs();
+    }
   });
 });

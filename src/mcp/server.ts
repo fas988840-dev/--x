@@ -50,6 +50,8 @@ import { InstructionParser } from '../services/instruction-parser';
 import { AlertEngine } from '../services/alert-engine';
 import { ChainGptClient } from '../services/chaingpt-client';
 import { SolanaConfig } from '../types/config';
+import { validateTokenMint } from '../types/domain.js';
+import { createPriceProvider } from '../services/create-price-provider.js';
 
 const addressParam = z.string().describe('Solana wallet address, base58-encoded');
 const limitParam = z.number().int().min(1).max(1000).optional().describe('Max transactions to fetch (default 100, capped at 1000)');
@@ -77,6 +79,7 @@ export function buildMcpServer(): McpServer {
   const instructionParser = new InstructionParser(dexRegistry);
   const behaviorAnalyzer = new BehaviorAnalyzer();
   const riskAssessor = new RiskAssessor();
+  const priceProvider = createPriceProvider();
 
   const txAgent = new TransactionIntelligenceAgent(transactionRetriever, rpcClient, instructionParser);
   const walletAgent = new WalletIntelligenceAgent(transactionRetriever, rpcClient, txAgent);
@@ -163,6 +166,16 @@ export function buildMcpServer(): McpServer {
     },
     async ({ topic }: { topic: string }) => jsonResult(await marketAgent.trackEvents(topic))
   );
+
+  server.registerTool('token_price', {
+    description: 'Read a token USD price using the configured provider, including Pyth. Unavailable or stale Pyth data returns UNKNOWN. Provider-reported, not locally signature-verified. Not financial advice.',
+    inputSchema: { mint: z.string(), timestamp: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional() },
+  }, async ({ mint, timestamp }: { mint: string; timestamp?: number }) => {
+    const price = await priceProvider.getPrice(validateTokenMint(mint), timestamp);
+    return jsonResult({ price, evidenceStatus: price.priceUSD === null ? 'UNKNOWN' : 'PROVIDER_REPORTED',
+      verification: 'Provider response; no local cryptographic or on-chain signature verification.',
+      disclaimer: 'Market data only. Not financial advice or a token safety rating.' });
+  });
 
   return server;
 }
