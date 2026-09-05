@@ -8,6 +8,8 @@ Use this file as the single source of truth for grant and accelerator applicatio
 
 - Name: Abdullah Al-Anzi
 - Country: Saudi Arabia
+- City: Riyadh
+- Location for forms: Riyadh, Saudi Arabia
 - Phone: 0532331116
 - Project email: fas988840@gmail.com
 - Microsoft account email: Xx053233@hotmail.com
@@ -30,20 +32,20 @@ A read-only Solana wallet intelligence API that never fabricates data. Every val
 ## Current factual positioning
 
 - Stage: MVP / early prototype.
+- Entity status: not incorporated / no registered company currently documented.
 - Founder: solo developer.
 - Product: deployed read-only Solana wallet intelligence API and MCP tooling.
 - No users, revenue, investment, or awards should be claimed unless a later verified record documents them.
 - The system does not request or custody private keys and does not sign transactions.
+- Riyadh, Saudi Arabia is the founder/project location for ordinary form fields. It must not be presented as a registered company address or legal incorporation address.
 
 ## Fields still requiring founder/account truth at submission time
 
-- Registered legal company name, if any.
-- Registered business address / billing address.
-- Incorporation/registration identifiers and dates, if applicable.
+- Full personal/business/billing address when a portal explicitly requires it.
 - Prior Microsoft Azure credits or account history.
 - Investor referral code, if any.
 - Funding and investment declarations not already documented.
 - KYC/tax/payment information.
 - Any SMS, email, wallet-signature, OAuth, or identity verification codes.
 
-These fields must be taken from the founder's actual records or completed directly in the authenticated portal.
+If a portal requires a registered legal entity, incorporation number/date, or registered company name, the application must pause unless the founder later supplies real legal registration documents. These fields must never be invented.
