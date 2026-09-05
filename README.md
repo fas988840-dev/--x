@@ -16,6 +16,25 @@ FactLedger is a **read-only** Solana wallet analysis and intelligence platform. 
 
 **IMPORTANT**: This platform does NOT request, store, or handle private keys, seed phrases, passwords, or API secrets. It is read-only and never signs transactions.
 
+## Demo and grant review
+
+- [Live API health](https://factledger-api.onrender.com/api/v1/health): independently checked on 2026-09-05; HTTP 200, service `ok`, price provider `degraded`. This verifies process liveness, not all integrations.
+- [Pyth integration and activation](PYTH_INTEGRATION.md): REST prices and the MCP `token_price` tool share the same configurable provider. Real-key Pyth activation remains pending.
+- [Current funding/application record](GRANTS/STATUS-2026-09-05.md): verified programme conditions, prepared applications, and outstanding submission requirements.
+
+### Token prices
+
+```text
+GET /api/v1/token/:mint/price
+GET /api/v1/token/:mint/price?timestamp=<unix-seconds>
+```
+
+Uses the existing API-key middleware and rate limits. `evidenceStatus` is
+`PROVIDER_REPORTED` for an available quote, or `UNKNOWN` with `priceUSD: null`
+when unavailable. Pyth quotes include their publication time, explicit feed ID
+and uncertainty interval. They are not locally signature-verified evidence.
+See [Pyth setup](PYTH_INTEGRATION.md) before enabling `PRICE_PROVIDER=pyth`.
+
 ## Architecture
 
 ### Core Services

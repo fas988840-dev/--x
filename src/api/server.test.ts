@@ -148,6 +148,37 @@ describe('API Server', () => {
     app = server.getApp();
   });
 
+  describe('GET /api/v1/token/:mint/price', () => {
+    const mint = 'So11111111111111111111111111111111111111112';
+    it('calls the configured price provider with the requested time', async () => {
+      mockPriceProvider.getPrice = vi.fn().mockResolvedValue({ mint, priceUSD: 123, timestamp: 500, source: 'pyth-hermes', confidence: 'high' });
+      const response = await request(app).get(`/api/v1/token/${mint}/price?timestamp=500`);
+      expect(response.status).toBe(200);
+      expect(mockPriceProvider.getPrice).toHaveBeenCalledWith(mint, 500);
+      expect(response.body.evidenceStatus).toBe('PROVIDER_REPORTED');
+      expect(response.body.price.priceUSD).toBe(123);
+      expect(response.body.disclaimer).toContain('Not financial advice');
+    });
+    it('exposes unavailable prices honestly', async () => {
+      const response = await request(app).get(`/api/v1/token/${mint}/price`);
+      expect(response.body.evidenceStatus).toBe('UNKNOWN');
+      expect(response.body.price.priceUSD).toBeNull();
+    });
+    it.each(['bad', '-1', '1.5', '9999999999999999999', '1&timestamp=2'])('rejects invalid time %s', async timestamp => {
+      const response = await request(app).get(`/api/v1/token/${mint}/price?timestamp=${timestamp}`);
+      expect(response.status).toBe(400);
+    });
+    it('validates the mint', async () => {
+      expect((await request(app).get('/api/v1/token/not-a-mint/price')).status).toBe(400);
+    });
+    it('preserves the API key gate', async () => {
+      vi.stubEnv('API_KEYS', 'test-key');
+      try {
+        expect((await request(app).get(`/api/v1/token/${mint}/price`)).status).toBe(401);
+      } finally { vi.unstubAllEnvs(); }
+    });
+  });
+
   describe('GET /', () => {
     it('should serve a service index rather than 404', async () => {
       const response = await request(app).get('/');

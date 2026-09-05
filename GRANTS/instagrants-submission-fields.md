@@ -3,23 +3,16 @@
 Apply through **https://earn.superteam.fun/grants/** (find the Instagrants
 listing open to your region).
 
-Roughly $500–$10,000 in USDC, no equity, decision in about 48 hours,
-application takes about 15 minutes.
+**Status updated 2026-09-05: not submitted.** The founder reports that Saudi
+Arabia is not accepted and asked to stop eligibility research. Do not use a
+regional listing that excludes the founder. The historical statement that
+Saudi eligibility was confirmed had no attached evidence and is superseded.
+Amounts and review times vary by actual listing; there is no guaranteed
+48-hour decision. The $8,000 below is a proposed budget, not an award.
 
----
-
-## Both preconditions are cleared
-
-**Region** — Superteam confirmed a solo developer in Saudi Arabia is eligible.
-(Their published material lists India, Southeast Asia, Eastern Europe and
-Africa, which is why this was worth asking rather than assuming.)
-
-**The live URL** — verified answering, and the protected routes verified
-returning 401 rather than data, so the API key gate is genuinely on.
-
-One thing to know before a reviewer opens it: on Render's free tier the
-service sleeps after about 15 minutes idle, so the first request can take
-~30 seconds. That is normal, not a fault. Worth a line if anyone mentions it.
+The live API health endpoint answered HTTP 200 on 2026-09-05, while the price
+provider was reported as degraded. This is a liveness check, not verification
+of all protected endpoints or integrations.
 
 ---
 
@@ -61,7 +54,7 @@ FactLedger is a read-only Solana API built on two rules enforced in code
 rather than promised in documentation. It never fabricates: any value it
 cannot verify — a price, a fee, a decoded swap amount — comes back null, never
 as a plausible estimate. And it never overstates confidence: every DEX
-instruction is classified VERIFIED, CANDIDATE or UNKNOWN, and those states are
+instruction is classified confirmed, candidate or unknown, and those states are
 never collapsed to make output look more complete.
 
 Every score ships with the named factors that produced it and the specific
@@ -102,12 +95,12 @@ Repository:  https://github.com/fas988840-dev/--x     (public, MIT)
 Live API:    https://factledger-api.onrender.com/api/v1/health
 CI:          https://github.com/fas988840-dev/--x/actions
 
-Deployed and answering. 151 tests pass on GitHub's own runners, including a
+Deployed and answering. 219 tests pass in the local verification run on 2026-09-05, including a
 determinism check that calls each scoring function twice with fixed input and
 asserts exact equality — the build fails if scoring ever stops being
 reproducible.
 
-TypeScript strict mode, no `any` types. 16 REST endpoints, an MCP server for
+TypeScript strict mode for the core build, REST endpoints, an MCP server for
 AI clients, and a read-only architecture that never requests or stores a
 private key.
 
@@ -147,12 +140,12 @@ Honest gaps, stated because the project's whole claim is that it states them.
 Raydium and Jupiter detection verifies the instruction type but not the
 account layout, so swap amounts stay null and status stays CANDIDATE. The live
 WebSocket alert stream is unit-tested but not yet exercised against a real RPC
-subscription. Prices come from CoinGecko's free API and return null often.
+subscription. CoinGecko remains the default price provider. Pyth is implemented and locally tested, with real-key activation and production deployment still pending.
 
-Concurrent applications: Solana Foundation (submitted, confirmed received,
-awaiting review) and the Startup Accelerator Grant from Webacy / DD.xyz via
-Superteam Earn (submitted, confirmed received). Nothing has been awarded. I
-mention it unprompted because you would ask.
+Concurrent applications reported submitted: Solana Foundation, Webacy / DD.xyz,
+ChainGPT and Superteam Solana Summit. Colosseum is in progress. These statuses
+are not cash award confirmations. Proposed costs will be reconciled across
+programmes so the same deliverable is not funded twice.
 ```
 
 ---
