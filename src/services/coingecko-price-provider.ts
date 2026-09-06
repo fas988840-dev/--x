@@ -14,6 +14,7 @@ import { PriceProvider, PriceResult } from './price-provider.js';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 const MAX_STALE_SECONDS = 5 * 60; // how far "now" a requested timestamp may be and still be served by this endpoint
+const HEALTH_CACHE_MS = 60_000;
 
 interface CoinGeckoTokenPriceResponse {
   [contractAddress: string]: { usd?: number; last_updated_at?: number } | undefined;
@@ -24,6 +25,8 @@ function unavailable(mint: string, timestamp: number): PriceResult {
 }
 
 export class CoinGeckoPriceProvider implements PriceProvider {
+  private healthCache: { checkedAt: number; healthy: boolean } | null = null;
+
   async getPrice(mint: string, timestamp?: number): Promise<PriceResult> {
     const results = await this.getPrices([mint], timestamp);
     return results[0];
@@ -77,11 +80,24 @@ export class CoinGeckoPriceProvider implements PriceProvider {
   }
 
   async isHealthy(): Promise<boolean> {
+    const now = Date.now();
+    if (this.healthCache && now - this.healthCache.checkedAt < HEALTH_CACHE_MS) {
+      return this.healthCache.healthy;
+    }
+
+    let healthy = false;
     try {
       const response = await fetch(`${COINGECKO_BASE_URL}/ping`);
-      return response.ok;
+      healthy = response.ok;
     } catch {
-      return false;
+      healthy = false;
     }
+
+    // Render calls /api/v1/health every few seconds. Without caching, each
+    // liveness request fans out to CoinGecko and can rate-limit the provider
+    // we are trying to monitor. Cache the dependency result for one minute so
+    // health checks observe CoinGecko without creating their own degradation.
+    this.healthCache = { checkedAt: now, healthy };
+    return healthy;
   }
 }
