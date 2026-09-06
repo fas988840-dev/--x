@@ -1,0 +1,173 @@
+openapi: 3.1.0
+info:
+  title: FactLedger API
+  version: 0.1.0
+  description: |
+    Read-only Solana wallet intelligence API. FactLedger never signs transactions and
+    returns null/UNKNOWN when evidence is unavailable instead of fabricating values.
+servers:
+  - url: https://factledger-api.onrender.com
+    description: Current public deployment
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/v1/health:
+    get:
+      security: []
+      summary: Service health
+      responses:
+        '200':
+          description: Service is reachable; dependency state can still be degraded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  service: { type: string }
+                  version: { type: string }
+  /api/v1/wallet/{address}/intelligence:
+    get:
+      summary: Deterministic wallet intelligence score
+      parameters:
+        - $ref: '#/components/parameters/WalletAddress'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/wallet/{address}/risk:
+    get:
+      summary: Deterministic wallet risk assessment
+      parameters:
+        - $ref: '#/components/parameters/WalletAddress'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/wallet/{address}/analysis:
+    get:
+      summary: Combined wallet analysis
+      parameters:
+        - $ref: '#/components/parameters/WalletAddress'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/wallet/{address}/evidence:
+    get:
+      summary: Evidence records linked to real transaction signatures
+      parameters:
+        - $ref: '#/components/parameters/WalletAddress'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/token/{mint}/price:
+    get:
+      summary: Provider-reported token/USD price
+      description: Returns UNKNOWN/null when the configured provider cannot produce valid evidence.
+      parameters:
+        - name: mint
+          in: path
+          required: true
+          schema: { type: string }
+        - name: timestamp
+          in: query
+          required: false
+          description: Unix timestamp in seconds for historical lookup.
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/token/{mint}/security:
+    get:
+      summary: On-chain token mint authority/security facts
+      parameters:
+        - name: mint
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/transaction/{signature}:
+    get:
+      summary: Transaction details
+      parameters:
+        - name: signature
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/protocols:
+    get:
+      summary: Registered protocol adapters and confidence state
+      responses:
+        '200': { $ref: '#/components/responses/JsonSuccess' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Required only when API_KEYS is configured on the deployment.
+  parameters:
+    WalletAddress:
+      name: address
+      in: path
+      required: true
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100 }
+  responses:
+    JsonSuccess:
+      description: Successful JSON response. Exact data schema varies by endpoint and preserves explicit evidence/unknown state.
+      content:
+        application/json:
+          schema: { type: object, additionalProperties: true }
+    BadRequest:
+      description: Invalid wallet address, mint, signature, query parameter, or intent.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing or invalid API key when API_KEYS is enabled.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Request rate limit exceeded.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
