@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FactLedger Live Demo</title>
+<meta name="description" content="Live, read-only FactLedger demo for Solana wallet intelligence and evidence-backed risk analysis." />
+<style>
+:root{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#111;background:#f7f7f5}*{box-sizing:border-box}body{margin:0}.wrap{max-width:980px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.badge{padding:6px 10px;border:1px solid #bbb;border-radius:999px;font-size:12px;background:#fff}h1{font-size:clamp(30px,6vw,58px);margin:24px 0 8px;line-height:1}.sub{max-width:760px;color:#555;line-height:1.6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}.card{background:#fff;border:1px solid #ccc;border-radius:12px;padding:18px}.card h2{margin-top:0;font-size:18px}.row{display:flex;gap:8px;flex-wrap:wrap}input{width:100%;padding:12px;border:1px solid #aaa;border-radius:8px;font:inherit;background:#fff}button,a.btn{padding:10px 12px;border:1px solid #222;border-radius:8px;background:#111;color:#fff;text-decoration:none;font:inherit;cursor:pointer}button.secondary,a.secondary{background:#fff;color:#111}pre{white-space:pre-wrap;word-break:break-word;background:#111;color:#e8e8e8;padding:16px;border-radius:10px;min-height:190px;max-height:520px;overflow:auto;font-size:12px;line-height:1.55}.status{font-size:13px;margin:8px 0;color:#555}.ok{color:#176b3a}.bad{color:#9a2f2f}.full{grid-column:1/-1}.foot{margin-top:24px;color:#666;font-size:13px;line-height:1.6}@media(max-width:760px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="badge">FactLedger · read-only · deterministic · evidence-cited</div>
+    <div class="row">
+      <a class="btn secondary" href="https://github.com/fas988840-dev/--x" target="_blank" rel="noreferrer">Source</a>
+      <a class="btn secondary" href="https://factledger-api.onrender.com" target="_blank" rel="noreferrer">API</a>
+    </div>
+  </div>
+
+  <h1>The wallet score you can check yourself.</h1>
+  <p class="sub">This page calls the production API directly. Paste any public Solana wallet address to inspect analysis, risk and evidence. FactLedger never requests private keys and returns <b>null/unknown</b> when data is not verifiable.</p>
+
+  <div class="grid">
+    <section class="card full">
+      <h2>0 · Production health</h2>
+      <div class="row"><button onclick="run('/api/v1/health','healthOut','healthStatus')">Check live API</button></div>
+      <div id="healthStatus" class="status">Not checked yet.</div>
+      <pre id="healthOut">Click “Check live API”.</pre>
+    </section>
+
+    <section class="card full">
+      <h2>1 · Wallet → analysis → risk → evidence</h2>
+      <input id="wallet" placeholder="Paste a public Solana wallet address" autocomplete="off" />
+      <div class="row" style="margin-top:10px">
+        <button onclick="walletRun('analysis')">Analysis</button>
+        <button onclick="walletRun('risk')">Risk</button>
+        <button onclick="walletRun('evidence')">Evidence</button>
+        <button class="secondary" onclick="walletRun('explanation')">Explanation</button>
+      </div>
+      <div id="walletStatus" class="status">No request yet.</div>
+      <pre id="walletOut">A successful evidence response should expose the exact facts FactLedger can cite (for example signature / slot / program / confidence where available). Unknown fields remain unknown.</pre>
+    </section>
+
+    <section class="card">
+      <h2>2 · Token security</h2>
+      <input id="mintSecurity" value="So11111111111111111111111111111111111111112" aria-label="Token mint for security check" />
+      <div class="row" style="margin-top:10px"><button onclick="tokenRun('security')">Run security check</button></div>
+      <div id="securityStatus" class="status">No request yet.</div>
+      <pre id="securityOut">Shows only verifiable token-security facts. A limited check is not a blanket “safe” claim.</pre>
+    </section>
+
+    <section class="card">
+      <h2>3 · Live token price</h2>
+      <input id="mintPrice" value="So11111111111111111111111111111111111111112" aria-label="Token mint for price check" />
+      <div class="row" style="margin-top:10px"><button onclick="tokenRun('price')">Get provider price</button></div>
+      <div id="priceStatus" class="status">No request yet.</div>
+      <pre id="priceOut">Returns a real provider result when available; otherwise priceUSD remains null.</pre>
+    </section>
+  </div>
+
+  <p class="foot"><b>Reviewer shortcut:</b> run Health, paste a real public wallet, then click Analysis → Risk → Evidence. The point of the product is not that a score looks authoritative; it is that the score can be traced back to observable evidence. Don’t trust the score — check it.</p>
+</div>
+<script>
+const API='https://factledger-api.onrender.com';
+function pretty(x){return JSON.stringify(x,null,2)}
+async function run(path,outId,statusId){
+  const out=document.getElementById(outId), status=document.getElementById(statusId);
+  status.textContent='Loading…'; status.className='status'; out.textContent='Requesting '+API+path+' …';
+  try{
+    const r=await fetch(API+path,{headers:{accept:'application/json'}});
+    const text=await r.text(); let body; try{body=JSON.parse(text)}catch{body=text}
+    status.textContent=`HTTP ${r.status} ${r.ok?'OK':'ERROR'}`; status.className='status '+(r.ok?'ok':'bad');
+    out.textContent=typeof body==='string'?body:pretty(body);
+    return body;
+  }catch(e){status.textContent='Request failed'; status.className='status bad'; out.textContent=String(e)}
+}
+function walletRun(kind){
+  const address=document.getElementById('wallet').value.trim();
+  if(!address){document.getElementById('walletStatus').textContent='Paste a public wallet address first.';document.getElementById('walletStatus').className='status bad';return}
+  run(`/api/v1/wallet/${encodeURIComponent(address)}/${kind}`,'walletOut','walletStatus');
+}
+function tokenRun(kind){
+  const input=kind==='security'?'mintSecurity':'mintPrice';
+  const out=kind==='security'?'securityOut':'priceOut';
+  const status=kind==='security'?'securityStatus':'priceStatus';
+  const mint=document.getElementById(input).value.trim();
+  if(!mint){document.getElementById(status).textContent='Enter a token mint first.';document.getElementById(status).className='status bad';return}
+  run(`/api/v1/token/${encodeURIComponent(mint)}/${kind}`,out,status);
+}
+</script>
+</body>
+</html>
