@@ -11,9 +11,10 @@
  */
 
 import { PriceProvider, PriceResult } from './price-provider.js';
+import { logger } from '../utils/logger.js';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
-const MAX_STALE_SECONDS = 5 * 60; // how far "now" a requested timestamp may be and still be served by this endpoint
+const MAX_STALE_SECONDS = 5 * 60;
 const HEALTH_CACHE_MS = 60_000;
 
 interface CoinGeckoTokenPriceResponse {
@@ -38,27 +39,27 @@ export class CoinGeckoPriceProvider implements PriceProvider {
 
     if (mints.length === 0) return [];
 
-    // This endpoint only serves the current price - never fabricate a
-    // historical one by silently substituting "now" for a real past request.
     if (Math.abs(now - ts) > MAX_STALE_SECONDS) {
       return mints.map((mint) => unavailable(mint, ts));
     }
 
     try {
       const url = `${COINGECKO_BASE_URL}/simple/token_price/solana?contract_addresses=${encodeURIComponent(mints.join(','))}&vs_currencies=usd`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          accept: 'application/json',
+          'user-agent': 'FactLedger/0.1.0',
+        },
+      });
 
       if (!response.ok) {
-        // Includes 429 (rate limited) - honestly unavailable, not a guess.
+        logger.warn(`CoinGecko price request failed: HTTP ${response.status}`);
         return mints.map((mint) => unavailable(mint, ts));
       }
 
       const data = (await response.json()) as CoinGeckoTokenPriceResponse;
 
       return mints.map((mint) => {
-        // CoinGecko's response keys aren't guaranteed to match the
-        // requested address's exact casing - try exact, then
-        // case-insensitive, before giving up honestly.
         const entry = data[mint] ?? Object.entries(data).find(([key]) => key.toLowerCase() === mint.toLowerCase())?.[1];
 
         if (!entry || typeof entry.usd !== 'number') {
@@ -73,8 +74,8 @@ export class CoinGeckoPriceProvider implements PriceProvider {
           confidence: 'high' as const,
         };
       });
-    } catch {
-      // Network error, JSON parse failure, etc.
+    } catch (error) {
+      logger.warn(`CoinGecko price request error: ${error instanceof Error ? error.message : 'unknown error'}`);
       return mints.map((mint) => unavailable(mint, ts));
     }
   }
@@ -87,16 +88,21 @@ export class CoinGeckoPriceProvider implements PriceProvider {
 
     let healthy = false;
     try {
-      const response = await fetch(`${COINGECKO_BASE_URL}/ping`);
+      const response = await fetch(`${COINGECKO_BASE_URL}/ping`, {
+        headers: {
+          accept: 'application/json',
+          'user-agent': 'FactLedger/0.1.0',
+        },
+      });
       healthy = response.ok;
-    } catch {
+      if (!healthy) {
+        logger.warn(`CoinGecko health check failed: HTTP ${response.status}`);
+      }
+    } catch (error) {
+      logger.warn(`CoinGecko health check error: ${error instanceof Error ? error.message : 'unknown error'}`);
       healthy = false;
     }
 
-    // Render calls /api/v1/health every few seconds. Without caching, each
-    // liveness request fans out to CoinGecko and can rate-limit the provider
-    // we are trying to monitor. Cache the dependency result for one minute so
-    // health checks observe CoinGecko without creating their own degradation.
     this.healthCache = { checkedAt: now, healthy };
     return healthy;
   }
