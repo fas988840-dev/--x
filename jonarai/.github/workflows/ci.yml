@@ -1,0 +1,91 @@
+# JONARAI CI — template. INACTIVE while JONARAI lives inside `--x`.
+#
+# GitHub Actions only reads workflows from `.github/workflows/` at the
+# repository root. This file sits under `jonarai/.github/workflows/`
+# so it MOVES with the code when JONARAI migrates to a standalone repo
+# — the moment it lands at the new repo's root, GitHub picks it up
+# automatically. No rewrite needed.
+#
+# Until then, the root-level `.github/workflows/` in `--x` is
+# FactLedger's CI; do NOT add JONARAI jobs there.
+
+name: JONARAI CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "database/**"
+      - "infrastructure/**"
+      - "docs/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------------
+  # Backend — lint + typecheck + tests
+  # ------------------------------------------------------------------
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+
+      - name: Ruff lint
+        run: ruff check src tests
+
+      - name: Ruff format check
+        run: ruff format --check src tests
+
+      - name: mypy --strict
+        run: mypy src
+
+      - name: pytest (guardrail-enforcing tests included)
+        run: pytest -v
+
+  # ------------------------------------------------------------------
+  # Frontend — lint + typecheck + build
+  # ------------------------------------------------------------------
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build

@@ -1,0 +1,55 @@
+# Multi-stage build for the JONARAI backend.
+#
+# Stage 1: install deps into a slim venv.
+# Stage 2: copy the venv + source into a distroless-ish runtime image.
+#
+# The image runs `uvicorn jonarai.api.main:app` on port 8000. That's the
+# only entry point today — every trading route is stubbed. Do not deploy
+# this image to production traffic in Phase A.1.
+
+# --------------------------------------------------------------------
+# Stage 1 — build
+# --------------------------------------------------------------------
+FROM python:3.12-slim AS build
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Only copy what's needed to resolve deps first, so the layer caches well.
+COPY backend/pyproject.toml ./backend/pyproject.toml
+COPY backend/src ./backend/src
+COPY README.md ./README.md
+
+RUN pip install --upgrade pip && \
+    pip install --prefix=/install ./backend
+
+# --------------------------------------------------------------------
+# Stage 2 — runtime
+# --------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    JONARAI_ENVIRONMENT=production \
+    JONARAI_ENTRIES_DISABLED=true \
+    JONARAI_LIVE_EXECUTION_DISABLED=true
+
+# Create a non-root user; the app never needs root.
+RUN groupadd --system jonarai && \
+    useradd  --system --gid jonarai --home-dir /home/jonarai --create-home jonarai
+
+COPY --from=build /install /usr/local
+
+USER jonarai
+WORKDIR /home/jonarai
+
+EXPOSE 8000
+
+# Uvicorn (production-style, no --reload). Real deployments should front
+# this with a proper reverse proxy or use a supervisor with graceful
+# shutdown; that decision is Phase Z.
+CMD ["uvicorn", "jonarai.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
